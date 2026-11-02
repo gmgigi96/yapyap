@@ -1019,6 +1019,23 @@ describe('startApp', () => {
     });
   });
 
+  it('shows the chat’s picture from WhatsApp, or none when it is slow to come', async () => {
+    vi.useFakeTimers();
+    const f = fakes();
+    await startApp(f);
+    const from = { sender: f.web.contents, senderFrame: { url: `${WHATSAPP_ORIGIN}/` } };
+    const icon = `${WHATSAPP_ORIGIN}/media/avatar.png`;
+    f.ipcListeners.get('whatsapp:notification-show')?.(from, { id: '1', title: 'Alice', icon });
+    await vi.advanceTimersByTimeAsync(0);
+    expect(f.natives[0]?.options).toMatchObject({ icon: 'data:image/png;base64,avatar' });
+    f.web.contents.session.fetch.mockReturnValueOnce(new Promise(() => undefined));
+    const slow = `${WHATSAPP_ORIGIN}/media/slow.png`;
+    f.ipcListeners.get('whatsapp:notification-show')?.(from, { id: '2', title: 'Bob', icon: slow });
+    await vi.advanceTimersByTimeAsync(1500);
+    expect(f.natives[1]?.options).toEqual({ title: 'Bob', body: '', silent: false });
+    vi.useRealTimers();
+  });
+
   describe('with two accounts', () => {
     function twoAccounts(argv: readonly string[] = []) {
       const f = fakes({}, argv);

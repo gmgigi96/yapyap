@@ -305,6 +305,10 @@ title, escape })` (`src/renderer/shared/mount.tsx`), which titles the
 - CI job timeouts (#569): smoke jobs stop after 20 minutes and package
   jobs after 60, so a hung runner step no longer holds a CI run for six
   hours.
+- Notification pictures (#572, C46 in ADR 0008): notifications show the
+  chat's picture, fetched by `AccountAvatars.picture` under the account
+  photo's rules, only while the sender is shown, and waited for at most
+  1.5 s (`main/notifications/notifier.ts`).
 - No extensions (#571, ADR 0018): the extension host, the marketplace, the
   SDK and signing CLI, the extension template and the call recorder are
   gone, with their settings, windows, menu items, shortcuts, install links,

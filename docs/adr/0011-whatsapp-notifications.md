@@ -22,7 +22,7 @@ notifications in the main process.
   `click` and `close` events) and forwards each notification as plain data.
 - The bridge it uses, exposed with `contextBridge.exposeInMainWorld`, has
   three operations and nothing else: show a notification (an ID, title, body,
-  tag and silent flag, all strings or booleans), close one, and listen for
+  tag, picture address and silent flag, all strings or booleans), close one, and listen for
   clicks on them. The page can call them, which gives it no more than the
   Web API already did.
 - The main process accepts these messages only from a registered WhatsApp
@@ -31,8 +31,18 @@ notifications in the main process.
   shown per account; the rest are dropped and counted in the log, never with
   their content.
 - The main process shows a native notification for the page. With more than
-  one account, the account's name heads the notification. Images from the
-  page are not shown: YapYap uses its own icon, so no avatar is fetched.
+  one account, the account's name heads the notification.
+- The chat's picture (#572, C46 in ADR 0008) comes as the address the page
+  names, never as image data. The main process fetches it only under the
+  rules for the account's own photo (ADR 0001): HTTPS from `*.whatsapp.net`
+  or WhatsApp's origin, on the account's session, at most 2 MB, shrunk to a
+  64-pixel copy. It fetches only for a notification that passed
+  do-not-disturb, mute and the rate limit and whose sender is shown, since
+  the picture tells who wrote. A notification waits at most 1.5 s for its
+  picture, and one the page closes or replaces meanwhile never shows. The
+  last 50 pictures stay in memory, so a chat's picture is fetched once;
+  nothing stores or logs a picture or its address. Any other address, or a
+  picture that does not come, leaves YapYap's own icon.
 - Clicking a notification brings the window forward, switches to its account
   and tells the page, whose stand-in fires `click`, so WhatsApp opens the
   chat itself. When WhatsApp closes a notification, for example because the

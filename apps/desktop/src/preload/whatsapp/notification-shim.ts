@@ -7,6 +7,7 @@ interface ShimOptions {
   readonly body?: unknown;
   readonly tag?: unknown;
   readonly silent?: unknown;
+  readonly icon?: unknown;
 }
 
 /**
@@ -31,9 +32,9 @@ export function installNotificationShim(bridgeName: string): void {
       count += 1;
       this.id = String(count);
       open.set(this.id, this);
-      const { body, tag, silent } = options;
+      const { body, tag, silent, icon } = options;
       // YapYap checks every field; the page's own objects never cross over.
-      bridge.show({ id: this.id, title, body, tag, silent });
+      bridge.show({ id: this.id, title, body, tag, silent, icon });
     }
     fire(type: 'click' | 'close'): void {
       const event = new Event(type);

@@ -18,6 +18,7 @@ interface NotificationRequest {
   readonly body: unknown;
   readonly tag: unknown;
   readonly silent: unknown;
+  readonly icon: unknown;
 }
 
 /** What the stand-in for the page's `Notification` calls. */

@@ -12,9 +12,20 @@ export interface NativeOptions {
   readonly title: string;
   readonly body: string;
   readonly silent: boolean;
+  /** The chat's picture, as a small PNG data URL. */
+  readonly icon?: string;
   /** An inline reply field, where the system offers one (macOS and Windows). */
   readonly hasReply?: boolean;
   readonly replyPlaceholder?: string;
+}
+
+/** The image the system shows: the chat's picture, or YapYap's own icon without one. */
+export function notificationIcon<Image>(
+  icon: string | undefined,
+  own: Image,
+  decode: (dataUrl: string) => Image,
+): Image {
+  return icon === undefined ? own : decode(icon);
 }
 
 /** What a notification may reveal (#62); read for each notification. */
@@ -30,6 +41,7 @@ export interface NotifierDependencies {
   /** Whether the system's notifications take an inline reply (#60). */
   readonly inlineReply: boolean;
   readonly now: () => number;
+  readonly wait: (ms: number) => Promise<void>;
   readonly warn: (message: string) => void;
 }
 
@@ -41,6 +53,8 @@ export interface NotifierAccount {
   readonly onClick: (id: string) => void;
   /** The text is message content: it goes to WhatsApp's message box and nowhere else. */
   readonly onReply: (id: string, text: string) => void;
+  /** The picture the page names, from WhatsApp's own hosts only; never rejects. */
+  readonly picture: (url: string) => Promise<string | undefined>;
 }
 
 /** What a WhatsApp page may do with its notifications (ADR 0011). */
@@ -55,6 +69,12 @@ const MAX_TITLE = 256;
 const MAX_BODY = 1000;
 const LIMIT_PER_MINUTE = 30;
 const MINUTE_MS = 60_000;
+/** WhatsApp's picture addresses are a few hundred characters; longer ones are ignored. */
+const MAX_ICON = 2048;
+/** A slow picture never holds a notification back for long. */
+const PICTURE_WAIT_MS = 1500;
+/** Pictures kept for a chat's next messages, so each is fetched once. */
+const MAX_PICTURES = 50;
 
 interface Checked {
   readonly id: string;
@@ -62,6 +82,7 @@ interface Checked {
   readonly body: string;
   readonly tag: string;
   readonly silent: boolean;
+  readonly icon: string;
 }
 
 const optionalText = (value: unknown, max: number): string | undefined => {
@@ -71,9 +92,13 @@ const optionalText = (value: unknown, max: number): string | undefined => {
   return typeof value === 'string' ? value.slice(0, max) : undefined;
 };
 
+/** An odd picture address costs the picture, never the notification. */
+const pictureAddress = (icon: unknown): string =>
+  typeof icon === 'string' && icon.length <= MAX_ICON ? icon : '';
+
 /** Plain text and flags only; anything else means the page sent something odd. */
 function check(request: unknown): Checked | undefined {
-  const { id, title, body, tag, silent } = Object(request) as Record<string, unknown>;
+  const { id, title, body, tag, silent, icon } = Object(request) as Record<string, unknown>;
   const bodyText = optionalText(body, MAX_BODY);
   const tagText = optionalText(tag, MAX_ID);
   if (typeof id !== 'string' || id.length > MAX_ID || typeof title !== 'string') {
@@ -91,6 +116,7 @@ function check(request: unknown): Checked | undefined {
     body: bodyText,
     tag: tagText,
     silent: silent === true,
+    icon: pictureAddress(icon),
   };
 }
 
@@ -136,19 +162,13 @@ function admission(deps: NotifierDependencies): () => boolean {
 
 type Shown = Map<string, { readonly native: NativeNotification; readonly tag: string }>;
 
-/** Shows a checked notification, replacing any with the same tag, as the Web API does. */
-function display(
+/** What the system shows: the privacy options decide what of the page's notification is in it. */
+function nativeOptions(
   deps: NotifierDependencies,
   account: NotifierAccount,
-  shown: Shown,
   notification: Checked,
-): void {
-  for (const [id, entry] of shown) {
-    if (notification.tag !== '' && entry.tag === notification.tag) {
-      entry.native.close();
-      shown.delete(id);
-    }
-  }
+  icon: string | undefined,
+): NativeOptions {
   const privacy = deps.privacy();
   const sender = privacy.sender ? notification.title : en.notifications.hiddenSender;
   const heading = account.heading();
@@ -158,7 +178,26 @@ function display(
   const reply = deps.inlineReply
     ? { hasReply: true, replyPlaceholder: en.notifications.replyPlaceholder }
     : {};
-  const native = deps.create({ title, body, silent: notification.silent, ...reply });
+  // The chat's picture tells who wrote as surely as the name does.
+  const picture = icon !== undefined && privacy.sender ? { icon } : {};
+  return { title, body, silent: notification.silent, ...reply, ...picture };
+}
+
+/** Shows a checked notification, replacing any with the same tag, as the Web API does. */
+function display(
+  deps: NotifierDependencies,
+  account: NotifierAccount,
+  shown: Shown,
+  notification: Checked,
+  icon?: string,
+): void {
+  for (const [id, entry] of shown) {
+    if (notification.tag !== '' && entry.tag === notification.tag) {
+      entry.native.close();
+      shown.delete(id);
+    }
+  }
+  const native = deps.create(nativeOptions(deps, account, notification, icon));
   native.on('click', () => {
     account.onClick(notification.id);
   });
@@ -167,6 +206,81 @@ function display(
   });
   shown.set(notification.id, { native, tag: notification.tag });
   native.show();
+}
+
+/** Chats' pictures by address, fetched once and waited for briefly. */
+function pictures(
+  deps: NotifierDependencies,
+  account: NotifierAccount,
+): (url: string) => Promise<string | undefined> {
+  const kept = new Map<string, string>();
+  const keep = (url: string, picture: string | undefined): string | undefined => {
+    if (picture !== undefined) {
+      kept.delete(url);
+      kept.set(url, picture);
+      const [oldest] = kept.keys();
+      if (kept.size > MAX_PICTURES && oldest !== undefined) {
+        kept.delete(oldest);
+      }
+    }
+    return picture;
+  };
+  return (url) => {
+    const picture = kept.get(url);
+    if (picture !== undefined) {
+      return Promise.resolve(keep(url, picture));
+    }
+    const late = deps.wait(PICTURE_WAIT_MS).then(() => undefined);
+    return Promise.race([account.picture(url).then((fetched) => keep(url, fetched)), late]);
+  };
+}
+
+/**
+ * Notifications waiting for their picture. One the page closes or replaces
+ * while it waits never shows.
+ */
+function waiting() {
+  const tags = new Map<string, string>();
+  return {
+    replace: (tag: string): void => {
+      for (const [id, waitingTag] of tags) {
+        if (tag !== '' && waitingTag === tag) {
+          tags.delete(id);
+        }
+      }
+    },
+    hold: (notification: Checked): void => {
+      tags.set(notification.id, notification.tag);
+    },
+    release: (id: string): boolean => tags.delete(id),
+    clear: (): void => {
+      tags.clear();
+    },
+  };
+}
+
+/** Shows a notification, once its picture came or took too long. */
+function revealer(
+  deps: NotifierDependencies,
+  account: NotifierAccount,
+  shown: Shown,
+  held: ReturnType<typeof waiting>,
+): (notification: Checked) => void {
+  const pictureOf = pictures(deps, account);
+  return (notification) => {
+    held.replace(notification.tag);
+    // Nothing is fetched for a picture the privacy options would hide.
+    if (notification.icon === '' || !deps.privacy().sender) {
+      display(deps, account, shown, notification);
+      return;
+    }
+    held.hold(notification);
+    void pictureOf(notification.icon).then((icon) => {
+      if (held.release(notification.id)) {
+        display(deps, account, shown, notification, icon);
+      }
+    });
+  };
 }
 
 /**
@@ -178,8 +292,11 @@ export function accountNotifier(
   account: NotifierAccount,
 ): AccountNotifier {
   const shown: Shown = new Map();
+  const held = waiting();
+  const reveal = revealer(deps, account, shown, held);
   const admitted = admission(deps);
   const close = (id: string): void => {
+    held.release(id);
     shown.get(id)?.native.close();
     shown.delete(id);
   };
@@ -192,7 +309,7 @@ export function accountNotifier(
       }
       // A silenced account's notifications count against no limit.
       if (!account.silenced() && admitted()) {
-        display(deps, account, shown, notification);
+        reveal(notification);
       }
     },
     close: (id) => {
@@ -201,6 +318,7 @@ export function accountNotifier(
       }
     },
     closeAll: () => {
+      held.clear();
       for (const id of shown.keys()) {
         close(id);
       }

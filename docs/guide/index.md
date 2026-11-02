@@ -129,8 +129,9 @@ account's name. Clicking one brings YapYap forward, switches to that account
 and opens the chat. Once an account has no unread chats left, here or on
 your phone, YapYap withdraws its notifications, so your notification list
 and the count on your dock clear too. They also go when YapYap quits. WhatsApp's own notification settings,
-such as sounds, still apply. YapYap shows its own icon rather than contact
-photos, and the text of a notification never leaves your computer.
+such as sounds, still apply. A notification shows the picture of the person
+or group it comes from, unless you hide who wrote. The text of a
+notification never leaves your computer.
 
 On macOS and Windows you can reply from a notification: YapYap opens the
 chat and puts your reply in the message box, where you check it and press

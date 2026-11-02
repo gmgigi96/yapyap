@@ -72,6 +72,7 @@ and an ESLint restriction forbids constructing `BrowserWindow` or
   WhatsApp's own origin, on the account's session, reads at most 2 MB, and
   keeps only a 64-pixel copy in memory for the sidebar. Nothing stores or
   logs the photo or its address.
+  A chat's picture in a notification follows the same rules (ADR 0011).
 - WhatsApp's views have one preload, for notifications, whose design is in
   ADR 0011, and screen shares. It also gives the assistant bar's five
   actions and the chat list divider's two to the adapter's isolated world

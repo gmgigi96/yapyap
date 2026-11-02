@@ -10,7 +10,7 @@ describe('createNotificationBridge', () => {
   it('sends each operation on its own fixed channel', () => {
     const ipc = { send: vi.fn(), on: vi.fn() };
     const bridge = createNotificationBridge(ipc);
-    const request = { id: '1', title: 'Alice', body: 'Hi', tag: '', silent: false };
+    const request = { id: '1', title: 'Alice', body: 'Hi', tag: '', silent: false, icon: '' };
     bridge.show(request);
     bridge.close('1');
     expect(ipc.send.mock.calls).toEqual([
