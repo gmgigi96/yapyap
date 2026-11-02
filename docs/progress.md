@@ -314,3 +314,6 @@ title, escape })` (`src/renderer/shared/mount.tsx`), which titles the
   gone, with their settings, windows, menu items, shortcuts, install links,
   release components and docs. The assistant keeps the chat readers and the
   capped download it shared with them.
+- Install page button (#579): the download button carries its own styles,
+  so it shows as a button on the install page too, not only on the home
+  page.
