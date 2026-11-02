@@ -345,3 +345,8 @@ title, escape })` (`src/renderer/shared/mount.tsx`), which titles the
 - No quick access panel (#585): the always-on-top panel, its settings and
   `quick-panel.json` are gone; the tray, the sidebar and the Account menu
   switch accounts and turn Do not disturb on or off.
+- MCP server design (#576, ADR 0019, C47 in ADR 0008): proposed a built-in
+  MCP server, off by default, on `127.0.0.1` and the official MCP SDK, with
+  fine-grained tokens (scopes, accounts, chat allowlist, limits, expiry)
+  that let AI agents read chats, write drafts and, with `messages:send`,
+  send to allowed chats. Design only; no code yet.
