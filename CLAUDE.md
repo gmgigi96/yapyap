@@ -14,7 +14,7 @@ under `docs/adr/`.
 
 ## Commands
 
-Use pnpm (version pinned in `package.json`) on Node.js 24 LTS.
+Use pnpm (version pinned in `package.json`) on Node.js 26 LTS.
 
 | Task                              | Command                                                                                             |
 | --------------------------------- | --------------------------------------------------------------------------------------------------- |
