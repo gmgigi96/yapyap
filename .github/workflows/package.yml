@@ -30,6 +30,10 @@ jobs:
           - { name: windows, os: windows-latest }
           - { name: macos, os: macos-latest }
     runs-on: ${{ matrix.os }}
+    # Packaging takes minutes, notarization included, and the cap leaves
+    # room for a slow notary queue. A hung runner step would otherwise hold
+    # the CI run for six hours.
+    timeout-minutes: 60
     env: &package-env
       # Never sign with whatever identity happens to be on the runner. A
       # release with the macOS certificate turns discovery on: electron-builder
@@ -144,6 +148,7 @@ jobs:
         include:
           - { name: linux-arm64, os: ubuntu-24.04-arm }
     runs-on: ${{ matrix.os }}
+    timeout-minutes: 60
     env: *package-env
     steps: *package-steps
 
@@ -157,6 +162,7 @@ jobs:
           - { arch: x86_64, os: ubuntu-latest }
           - { arch: aarch64, os: ubuntu-24.04-arm }
     runs-on: ${{ matrix.os }}
+    timeout-minutes: 60
     container:
       image: ghcr.io/flathub-infra/flatpak-github-actions:freedesktop-26.08@sha256:6ed6921bb5a9e1a916989971844f159b854b7b225880c381fa34f7a158863039
       options: --privileged
@@ -201,6 +207,7 @@ jobs:
   extensions:
     name: First-party extensions
     runs-on: ubuntu-latest
+    timeout-minutes: 60
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:

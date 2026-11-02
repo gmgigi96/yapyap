@@ -20,6 +20,9 @@ jobs:
         include:
           - { format: appimage, arch: x64, os: ubuntu-latest, artifact: packages-linux-x64 }
     runs-on: ${{ matrix.os }}
+    # Smoke runs take minutes. A hung runner step, such as a stalled pnpm
+    # self-install, would otherwise hold the CI run for six hours.
+    timeout-minutes: 20
     steps: &linux-steps
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -65,6 +68,7 @@ jobs:
           - { format: deb, arch: arm64, os: ubuntu-24.04-arm, artifact: packages-linux-arm64 }
           - { format: appimage, arch: arm64, os: ubuntu-24.04-arm, artifact: packages-linux-arm64 }
     runs-on: ${{ matrix.os }}
+    timeout-minutes: 20
     steps: *linux-steps
 
   flatpak:
@@ -77,6 +81,7 @@ jobs:
           - { arch: x86_64, os: ubuntu-latest }
           - { arch: aarch64, os: ubuntu-24.04-arm }
     runs-on: ${{ matrix.os }}
+    timeout-minutes: 20
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -117,6 +122,7 @@ jobs:
           - { arch: x64, os: ubuntu-latest, artifact: packages-linux-x64 }
           - { arch: arm64, os: ubuntu-24.04-arm, artifact: packages-linux-arm64 }
     runs-on: ${{ matrix.os }}
+    timeout-minutes: 20
     container:
       image: fedora:44@sha256:43b29f65a41eb9c35e1cd5323e3bdf3b655c2357a9f4f1ff2f9c2798e5045d80
       # The setuid Chromium sandbox needs namespaces that Docker's defaults block.
@@ -156,6 +162,7 @@ jobs:
     name: Smoke (aur-x86_64)
     if: inputs.scope == 'full'
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     container:
       image: archlinux:base-devel@sha256:0ccc8b2e55c0c26a6e501e892cc6b1cdea7cfdf77e432941320148b4dabd2bff
       # The setuid Chromium sandbox needs namespaces that Docker's defaults block.
@@ -216,6 +223,7 @@ jobs:
         include:
           - { format: nsis, arch: x64, os: windows-latest, installer: 'YapYap-*-win-setup.exe' }
     runs-on: ${{ matrix.os }}
+    timeout-minutes: 20
     steps: &windows-steps
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -277,11 +285,13 @@ jobs:
               installer: 'YapYap-*-win-arm64-portable.exe',
             }
     runs-on: ${{ matrix.os }}
+    timeout-minutes: 20
     steps: *windows-steps
 
   macos:
     name: Smoke (dmg-universal)
     runs-on: macos-latest
+    timeout-minutes: 20
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
