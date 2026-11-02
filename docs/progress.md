@@ -302,3 +302,6 @@ title, escape })` (`src/renderer/shared/mount.tsx`), which titles the
   the assistant extension's import and its one-time bar note are gone,
   and the manifest guide no longer warns about older YapYap releases.
   From 1.0, settings migrations start again at version 1.
+- CI job timeouts (#569): smoke jobs stop after 20 minutes and package
+  jobs after 60, so a hung runner step no longer holds a CI run for six
+  hours.
