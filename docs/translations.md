@@ -20,9 +20,9 @@ translation tools such as Weblate read and write:
   nesting.
 - Values are plain text. Markup such as `<b>` or `&amp;` is rejected, and
   YapYap always shows text as text.
-- `{{name}}` is a placeholder that YapYap fills in, such as an account or a
-  extension name. Keep every placeholder English has, spelled the same, wherever
-  your language puts it.
+- `{{name}}` is a placeholder that YapYap fills in, such as an account name.
+  Keep every placeholder English has, spelled the same, wherever your
+  language puts it.
 - A message that counts has one key per plural form: `unread_one`,
   `unread_other`, and `_zero`, `_two`, `_few` or `_many` where your language
   uses them ([CLDR plural rules](https://www.unicode.org/cldr/charts/latest/supplemental/language_plural_rules.html)).
@@ -37,9 +37,6 @@ translation is still usable.
 - `menu`: `&` marks the access key on Windows and Linux, and macOS ignores
   it. Keep one `&` per label, before a letter of your translation that no
   other item in the same menu uses.
-- `extensions.notificationTitle` and `menu.extensionCommand`: these name the
-  extension first, so its notifications and commands never pass for WhatsApp's
-  or YapYap's own. Keep `{{extension}}` at the start.
 - `notifications.titled`: with several accounts, the account a notification
   comes from heads it.
 - `report.issueTitle` and `report.crashTitle` become GitHub issue titles,
@@ -48,8 +45,6 @@ translation is still usable.
 - `settings.fields` are grouped by settings section, then keyed by
   setting, and their `options` by the values the settings file stores.
   Translate only the text.
-- `extensions.capabilities` describes what each permission lets an extension do, in
-  the words the consent window shows before installing.
 
 ## Checks
 

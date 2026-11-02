@@ -1,4 +1,4 @@
-import { compareVersions } from '../../../packages/sdk/src/version.ts';
+import { compareVersions } from '../../../apps/desktop/src/main/updates/version.ts';
 
 export const NVMRC = '.nvmrc';
 export const ROOT_PACKAGE = 'package.json';

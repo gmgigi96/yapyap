@@ -27,7 +27,6 @@ function setup(home: string | null = HOME) {
   const scheduled: { callback: () => void; ms: number }[] = [];
   const deps = {
     homeOf: vi.fn(() => home ?? undefined),
-    confined: vi.fn(() => false),
     openExternal: vi.fn(() => Promise.resolve()),
     popupPreferences: vi.fn(() => PREFERENCES),
     warn: vi.fn(),
@@ -60,18 +59,6 @@ describe('will-navigate', () => {
     const event = t.navigation(`${HOME}/send?phone=1`);
     t.fire('will-navigate', event);
     expect(event.preventDefault).not.toHaveBeenCalled();
-    expect(t.deps.openExternal).not.toHaveBeenCalled();
-  });
-
-  it('keeps a confined view, such as an extension, from opening links anywhere else', () => {
-    const t = setup('extension://org.example.hello');
-    t.deps.confined.mockReturnValue(true);
-    const event = t.navigation('https://example.com/');
-    t.fire('will-navigate', event);
-    expect(event.preventDefault).toHaveBeenCalledOnce();
-    expect(t.open('https://example.com/')).toEqual({ action: 'deny' });
-    expect(t.open('extension://org.example.hello/other')).toEqual({ action: 'deny' });
-    expect(t.open('about:blank')).toEqual({ action: 'deny' });
     expect(t.deps.openExternal).not.toHaveBeenCalled();
   });
 

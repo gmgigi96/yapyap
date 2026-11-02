@@ -4,13 +4,10 @@ import { About } from '../about/About.tsx';
 import { Accounts } from '../accounts/Accounts.tsx';
 import { CustomCodeEditor } from '../custom-code/CustomCode.tsx';
 import { Downloads } from '../downloads/Downloads.tsx';
-import { ExtensionConsent } from '../extension-consent/ExtensionConsent.tsx';
-import { Extensions } from '../extensions/Extensions.tsx';
 import { NewChat } from '../new-chat/NewChat.tsx';
 import { cancelOnEscape, Picker } from '../picker/Picker.tsx';
 import { ProxyLogin } from '../proxy-login/ProxyLogin.tsx';
 import { QuickPanel } from '../quick-panel/QuickPanel.tsx';
-import { RecordPrompt } from '../record-prompt/RecordPrompt.tsx';
 import { Recovery } from '../recovery/Recovery.tsx';
 import { ProblemReport } from '../report/ProblemReport.tsx';
 import { Settings } from '../settings/Settings.tsx';
@@ -48,18 +45,6 @@ const ENTRIES = [
     Downloads,
     { title: windows.downloads, ...close },
   ],
-  [
-    'extension consent',
-    () => import('../extension-consent/main.tsx'),
-    ExtensionConsent,
-    { title: windows.extensionConsent, ...close },
-  ],
-  [
-    'extensions',
-    () => import('../extensions/main.tsx'),
-    Extensions,
-    { title: windows.extensions, ...close },
-  ],
   ['new chat', () => import('../new-chat/main.tsx'), NewChat, { title: windows.newChat, ...close }],
   [
     'picker',
@@ -78,12 +63,6 @@ const ENTRIES = [
     () => import('../quick-panel/main.tsx'),
     QuickPanel,
     { title: windows.quickPanel },
-  ],
-  [
-    'record prompt',
-    () => import('../record-prompt/main.tsx'),
-    RecordPrompt,
-    { title: en.recording.windowTitle },
   ],
   ['recovery', () => import('../recovery/main.tsx'), Recovery, undefined],
   ['report', () => import('../report/main.tsx'), ProblemReport, { title: windows.report }],

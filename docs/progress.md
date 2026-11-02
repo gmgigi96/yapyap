@@ -309,3 +309,8 @@ title, escape })` (`src/renderer/shared/mount.tsx`), which titles the
   chat's picture, fetched by `AccountAvatars.picture` under the account
   photo's rules, only while the sender is shown, and waited for at most
   1.5 s (`main/notifications/notifier.ts`).
+- No extensions (#571, ADR 0018): the extension host, the marketplace, the
+  SDK and signing CLI, the extension template and the call recorder are
+  gone, with their settings, windows, menu items, shortcuts, install links,
+  release components and docs. The assistant keeps the chat readers and the
+  capped download it shared with them.

@@ -114,7 +114,6 @@ export default defineConfig(
       '.claude/',
       'docs/.vitepress/cache/',
       'docs/.vitepress/dist/',
-      'docs/api/',
     ],
   },
   eslint.configs.recommended,
@@ -160,7 +159,7 @@ export default defineConfig(
   },
   {
     // Every renderer must start from the hardened factory (ADR 0001).
-    files: ['apps/**/*.ts', 'packages/**/*.ts', 'extensions/**/*.ts'],
+    files: ['apps/**/*.ts'],
     ignores: ['apps/desktop/src/main/window/windows.ts'],
     rules: {
       'no-restricted-syntax': [

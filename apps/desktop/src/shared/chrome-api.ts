@@ -122,139 +122,6 @@ export interface SidebarState {
   readonly doNotDisturb: boolean;
 }
 
-/**
- * Who vouches for an extension: YapYap's own key, another author's key the user
- * pins on first install, that key reviewed by YapYap for the marketplace
- * (ADR 0014), or nobody (Developer Mode only).
- */
-export type ExtensionTrust = 'first-party' | 'reviewed' | 'third-party' | 'developer';
-
-/** Grants an extension asks for: capabilities, and network hosts one by one. */
-interface ExtensionGrants {
-  readonly capabilities: readonly string[];
-  readonly hosts: readonly string[];
-}
-
-/** What the consent window shows before an extension is installed or updated (ADR 0004). */
-export interface ExtensionConsent extends ExtensionGrants {
-  readonly id: string;
-  readonly name: string;
-  readonly version: string;
-  readonly author: { readonly name: string; readonly url: string | null };
-  /** The signing key's fingerprint; null for an unsigned extension. */
-  readonly fingerprint: string | null;
-  readonly trust: ExtensionTrust;
-  /** An update to an installed extension, which asks only because it wants more. */
-  readonly update: boolean;
-  /** On an update, what it asks for that was not granted before. */
-  readonly added: ExtensionGrants;
-}
-
-/** An extension the marketplace lists, as the Extensions window shows it (ADR 0014). */
-export interface MarketplaceEntry {
-  readonly id: string;
-  readonly name: string;
-  readonly summary: string;
-  readonly author: { readonly name: string; readonly url: string | null };
-  readonly homepage: string;
-  /** YapYap's own extension, or a third-party extension the maintainer reviewed. */
-  readonly review: 'official' | 'reviewed';
-  /** The newest version this YapYap runs, or the newest listed when none does. */
-  readonly version: string;
-  readonly capabilities: readonly string[];
-  readonly hosts: readonly string[];
-  /** What changed in `version`, as the marketplace lists it; null when it says nothing. */
-  readonly notes: string | null;
-  /** The installed version, if the extension is installed. */
-  readonly installed: string | null;
-  readonly action: 'install' | 'update' | 'installed' | 'incompatible';
-}
-
-/** The marketplace, or why it cannot be shown. */
-export interface MarketplaceView {
-  readonly status: 'ready' | 'unreachable' | 'invalid' | 'outdated';
-  readonly extensions: readonly MarketplaceEntry[];
-}
-
-/** What YapYap's call-recording window shows by the call (ADR 0015). */
-export interface RecordPromptState {
-  /** The extension that asked to record. */
-  readonly extension: string;
-  /** Asking whether to record, recording, or finished. */
-  readonly phase: 'asking' | 'recording' | 'ended';
-  /** When the recording started, as an ISO date; null until it does. */
-  readonly since: string | null;
-  /** Whether the user must first confirm the consent warning, as before the first recording. */
-  readonly consent: boolean;
-}
-
-/** What the main process tells the hidden recorder page to do. */
-export type RecorderCommand = 'start' | 'start-wav' | 'stop';
-
-/** How a call is recorded: Opus in WebM, or WAV (#442). */
-export type RecordingFormat = 'webm' | 'wav';
-
-/** An installed extension, as the Extensions window lists it. */
-export interface InstalledExtension {
-  readonly id: string;
-  /** The manifest's name, or the ID when the manifest cannot be read. */
-  readonly name: string;
-  readonly version: string;
-  readonly trust: ExtensionTrust;
-  /** Why the marketplace pulled this version, which YapYap then does not run (ADR 0014). */
-  readonly pulled: string | null;
-  /** What the user approved, and whether each grant still stands (#94). */
-  readonly grants: readonly ExtensionGrant[];
-  /** The extension's settings form, with what the user saved; empty when it has none (#98). */
-  readonly settings: readonly ExtensionSetting[];
-}
-
-/** One field of an extension's settings form, as YapYap renders it. */
-export interface ExtensionSetting {
-  readonly key: string;
-  readonly type: 'string' | 'number' | 'integer' | 'boolean';
-  readonly title?: string;
-  readonly description?: string;
-  /** The values to choose from, when the extension lists them. */
-  readonly enum?: readonly (string | number)[];
-  readonly minimum?: number;
-  readonly maximum?: number;
-  readonly maxLength?: number;
-  /** Missing until the user saves one. */
-  readonly value?: string | number | boolean;
-}
-
-/**
- * One capability or `network:<host>` the user approved: granted for the
- * whole extension, or, for one that acts on an account, account by account.
- */
-export interface ExtensionGrant {
-  readonly capability: string;
-  readonly granted: boolean;
-  /** Set for a capability that acts on the account on screen. */
-  readonly accounts?: readonly {
-    readonly id: string;
-    readonly name: string;
-    readonly granted: boolean;
-  }[];
-}
-
-export interface ExtensionList {
-  readonly extensions: readonly InstalledExtension[];
-  readonly developerMode: boolean;
-  /** What extensions asked YapYap to do, newest first; never what they sent or got. */
-  readonly activity: readonly ExtensionActivity[];
-}
-
-/** One call an extension made, by operation and outcome. */
-export interface ExtensionActivity {
-  readonly time: string;
-  readonly extension: string;
-  readonly capability: string;
-  readonly method: string;
-  readonly outcome: 'ok' | 'invalid' | 'not-granted' | 'rate-limited' | 'timeout' | 'failed';
-}
-
 /** The API the chrome preload exposes as `window.yapyap`, one function per operation. */
 export interface ChromeApi {
   readonly about: {
@@ -318,55 +185,6 @@ export interface ChromeApi {
     /** Switches to the account and brings YapYap's window back. */
     readonly open: (id: string) => Promise<void>;
     readonly setDoNotDisturb: (on: boolean) => Promise<void>;
-  };
-  /** YapYap's own window by a call, which asks to record it and shows the recording (ADR 0015). */
-  readonly recordPrompt: {
-    readonly state: () => Promise<RecordPromptState>;
-    /**
-     * The user's answer: record this call, or not, and whether they ticked
-     * the consent warning's box when the window showed it.
-     */
-    readonly answer: (record: boolean, consented: boolean) => Promise<void>;
-    readonly stop: () => Promise<void>;
-    readonly onState: (listener: (state: RecordPromptState) => void) => void;
-  };
-  /** The hidden page that captures and encodes a call's sound (ADR 0015). */
-  readonly recorder: {
-    readonly onCommand: (listener: (command: RecorderCommand) => void) => void;
-    /** Hands over encoded sound, in order. */
-    readonly chunk: (bytes: Uint8Array) => Promise<void>;
-    /** Everything was handed over after a stop. */
-    readonly ended: () => Promise<void>;
-    /** Capturing failed, so the recording is thrown away. */
-    readonly failed: () => Promise<void>;
-  };
-  readonly extensions: {
-    readonly list: () => Promise<ExtensionList>;
-    /** Downloads and verifies the marketplace's list; only the Marketplace tab asks (ADR 0014). */
-    readonly marketplace: () => Promise<MarketplaceView>;
-    /** Installs the version of a listed extension the marketplace offers, after the usual consent. */
-    readonly installListed: (id: string) => Promise<void>;
-    /** The pending install this consent window asks about. */
-    readonly consent: () => Promise<ExtensionConsent>;
-    /** `acknowledged`: the user accepted the risk of an extension YapYap has not reviewed. */
-    readonly answer: (install: boolean, acknowledged: boolean) => Promise<void>;
-    /** Saves one setting of an extension; null goes back to the extension's own default. */
-    readonly setSetting: (
-      id: string,
-      key: string,
-      value: string | number | boolean | null,
-    ) => Promise<ExtensionList>;
-    /** Grants a capability again or takes it back: for one account, or the whole extension with null. */
-    readonly setGrant: (
-      id: string,
-      capability: string,
-      account: string | null,
-      granted: boolean,
-    ) => Promise<ExtensionList>;
-    /** Removes an extension and everything it kept, once the user confirms (#332). */
-    readonly remove: (id: string) => Promise<ExtensionList>;
-    /** Calls `listener` whenever an extension is installed, updated, removed or stopped (#342). */
-    readonly onChange: (listener: () => void) => void;
   };
   readonly report: {
     /** The sanitized diagnostics the report would carry, for the user to review. */
@@ -436,20 +254,6 @@ export interface ShortcutList {
   readonly platform: string;
   readonly shortcuts: readonly ActiveShortcut[];
   readonly global: readonly GlobalShortcutState[];
-  /** The running extensions' commands (#443). */
-  readonly extensions: readonly ExtensionShortcutState[];
-}
-
-/** An extension command's keys: those it has now, those it suggests, and whether the user chose. */
-export interface ExtensionShortcutState {
-  /** `extension/command`. */
-  readonly id: string;
-  readonly label: string;
-  /** Empty when it has no keys, because the user removed them or something else has them. */
-  readonly accelerator: string;
-  /** Empty when the extension suggests none. */
-  readonly suggested: string;
-  readonly custom: boolean;
 }
 
 /** A shortcut that works from any app, and whether the system granted its keys. */
@@ -554,20 +358,6 @@ export const CHROME_CHANNELS = {
   sidebarStopSharing: 'sidebar:stop-sharing',
   reportDiagnostics: 'report:diagnostics',
   reportOpen: 'report:open',
-  recordPromptState: 'record-prompt:state',
-  recordPromptAnswer: 'record-prompt:answer',
-  recordPromptStop: 'record-prompt:stop',
-  recorderChunk: 'recorder:chunk',
-  recorderEnded: 'recorder:ended',
-  recorderFailed: 'recorder:failed',
-  extensionsList: 'extensions:list',
-  extensionsConsent: 'extensions:consent',
-  extensionsAnswer: 'extensions:answer',
-  extensionsSetGrant: 'extensions:set-grant',
-  extensionsSetSetting: 'extensions:set-setting',
-  extensionsRemove: 'extensions:remove',
-  extensionsMarketplace: 'extensions:marketplace',
-  extensionsInstallListed: 'extensions:install-listed',
   shortcutsList: 'shortcuts:list',
   shortcutsSet: 'shortcuts:set',
   downloadsList: 'downloads:list',
@@ -594,19 +384,7 @@ export const CHROME_CHANNELS = {
 /** Tells the sidebar and the quick panel how the accounts stand. */
 export const SIDEBAR_STATE_EVENT = 'sidebar:state-changed';
 
-/** Tells an open Extensions window that the installed extensions changed (#342). */
-export const EXTENSIONS_CHANGED_EVENT = 'extensions:changed';
-
-/** Tells the call-recording window how the recording stands. */
-export const RECORD_PROMPT_STATE_EVENT = 'record-prompt:state-changed';
-
-/** Tells the recorder page to start or stop capturing. */
-export const RECORDER_COMMAND_EVENT = 'recorder:command';
-
 /** What the main process sends on each event channel, the only ones a chrome page hears. */
 export interface ChromeEvents {
   readonly [SIDEBAR_STATE_EVENT]: SidebarState;
-  readonly [EXTENSIONS_CHANGED_EVENT]: undefined;
-  readonly [RECORD_PROMPT_STATE_EVENT]: RecordPromptState;
-  readonly [RECORDER_COMMAND_EVENT]: RecorderCommand;
 }

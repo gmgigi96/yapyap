@@ -29,7 +29,7 @@ export function supportsInlineReply(platform: string): boolean {
 
 async function focused(contents: ReplyContents, code = FOCUS_COMPOSER): Promise<boolean> {
   // Typing goes to the page that has the keyboard, so WhatsApp's view takes
-  // it first: a YapYap window, such as Extensions, may still hold it (#376).
+  // it first: a YapYap window, such as Settings, may still hold it (#376).
   contents.focus();
   const result = await runInAdapterWorld(contents, code).catch(() => false);
   return result === true;
@@ -56,10 +56,9 @@ export async function pressEnter(contents: ReplyContents & KeyContents): Promise
 }
 
 /**
- * Puts an extension's draft into the open chat's message box, as if typed,
- * for the user to edit and send (ADR 0004: extensions never send). False when
- * no chat is open to take it. The text is message content, so it is never
- * logged.
+ * Puts the assistant's draft into the open chat's message box, as if typed,
+ * for the user to edit and send. False when no chat is open to take it. The
+ * text is message content, so it is never logged.
  */
 export async function insertDraft(contents: ReplyContents, text: string): Promise<boolean> {
   if (!(await focused(contents))) {
@@ -83,9 +82,9 @@ export async function replaceDraft(contents: ReplyContents, text: string): Promi
 }
 
 /**
- * What the user typed in the open chat's message box, for an extension holding
- * `composer:read-draft`; null when no chat is open. It is message content,
- * so it is never logged.
+ * What the user typed in the open chat's message box, for the assistant to
+ * rewrite; null when no chat is open. It is message content, so it is never
+ * logged.
  */
 export async function readDraft(contents: ReplyContents): Promise<string | null> {
   const found = await runInAdapterWorld(contents, READ_COMPOSER);

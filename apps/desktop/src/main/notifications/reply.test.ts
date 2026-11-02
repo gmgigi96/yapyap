@@ -48,7 +48,7 @@ describe('draftReply', () => {
 });
 
 describe('insertDraft', () => {
-  it('types an extension’s draft into the open chat’s message box, and nothing when none is open', async () => {
+  it('types the assistant’s draft into the open chat’s message box, and nothing when none is open', async () => {
     const t = setup([true, false]);
     await expect(insertDraft(t.contents, 'Draft')).resolves.toBe(true);
     expect(t.contents.insertText).toHaveBeenCalledExactlyOnceWith('Draft');

@@ -54,34 +54,6 @@ describe('createChromeBridge', () => {
     await api.sidebar.stopSharing('a');
     await api.quickPanel.open('a');
     await api.quickPanel.setDoNotDisturb(true);
-    expect(await api.extensions.list()).toBe('ignored');
-    expect(await api.extensions.consent()).toBe('ignored');
-    await api.extensions.answer(true, false);
-    expect(await api.extensions.setSetting('org.example.hello', 'model', 'small')).toBe('ignored');
-    expect(await api.extensions.setGrant('org.example.hello', 'secrets:own', null, false)).toBe(
-      'ignored',
-    );
-    expect(await api.extensions.remove('org.example.hello')).toBe('ignored');
-    expect(await api.extensions.marketplace()).toBe('ignored');
-    await api.extensions.installListed('org.example.hello');
-    expect(await api.recordPrompt.state()).toBe('ignored');
-    await api.recordPrompt.answer(true, false);
-    await api.recordPrompt.stop();
-    await api.recorder.chunk(new Uint8Array([1]));
-    await api.recorder.ended();
-    await api.recorder.failed();
-    const onPrompt = vi.fn();
-    api.recordPrompt.onState(onPrompt);
-    expect(listen).toHaveBeenLastCalledWith('record-prompt:state-changed', onPrompt);
-    const onCommand = vi.fn();
-    api.recorder.onCommand(onCommand);
-    expect(listen).toHaveBeenLastCalledWith('recorder:command', onCommand);
-    const changed = vi.fn();
-    api.extensions.onChange(changed);
-    const [event, heard] = listen.mock.calls.at(-1) as [string, (payload: unknown) => void];
-    expect(event).toBe('extensions:changed');
-    heard(undefined);
-    expect(changed).toHaveBeenCalledExactlyOnceWith();
     expect(await api.shortcuts.list()).toBe('ignored');
     expect(await api.shortcuts.set('settings', 'CmdOrCtrl+K')).toBe('ignored');
     expect(await api.downloads.list()).toBe('ignored');
@@ -142,20 +114,6 @@ describe('createChromeBridge', () => {
       ['sidebar:stop-sharing', 'a'],
       ['quick-panel:open', 'a'],
       ['quick-panel:set-do-not-disturb', true],
-      ['extensions:list'],
-      ['extensions:consent'],
-      ['extensions:answer', true, false],
-      ['extensions:set-setting', 'org.example.hello', 'model', 'small'],
-      ['extensions:set-grant', 'org.example.hello', 'secrets:own', null, false],
-      ['extensions:remove', 'org.example.hello'],
-      ['extensions:marketplace'],
-      ['extensions:install-listed', 'org.example.hello'],
-      ['record-prompt:state'],
-      ['record-prompt:answer', true, false],
-      ['record-prompt:stop'],
-      ['recorder:chunk', new Uint8Array([1])],
-      ['recorder:ended'],
-      ['recorder:failed'],
       ['shortcuts:list'],
       ['shortcuts:set', 'settings', 'CmdOrCtrl+K'],
       ['downloads:list'],
@@ -187,9 +145,6 @@ describe('createChromeBridge', () => {
       'accounts',
       'sidebar',
       'quickPanel',
-      'extensions',
-      'recordPrompt',
-      'recorder',
       'report',
       'spelling',
       'picker',
@@ -207,20 +162,7 @@ describe('createChromeBridge', () => {
       'stopSharing',
       'onState',
     ]);
-    expect(Object.keys(api.extensions)).toEqual([
-      'list',
-      'consent',
-      'answer',
-      'setSetting',
-      'setGrant',
-      'remove',
-      'marketplace',
-      'installListed',
-      'onChange',
-    ]);
     expect(Object.keys(api.quickPanel)).toEqual(['open', 'setDoNotDisturb']);
-    expect(Object.keys(api.recordPrompt)).toEqual(['state', 'answer', 'stop', 'onState']);
-    expect(Object.keys(api.recorder)).toEqual(['onCommand', 'chunk', 'ended', 'failed']);
     expect(Object.keys(api.chat)).toEqual(['openNumber']);
     expect(Object.keys(api.shortcuts)).toEqual(['list', 'set']);
     expect(Object.keys(api.downloads)).toEqual(['list', 'act', 'clear']);

@@ -3,8 +3,7 @@ import { readdir, readFile } from 'node:fs/promises';
 import { createServer } from 'node:http';
 import type { AddressInfo } from 'node:net';
 import { join } from 'node:path';
-import { barNames, barSays, openAssistantSettings } from './assistant-helpers.ts';
-import { clickInBar } from './extension-helpers.ts';
+import { barNames, barSays, clickInBar, openAssistantSettings } from './assistant-helpers.ts';
 import { closeApp, expect, launchApp, test, whatsAppPage } from './fixtures.ts';
 
 /** A tiny MIT-licensed GGUF model (see `test/models/LICENSE-stories260K.txt`). */

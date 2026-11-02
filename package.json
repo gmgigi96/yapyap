@@ -16,14 +16,14 @@
     "test": "vitest run",
     "test:coverage": "vitest run --coverage",
     "commitlint": "commitlint --from origin/master --to HEAD --verbose",
-    "test:e2e": "pnpm --filter \"./extensions/**\" build && pnpm --filter @yapyap/desktop test:e2e",
+    "test:e2e": "pnpm --filter @yapyap/desktop test:e2e",
     "check:licenses": "pnpm --filter @yapyap/scripts check-licenses",
     "test:mutation": "stryker run",
     "docs:dev": "pnpm --filter @yapyap/docs dev",
     "docs:build": "pnpm --filter @yapyap/docs build",
     "package": "pnpm --filter @yapyap/desktop build && node scripts/src/bin/package.ts",
     "test:smoke": "pnpm --filter @yapyap/desktop test:smoke",
-    "test:bench": "pnpm --filter \"./extensions/**\" build && pnpm --filter @yapyap/desktop test:bench",
+    "test:bench": "pnpm --filter @yapyap/desktop test:bench",
     "screenshots": "pnpm build && pnpm --filter @yapyap/desktop screenshots"
   },
   "devDependencies": {

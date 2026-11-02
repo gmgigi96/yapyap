@@ -8,9 +8,6 @@
       "entry": ["e2e/**/*.spec.ts", "src/preload/*/index.ts"],
       "project": ["src/**/*.{ts,tsx}", "e2e/**/*.ts", "test/**/*.ts"]
     },
-    "docs": {
-      "entry": ["marketplace/*.ts"]
-    },
     "scripts": {
       "entry": ["src/bin/*.ts"],
       "project": ["src/**/*.ts"]

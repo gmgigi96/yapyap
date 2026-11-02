@@ -24,7 +24,7 @@ export interface SecretStore {
   readonly get: (name: string) => Promise<string | undefined>;
   /** Keeps a secret, or forgets it when `value` is undefined; false if it cannot be kept. */
   readonly set: (name: string, value: string | undefined) => Promise<boolean>;
-  /** Forgets every secret whose name starts with `prefix`, such as a removed extension's. */
+  /** Forgets every secret whose name starts with `prefix`, such as a removed account's chat names. */
   readonly forgetAll: (prefix: string) => void;
 }
 

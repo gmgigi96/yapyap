@@ -1,4 +1,4 @@
-/** This repository's GitHub releases, which hold every package and extension archive. */
+/** This repository's GitHub releases, which hold every package. */
 const RELEASES = 'https://github.com/vascoguita/yapyap/releases';
 
 /** Where a release's files are downloaded from: `${RELEASE_DOWNLOADS}/<tag>/<file>` (ADR 0014). */

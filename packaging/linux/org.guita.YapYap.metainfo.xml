@@ -16,8 +16,7 @@
     </p>
     <p>
       It has a built-in AI writing assistant, with a private model or the provider you choose, that
-      only ever inserts drafts. It has no telemetry, keeps its logs local and redacted, and supports
-      signed, sandboxed extensions.
+      only ever inserts drafts. It has no telemetry and keeps its logs local and redacted.
     </p>
     <p>YapYap is unofficial and is not affiliated with, endorsed by, or sponsored by WhatsApp or Meta.</p>
   </description>

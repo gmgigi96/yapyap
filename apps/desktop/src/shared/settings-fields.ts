@@ -11,10 +11,8 @@ export const SETTINGS_SECTIONS = [
   { id: 'appearance', title: en.settings.sections.appearance },
   { id: 'reliability', title: en.settings.sections.reliability },
   { id: 'downloads', title: en.settings.sections.downloads },
-  { id: 'recording', title: en.settings.sections.recording },
   { id: 'privacy', title: en.settings.sections.privacy },
   { id: 'network', title: en.settings.sections.network },
-  { id: 'extensions', title: en.settings.sections.extensions },
 ] as const;
 
 type SettingsSection = (typeof SETTINGS_SECTIONS)[number]['id'];
@@ -172,19 +170,6 @@ export const SETTING_FIELDS: readonly SettingField[] = [
   },
   { ...described('downloads', 'openWhenDone'), restart: false },
   {
-    ...described('recording', 'format'),
-    restart: false,
-    options: choices(text.recording.format.options),
-  },
-  {
-    ...described('recording', 'folder'),
-    restart: false,
-    folder: {
-      defaultName: en.settings.defaultRecordingFolder,
-      useDefault: en.settings.useDefaultRecordingFolder,
-    },
-  },
-  {
     ...described('network', 'proxyMode'),
     restart: false,
     options: choices(text.network.proxyMode.options),
@@ -193,11 +178,5 @@ export const SETTING_FIELDS: readonly SettingField[] = [
     ...described('network', 'proxyServer'),
     restart: false,
     text: { placeholder: en.settings.proxyPlaceholder },
-  },
-  { ...described('extensions', 'developerMode'), restart: false },
-  {
-    ...described('extensions', 'chatMessages'),
-    restart: false,
-    options: choices(text.extensions.chatMessages.options),
   },
 ];

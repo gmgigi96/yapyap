@@ -110,15 +110,6 @@ export const SettingsSchema = Type.Object(
       },
       { default: {}, additionalProperties: false },
     ),
-    recording: Type.Object(
-      {
-        // Empty means `YapYap` in the Music folder; set only through the folder picker.
-        folder: Type.String({ maxLength: 4096, default: '' }),
-        // Opus in WebM is small; WAV is large, but every program opens it (#442).
-        format: Type.Union([Type.Literal('webm'), Type.Literal('wav')], { default: 'webm' }),
-      },
-      { default: {}, additionalProperties: false },
-    ),
     privacy: Type.Object(
       {
         crashReports: Type.Union(
@@ -162,27 +153,10 @@ export const SettingsSchema = Type.Object(
           ),
           { default: {} },
         ),
-        // Keys the user chose for extension commands, by `extension/command`; empty means none.
-        extensions: Type.Record(Type.String(), Type.String({ maxLength: 64 }), {
-          default: {},
-          maxProperties: 128,
-          propertyNames: { pattern: '^[A-Za-z0-9._-]{1,200}/[A-Za-z0-9._-]{1,64}$' },
-        }),
         // Shortcuts that work from any app; empty means none.
         global: Type.Object(
           { toggleWindow: Type.String({ maxLength: 64, default: '' }) },
           { default: {}, additionalProperties: false },
-        ),
-      },
-      { default: {}, additionalProperties: false },
-    ),
-    extensions: Type.Object(
-      {
-        developerMode: Type.Boolean({ default: false }),
-        // How many of the open chat's latest messages an extension may read (#100).
-        chatMessages: Type.Union(
-          [Type.Literal('5'), Type.Literal('10'), Type.Literal('20'), Type.Literal('50')],
-          { default: '20' },
         ),
       },
       { default: {}, additionalProperties: false },

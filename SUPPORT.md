@@ -5,7 +5,6 @@
   Please attach the output of **Help → Copy diagnostics**. It is redacted and
   contains no message content.
 - **Feature requests:** [open a feature request](https://github.com/vascoguita/yapyap/issues/new?template=feature_request.yml)
-- **Extension ideas:** [open an extension request](https://github.com/vascoguita/yapyap/issues/new?template=extension_request.yml)
 - **Security issues:** see [SECURITY.md](SECURITY.md). Never report these in public.
 - **Documentation:** https://yapyap.guita.org/
 

@@ -3,20 +3,12 @@ import type { ZoomStep } from './appearance/zoom.ts';
 import { PRODUCT_NAME } from './identity/product.ts';
 import type { AccountSummary } from '../shared/chrome-api.ts';
 import { en } from '../shared/messages/en.ts';
-import type { ExtensionCommand, ExtensionPanel } from './extensions/runtime.ts';
-import {
-  acceleratorOf,
-  extensionShortcuts,
-  type ChosenExtensionShortcuts,
-  type CustomShortcuts,
-  type ShortcutId,
-} from '../shared/shortcuts.ts';
+import { acceleratorOf, type CustomShortcuts, type ShortcutId } from '../shared/shortcuts.ts';
 
 /** The platform the menu is for, and the keys the user chose instead of YapYap's. */
 interface Keys {
   readonly platform: string;
   readonly custom: CustomShortcuts;
-  readonly chosen?: ChosenExtensionShortcuts;
 }
 
 /** Positions with a shortcut: the digits 1 to 9. */
@@ -42,15 +34,7 @@ export interface MenuActions {
   readonly setMuted: (muted: boolean) => void;
   readonly openAbout: () => void;
   readonly openSettings: () => void;
-  readonly openExtensions: () => void;
-  readonly installExtension: () => void;
   readonly openCustomCode: () => void;
-  /** Commands of the running extensions, each under its extension's name (#98). */
-  readonly extensionCommands: readonly ExtensionCommand[];
-  readonly runExtensionCommand: (extension: string, command: string) => void;
-  /** Panels of the running extensions, each under its extension's name (#98). */
-  readonly extensionPanels: readonly ExtensionPanel[];
-  readonly openExtensionPanel: (extension: string) => void;
   readonly openNewChat: () => void;
   readonly clearCache: () => void;
   readonly resetSession: () => void;
@@ -280,58 +264,17 @@ function commonItems(
   return { about: [about], settings: [settings], help: [shortcuts, report, diagnostics, trace] };
 }
 
-/**
- * An extension's commands never pass for YapYap's own: they sit in their own
- * submenu, each named after its extension.
- */
-function extensionCommandItems(actions: MenuActions, keys: Keys): MenuItemConstructorOptions[] {
-  const shortcuts = extensionShortcuts(
-    actions.extensionCommands,
-    keys.platform,
-    keys.custom,
-    keys.chosen,
-  );
-  const commands = actions.extensionCommands.map(({ extension, extensionName, id, title }) => ({
-    label: en.menu.extensionCommand({ extension: extensionName, title }),
-    accelerator: shortcuts.get(`${extension}/${id}`),
-    click: () => {
-      actions.runExtensionCommand(extension, id);
-    },
-  }));
-  const panels = actions.extensionPanels.map(({ extension, extensionName, title }) => ({
-    label: en.menu.extensionCommand({ extension: extensionName, title }),
-    click: () => {
-      actions.openExtensionPanel(extension);
-    },
-  }));
-  if (commands.length + panels.length === 0) {
-    return [];
-  }
-  const apart: MenuItemConstructorOptions[] =
-    commands.length > 0 && panels.length > 0 ? [{ type: 'separator' }] : [];
-  return [{ label: en.menu.extensionCommands, submenu: [...commands, ...apart, ...panels] }];
-}
-
-/**
- * Extensions sit beside Settings, as Settings is where Developer Mode lives;
- * the user's own code is the other way to change WhatsApp.
- */
-function extensionItems(actions: MenuActions, keys: Keys): MenuItemConstructorOptions[] {
-  return [
-    { label: en.menu.extensions, click: actions.openExtensions },
-    { label: en.menu.installExtension, click: actions.installExtension },
-    { label: en.menu.customCode, click: actions.openCustomCode },
-    ...extensionCommandItems(actions, keys),
-  ];
+/** The user's own code sits beside Settings, as Settings is where Developer Mode lives. */
+function customCode(actions: MenuActions): MenuItemConstructorOptions {
+  return { label: en.menu.customCode, click: actions.openCustomCode };
 }
 
 export function buildMenuTemplate(
   platform: string,
   actions: MenuActions,
   custom: CustomShortcuts = {},
-  chosen: ChosenExtensionShortcuts = {},
 ): MenuItemConstructorOptions[] {
-  const keys = { platform, custom, chosen };
+  const keys = { platform, custom };
   const { about, settings, help } = commonItems(actions, keys);
   const quit: MenuItemConstructorOptions = { role: 'quit', ...keyed('quit', keys) };
   const standard: MenuItemConstructorOptions[] = [
@@ -342,7 +285,7 @@ export function buildMenuTemplate(
   if (platform !== 'darwin') {
     const file: MenuItemConstructorOptions = {
       label: en.menu.file,
-      submenu: [...settings, ...extensionItems(actions, keys), { type: 'separator' }, quit],
+      submenu: [...settings, customCode(actions), { type: 'separator' }, quit],
     };
     return [
       file,
@@ -353,7 +296,7 @@ export function buildMenuTemplate(
     ];
   }
   return [
-    macAppMenu([...about], [...settings, ...extensionItems(actions, keys)], quit, keys),
+    macAppMenu([...about], [...settings, customCode(actions)], quit, keys),
     { role: 'fileMenu' },
     accountMenu(actions, keys),
     assistantMenu(actions, keys),

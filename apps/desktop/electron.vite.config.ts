@@ -44,21 +44,13 @@ function engineWasm(): Plugin {
 }
 
 export default defineConfig({
-  main: {
-    resolve: {
-      // fflate's Node build declares its own `require`, which clashes with the
-      // one the bundle defines. Extension archives use only its synchronous
-      // functions, which the browser build has without worker threads.
-      alias: [{ find: /^fflate$/, replacement: 'fflate/browser' }],
-    },
-  },
+  main: {},
   preload: {
     build: {
       rolldownOptions: {
         input: {
           chrome: resolve(import.meta.dirname, 'src/preload/chrome/index.ts'),
           whatsapp: resolve(import.meta.dirname, 'src/preload/whatsapp/index.ts'),
-          extension: resolve(import.meta.dirname, 'src/preload/extension/index.ts'),
           engine: resolve(import.meta.dirname, 'src/preload/engine/index.ts'),
         },
         // Sandboxed preloads cannot load ES modules.

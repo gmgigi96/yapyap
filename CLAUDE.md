@@ -5,9 +5,9 @@ Windows and macOS. It wraps `https://web.whatsapp.com` in a hardened Electron
 shell, so WhatsApp runs on the stock Chromium it is built for. It adds isolated
 multi-account sessions, native notifications, a tray, and recovery tools. Its
 main feature is a built-in AI writing assistant, with a private model on the
-user's computer or the provider they choose (ADR 0017). It also hosts a
-sandboxed, signed extension system. It has no telemetry, and it is not
-affiliated with WhatsApp or Meta.
+user's computer or the provider they choose (ADR 0017). It has no extension
+system (ADR 0018), no telemetry, and it is not affiliated with WhatsApp or
+Meta.
 
 Start every session by reading this file, `docs/progress.md`, and the ADRs
 under `docs/adr/`.
@@ -16,39 +16,35 @@ under `docs/adr/`.
 
 Use pnpm (version pinned in `package.json`) on Node.js 24 LTS.
 
-| Task                              | Command                                                                                                          |
-| --------------------------------- | ---------------------------------------------------------------------------------------------------------------- |
-| Install                           | `pnpm install` (CI: `pnpm install --frozen-lockfile`)                                                            |
-| Run the app (hot reload)          | `pnpm dev`                                                                                                       |
-| Build all packages                | `pnpm build`                                                                                                     |
-| Lint (ESLint + Prettier + knip)   | `pnpm lint`                                                                                                      |
-| Format                            | `pnpm format`                                                                                                    |
-| Typecheck                         | `pnpm typecheck`                                                                                                 |
-| Unit + integration tests          | `pnpm test`                                                                                                      |
-| Coverage (100% gate)              | `pnpm test:coverage`                                                                                             |
-| E2E tests                         | `dbus-run-session -- xvfb-run -a pnpm test:e2e` on Linux, else `pnpm test:e2e`                                   |
-| Mutation tests (≥ 90%)            | `pnpm test:mutation` (PR CI mutates changed in-scope files only)                                                 |
-| Performance benchmark             | `xvfb-run -a pnpm test:bench` (nightly; budgets in `apps/desktop/e2e/bench/`, ADR 0009)                          |
-| Website screenshots (Linux)       | `dbus-run-session -- xvfb-run -a -s "-screen 0 3840x2400x24" pnpm screenshots`                                   |
-| Commit messages                   | `pnpm commitlint`                                                                                                |
-| Regenerate the message types      | `node scripts/src/bin/i18n-types.ts` (after changing `locales/en.json`)                                          |
-| Check translation catalogs        | `node scripts/src/bin/check-catalogs.ts` (part of `pnpm lint`)                                                   |
-| Check chrome CSS is logical       | `node scripts/src/bin/check-logical-css.ts` (part of `pnpm lint`; no physical left/right, ADR 0012)              |
-| License compatibility             | `pnpm check:licenses`                                                                                            |
-| Vulnerability audit               | `pnpm audit --audit-level high`                                                                                  |
-| Docs site (dev / build)           | `pnpm docs:dev` / `pnpm docs:build`                                                                              |
-| Package installers for this OS    | `pnpm package` (output in `apps/desktop/release/`)                                                               |
-| Smoke-test an installed package   | `YAPYAP_PACKAGED_EXECUTABLE=<path> pnpm test:smoke`                                                              |
-| Verify hardened fuses             | `node scripts/src/bin/verify-fuses.ts <executable or .app>`                                                      |
-| AUR PKGBUILD and .SRCINFO         | `node scripts/src/bin/aur.ts <version> <amd64 .deb> <arm64 .deb> <output dir>`                                   |
-| Homebrew, winget, Scoop manifests | `node scripts/src/bin/distribution.ts <version> <SHA256SUMS> <output dir>`                                       |
-| Check those manifests             | `bash packaging/distribution/test.sh` (needs podman or docker; runs `brew style` and `brew audit`)               |
-| Build an npm package              | `pnpm --filter @yapyap/extension-sdk build` (or `@yapyap/extension-sign`; writes `dist/`)                        |
-| Sign, verify or pack an extension | `node packages/extension-sign/src/bin/yapyap-extension-sign.ts sign --key <pem> <folder>`                        |
-| Check the extension marketplace   | `node scripts/src/bin/marketplace-index.ts marketplace [site dir]` (signs with `EXTENSION_SIGNING_KEY` when set) |
-| Sign first-party extensions (CI)  | `EXTENSION_SIGNING_KEY=… node scripts/src/bin/sign-extensions.ts` after building `extensions/`                   |
-| Test the apt/dnf/pacman repos     | `bash packaging/repository/test.sh` (needs podman or docker)                                                     |
-| Flatpak bundle (Linux)            | See the `flatpak` job in `.github/workflows/package.yml`; it runs in Flathub's container                         |
+| Task                              | Command                                                                                             |
+| --------------------------------- | --------------------------------------------------------------------------------------------------- |
+| Install                           | `pnpm install` (CI: `pnpm install --frozen-lockfile`)                                               |
+| Run the app (hot reload)          | `pnpm dev`                                                                                          |
+| Build all packages                | `pnpm build`                                                                                        |
+| Lint (ESLint + Prettier + knip)   | `pnpm lint`                                                                                         |
+| Format                            | `pnpm format`                                                                                       |
+| Typecheck                         | `pnpm typecheck`                                                                                    |
+| Unit + integration tests          | `pnpm test`                                                                                         |
+| Coverage (100% gate)              | `pnpm test:coverage`                                                                                |
+| E2E tests                         | `dbus-run-session -- xvfb-run -a pnpm test:e2e` on Linux, else `pnpm test:e2e`                      |
+| Mutation tests (≥ 90%)            | `pnpm test:mutation` (PR CI mutates changed in-scope files only)                                    |
+| Performance benchmark             | `xvfb-run -a pnpm test:bench` (nightly; budgets in `apps/desktop/e2e/bench/`, ADR 0009)             |
+| Website screenshots (Linux)       | `dbus-run-session -- xvfb-run -a -s "-screen 0 3840x2400x24" pnpm screenshots`                      |
+| Commit messages                   | `pnpm commitlint`                                                                                   |
+| Regenerate the message types      | `node scripts/src/bin/i18n-types.ts` (after changing `locales/en.json`)                             |
+| Check translation catalogs        | `node scripts/src/bin/check-catalogs.ts` (part of `pnpm lint`)                                      |
+| Check chrome CSS is logical       | `node scripts/src/bin/check-logical-css.ts` (part of `pnpm lint`; no physical left/right, ADR 0012) |
+| License compatibility             | `pnpm check:licenses`                                                                               |
+| Vulnerability audit               | `pnpm audit --audit-level high`                                                                     |
+| Docs site (dev / build)           | `pnpm docs:dev` / `pnpm docs:build`                                                                 |
+| Package installers for this OS    | `pnpm package` (output in `apps/desktop/release/`)                                                  |
+| Smoke-test an installed package   | `YAPYAP_PACKAGED_EXECUTABLE=<path> pnpm test:smoke`                                                 |
+| Verify hardened fuses             | `node scripts/src/bin/verify-fuses.ts <executable or .app>`                                         |
+| AUR PKGBUILD and .SRCINFO         | `node scripts/src/bin/aur.ts <version> <amd64 .deb> <arm64 .deb> <output dir>`                      |
+| Homebrew, winget, Scoop manifests | `node scripts/src/bin/distribution.ts <version> <SHA256SUMS> <output dir>`                          |
+| Check those manifests             | `bash packaging/distribution/test.sh` (needs podman or docker; runs `brew style` and `brew audit`)  |
+| Test the apt/dnf/pacman repos     | `bash packaging/repository/test.sh` (needs podman or docker)                                        |
+| Flatpak bundle (Linux)            | See the `flatpak` job in `.github/workflows/package.yml`; it runs in Flathub's container            |
 
 Update this table in the PR that adds a command.
 
@@ -61,11 +57,6 @@ Update this table in the PR that adds a command.
 | Chrome renderer  | `apps/desktop/src/renderer/`                                                      | YapYap's own UI (Preact), served from `app://`                                          |
 | WhatsApp adapter | `apps/desktop/src/adapter/`                                                       | **The only place** with WhatsApp DOM knowledge; versioned selectors; returns plain data |
 | AI assistant     | `apps/desktop/src/main/assistant/`, `src/renderer/engine/`, `src/preload/engine/` | Setup, providers, bar, private model and its engine window (ADR 0017)                   |
-| Extension host   | `apps/desktop/src/main/extensions/`                                               | Sandboxed extension renderers, RPC, capabilities, signatures                            |
-| Extension SDK    | `packages/sdk/`                                                                   | Typed extension API and manifest JSON Schema (TSDoc on every export)                    |
-| Signing CLI      | `packages/extension-sign/`                                                        | Ed25519 signing and verification (PKCS#8 PEM keys)                                      |
-| Extensions       | `extensions/call-recorder/`, `extensions/example/`                                | First-party extensions                                                                  |
-| Template         | `templates/extension/`                                                            | Standalone extension repository for authors, built against the npm SDK and signing CLI  |
 | Docs             | `docs/`                                                                           | VitePress site, ADRs in `docs/adr/`                                                     |
 | Repo automation  | `scripts/`                                                                        | Tested automation such as pinned-version checks; entries in `scripts/src/bin/`          |
 | Packaging        | `apps/desktop/electron-builder.yml`, `packaging/`                                 | electron-builder targets, fuses, desktop entry, AppStream metainfo                      |
@@ -85,8 +76,7 @@ Update this table in the PR that adds a command.
    WhatsApp page and anonymized fixtures only.
 4. **Comments explain why, never what.** Good reasons are constraints,
    WhatsApp quirks, security reasoning, and workarounds (with a link to the
-   YapYap issue). No commented-out code, and no TODOs: open an issue. Every
-   exported SDK symbol has TSDoc.
+   YapYap issue). No commented-out code, and no TODOs: open an issue.
 5. **Coverage.** 100% lines and branches. `istanbul`, `c8` and `v8` ignore
    comments are forbidden (enforced by lint). Coverage exclusions live only in
    `vitest.config.ts` and must be justified in ADR 0005.
@@ -98,12 +88,11 @@ Update this table in the PR that adds a command.
    Other requirements: strict CSP for app UI, minimal typed preloads, sender
    and payload validation on every IPC call, deny-by-default permissions,
    navigation and `window.open` guards, hardened fuses. No remote code except
-   WhatsApp itself and signed user-installed extensions. See ADR 0001.
-8. **Extension trust model.** Extensions are Ed25519-signed. They run in their own
-   sandboxed renderer and partition, talk to the host over one MessagePort
-   with schema-validated, capability-checked, rate-limited RPC, and never
-   touch the WhatsApp DOM. There is no send-message API: extensions insert
-   drafts only. See ADR 0004.
+   WhatsApp itself. See ADR 0001.
+8. **No extensions.** YapYap runs no third-party code beside WhatsApp, and
+   has no extension host, marketplace or call recorder (ADR 0018). A
+   feature goes into YapYap itself. Nothing sends a message for the user:
+   the assistant inserts drafts only.
 9. **Privacy.** No telemetry. Never log or persist message content, phone
    numbers or secrets. Secrets go through `safeStorage`.
 10. **Versions.** Latest stable releases only, pinned exactly. Justify new
@@ -272,8 +261,7 @@ Update this table in the PR that adds a command.
   idle. Never open it at startup: the startup bench budgets renderer
   processes (ADR 0009). It runs on `app://engine` under its own CSP; serve
   nothing else there.
-- The `assistant` settings section is local, like `extensions`: never
-  exported or imported (`LOCAL_SECTIONS` in `settings/transfer.ts`). The
+- The `assistant` settings section is local: never exported or imported (`LOCAL_SECTIONS` in `settings/transfer.ts`). The
   assistant's state that is no preference lives in `assistant.json` and
   `assistant-chats.json`, its keys and chat names in `secrets.json`.
 - The assistant never sends a message: it puts drafts in the message box.
@@ -283,10 +271,3 @@ Update this table in the PR that adds a command.
 - Packaged builds disable the Node inspector fuse, so Playwright's Electron
   launcher cannot drive them. The smoke test connects over CDP through the
   `DevToolsActivePort` file in the profile directory instead.
-- `templates/extension/` is copied whole into authors' own repositories, so
-  it never uses `workspace:` versions or extends this repository's configs.
-  It names the npm versions of the SDK and signing CLI, which release-please
-  bumps; overrides in `pnpm-workspace.yaml` link them to `packages/` here, so
-  CI lints and typechecks it against every change. The published packages
-  compile `src/` to `dist/` and swap their `exports` and `bin` through
-  `publishConfig`; inside the workspace they stay on the `.ts` sources.

@@ -2,10 +2,9 @@ import { describe, expect, it, vi } from 'vitest';
 import { CHROME_CHANNELS, type ShortcutChange } from '../../shared/chrome-api.ts';
 import { defaultSettings } from '../settings/decode.ts';
 import type { Settings } from '../settings/schema.ts';
-import type { ExtensionCommand } from '../extensions/runtime.ts';
 import { shortcutHandlers } from './shortcut-settings.ts';
 
-function setup(platform = 'linux', registered = true, commands: readonly ExtensionCommand[] = []) {
+function setup(platform = 'linux', registered = true) {
   let settings: Settings = defaultSettings();
   const service = {
     current: () => settings,
@@ -13,12 +12,7 @@ function setup(platform = 'linux', registered = true, commands: readonly Extensi
       settings = change(settings);
     }),
   };
-  const handlers = shortcutHandlers(
-    service,
-    platform,
-    () => registered,
-    () => commands,
-  );
+  const handlers = shortcutHandlers(service, platform, () => registered);
   const handler = (channel: string) => {
     const found = handlers.find((candidate) => candidate.channel === channel);
     if (found === undefined) {
@@ -114,74 +108,5 @@ describe('the shortcut that works from any app', () => {
     const list = t.handler(CHROME_CHANNELS.shortcutsList).handle({ sender: {} }) as ShortcutChange;
     expect(list.global[0]?.registered).toBe(true);
     expect(t.set('toggleWindow', 'F9').global[0]?.registered).toBe(false);
-  });
-});
-
-describe('an extension command’s keys', () => {
-  const RECORD = {
-    extension: 'org.example.rec',
-    extensionName: 'Rec',
-    id: 'record',
-    title: 'Record this call',
-    shortcut: 'CmdOrCtrl+Alt+R',
-  };
-  const STOP = { ...RECORD, id: 'stop', title: 'Stop', shortcut: 'CmdOrCtrl+Alt+S' };
-
-  it('lists each running command with the keys it has and suggests', () => {
-    const t = setup('linux', true, [RECORD, { ...STOP, shortcut: undefined }]);
-    const listed = t
-      .handler(CHROME_CHANNELS.shortcutsList)
-      .handle({ sender: {} }) as ShortcutChange;
-    expect(listed.extensions).toEqual([
-      {
-        id: 'org.example.rec/record',
-        label: 'Rec: Record this call',
-        accelerator: 'CmdOrCtrl+Alt+R',
-        suggested: 'CmdOrCtrl+Alt+R',
-        custom: false,
-      },
-      {
-        id: 'org.example.rec/stop',
-        label: 'Rec: Stop',
-        accelerator: '',
-        suggested: '',
-        custom: false,
-      },
-    ]);
-    expect(setup().handler(CHROME_CHANNELS.shortcutsList).handle({ sender: {} })).toMatchObject({
-      extensions: [],
-    });
-  });
-
-  it('takes other keys, removes them, and goes back to the suggestion', () => {
-    const t = setup('linux', true, [RECORD, STOP]);
-    expect(t.set('org.example.rec/record', 'CmdOrCtrl+Alt+Q').problem).toBe('');
-    expect(t.settings().shortcuts.extensions).toEqual({
-      'org.example.rec/record': 'CmdOrCtrl+Alt+Q',
-    });
-    const removed = t.set('org.example.rec/record', '');
-    expect(removed.problem).toBe('');
-    expect(removed.extensions[0]).toMatchObject({ accelerator: '', custom: true });
-    t.set('org.example.rec/record', null);
-    expect(t.settings().shortcuts.extensions).toEqual({});
-  });
-
-  it('refuses keys that do not fit, or that YapYap or another command uses', () => {
-    const t = setup('linux', true, [RECORD, STOP]);
-    expect(t.set('org.example.rec/record', 'Q').problem).toBe(
-      'Use a key together with a modifier such as Ctrl, Alt, Shift or ⌘, or a function key alone.',
-    );
-    expect(t.set('org.example.rec/record', 'CmdOrCtrl+R').problem).toMatch(/already used/);
-    expect(t.set('org.example.rec/record', 'CmdOrCtrl+Alt+S').problem).toBe(
-      'Those keys are already used for “Rec: Stop”.',
-    );
-    expect(t.settings().shortcuts.extensions).toEqual({});
-  });
-
-  it('accepts only commands that are running', () => {
-    const t = setup('linux', true, [RECORD]);
-    const accepts = t.handler(CHROME_CHANNELS.shortcutsSet).accepts;
-    expect(accepts(['org.example.rec/record', ''])).toBe(true);
-    expect(accepts(['org.example.rec/gone', 'CmdOrCtrl+Alt+G'])).toBe(false);
   });
 });

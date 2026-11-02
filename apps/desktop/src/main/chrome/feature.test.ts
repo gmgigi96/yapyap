@@ -2,7 +2,6 @@ import type { MenuItemConstructorOptions } from 'electron';
 import { join } from 'node:path';
 import { describe, expect, it, vi } from 'vitest';
 import { en } from '../../shared/messages/en.ts';
-import { RPC_OPTIONS } from '../extensions/rpc.ts';
 import { defaultSettings } from '../settings/decode.ts';
 import type { Settings } from '../settings/schema.ts';
 import type { ViewInfo } from '../security/views.ts';
@@ -10,8 +9,6 @@ import { CATALOG } from '../assistant/private/catalog.ts';
 import {
   CHROME_PARTITION,
   createChromeFeature,
-  extensionAccounts,
-  type AccountMenu,
   type ChromeFeatureDependencies,
 } from './feature.ts';
 import type { IpcInvokeEvent } from '../ipc/chrome.ts';
@@ -85,51 +82,6 @@ function setup() {
     },
     settingEffects: {},
     hiddenSettings: [],
-    recording: {
-      supported: true,
-      format: () => 'webm' as const,
-      paths: { folder: '/recordings', index: '/user-data/recordings.json' },
-      consentFile: '/user-data/recording-consent.json',
-      callWindowOf: vi.fn(() => undefined),
-      show: vi.fn(),
-    },
-    extensions: {
-      root: '/nonexistent/extensions',
-      anchors: new Set<string>(),
-      chooseArchive: vi.fn(() => Promise.resolve<string | undefined>(undefined)),
-      readFile: vi.fn(() => Promise.resolve(new Uint8Array())),
-      showMessage: vi.fn(),
-      sessionOf: vi.fn(),
-      createHost: vi.fn(),
-      createPanel: vi.fn(),
-      methodsFor: vi.fn(() => ({})),
-      rpc: { ...RPC_OPTIONS, now: () => 0, after: vi.fn() },
-      audit: { record: vi.fn(), recent: vi.fn(() => []) },
-      limits: {
-        metrics: () => [],
-        notify: vi.fn(),
-        every: vi.fn(),
-        now: () => 0,
-        cores: 1,
-      },
-      askHost: vi.fn(() => Promise.resolve(false)),
-      askLocal: vi.fn(() => Promise.resolve(false)),
-      presentHeaders: (headers: Readonly<Record<string, string>>) => ({ ...headers }),
-      confirmRemove: vi.fn(),
-      forgetData: vi.fn(),
-      marketplace: {
-        source: {
-          indexUrl: 'https://packages.example/extensions/index.json',
-          signatureUrl: 'https://packages.example/extensions/index.json.sig',
-          archiveUrl: (id: string, version: string) => `https://packages.example/${id}-${version}`,
-          anchors: [],
-        },
-        appVersion: '0.1.2',
-        fetchIndex: vi.fn(() => Promise.resolve(undefined)),
-        fetchArchive: vi.fn(() => Promise.resolve(undefined)),
-        now: () => new Date(0),
-      },
-    },
     assistant: {
       fetch: vi.fn(),
       catalog: CATALOG,
@@ -237,12 +189,11 @@ function setup() {
 }
 
 describe('createChromeFeature', () => {
-  it('registers app: and extension: as standard, secure schemes before the app is ready', () => {
+  it('registers app: as a standard, secure scheme before the app is ready', () => {
     const t = setup();
     t.feature.beforeReady();
     expect(t.deps.registerSchemesAsPrivileged).toHaveBeenCalledExactlyOnceWith([
       { scheme: 'app', privileges: { standard: true, secure: true, supportFetchAPI: true } },
-      { scheme: 'extension', privileges: { standard: true, secure: true } },
     ]);
   });
 
@@ -536,13 +487,9 @@ describe('createChromeFeature', () => {
         'privacy.blurWhenIdle': false,
         'network.proxyMode': 'system',
         'network.proxyServer': '',
-        'extensions.developerMode': false,
-        'extensions.chatMessages': '20',
         'downloads.askWhere': false,
         'downloads.openWhenDone': false,
         'downloads.folder': '',
-        'recording.folder': '',
-        'recording.format': 'webm',
         'spelling.enabled': false,
         'general.autostart': false,
         'general.startMinimized': false,
@@ -1181,48 +1128,5 @@ describe('createChromeFeature', () => {
     t.feature.afterReady(t.views, vi.fn(), 'hardware accelerated', false);
     t.clickAbout();
     expect(() => t.call('recovery:retry')).toThrow('No recovery screen belongs to this window.');
-  });
-
-  it('shows extensions the accounts: drafts and grants go to the active one, none before there are any', async () => {
-    const slot: { current?: AccountMenu } = {};
-    const accounts = extensionAccounts(slot);
-    await expect(accounts.insertDraft('Hi')).resolves.toBe(false);
-    await expect(accounts.readActiveChat(5)).resolves.toBeNull();
-    await expect(accounts.readUnreadSummary()).resolves.toEqual([]);
-    await expect(accounts.replaceDraft('Hi')).resolves.toBe(false);
-    await expect(accounts.readDraft()).resolves.toBeNull();
-    expect(accounts.active()).toBeUndefined();
-    expect(accounts.list()).toEqual([]);
-    const insertDraft = vi.fn(() => Promise.resolve(true));
-    const chat = { name: 'Team', group: false, messages: [] };
-    const readActiveChat = vi.fn(() => Promise.resolve(chat));
-    const unread = [{ name: 'Team', unread: 2, messages: [] }];
-    const readUnreadSummary = vi.fn(() => Promise.resolve(unread));
-    const replaceDraft = vi.fn(() => Promise.resolve(true));
-    const readDraft = vi.fn(() => Promise.resolve('Draft'));
-    slot.current = {
-      insertDraft,
-      readActiveChat,
-      readUnreadSummary,
-      replaceDraft,
-      readDraft,
-      entries: [
-        { id: 'a', name: 'Home', active: false },
-        { id: 'b', name: 'Work', active: true },
-      ],
-    } as unknown as AccountMenu;
-    await expect(accounts.insertDraft('Hi')).resolves.toBe(true);
-    expect(insertDraft).toHaveBeenCalledExactlyOnceWith('Hi');
-    await expect(accounts.readActiveChat(5)).resolves.toBe(chat);
-    expect(readActiveChat).toHaveBeenCalledExactlyOnceWith(5);
-    await expect(accounts.readUnreadSummary()).resolves.toBe(unread);
-    await expect(accounts.replaceDraft('New')).resolves.toBe(true);
-    expect(replaceDraft).toHaveBeenCalledExactlyOnceWith('New');
-    await expect(accounts.readDraft()).resolves.toBe('Draft');
-    expect(accounts.active()).toBe('b');
-    expect(accounts.list()).toEqual([
-      { id: 'a', name: 'Home' },
-      { id: 'b', name: 'Work' },
-    ]);
   });
 });

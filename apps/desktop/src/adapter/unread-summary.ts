@@ -2,11 +2,11 @@ import { Type } from 'typebox';
 import { Value } from 'typebox/value';
 import { LANDMARKS } from './page-state.ts';
 
-/** The most chats an extension receives, from the top of the list. */
+/** The most chats the assistant receives, from the top of the list. */
 const MAX_CHATS = 20;
-/** Longest chat name an extension receives. */
+/** Longest chat name the assistant receives. */
 const MAX_NAME = 256;
-/** Longest last-message preview an extension receives; a longer one is cut. */
+/** Longest last-message preview the assistant receives; a longer one is cut. */
 const MAX_TEXT = 1024;
 /** The highest count a badge can show that the reader accepts, as the page title's count. */
 const MAX_UNREAD = 999_999;
@@ -46,9 +46,8 @@ interface SummaryLimits {
  * count and its last message's preview, top of the list first. It never
  * opens a chat, since opening one marks it read and tells the people who
  * wrote that it was. So the preview is all it has of a chat's messages. Like
- * the open chat's reader, it returns page text, so it runs only when an
- * extension holding `chat:read-unread-summary` asks (ADR 0004, #100), and its
- * result is never logged. It runs inside the page as source text, so it must
+ * the open chat's reader, it returns page text, so it runs only when the
+ * assistant asks, and its result is never logged. It runs inside the page as source text, so it must
  * stay self-contained. A row without a badge of digits is not unread.
  */
 export function readUnreadSummary(
@@ -122,7 +121,7 @@ const UnreadSummarySchema = Type.Array(
   { maxItems: MAX_CHATS },
 );
 
-/** What an extension receives of a chat with unread messages. */
+/** What the assistant receives of a chat with unread messages. */
 export interface UnreadSummaryChat {
   readonly name: string;
   readonly unread: number;

@@ -5,47 +5,23 @@ import { defineConfig } from 'vitepress';
 const repository = 'https://github.com/vascoguita/yapyap';
 
 /**
- * Files the site serves whose sources live elsewhere: the app icon and the
- * SDK's manifest schema, served at its $id. They are copied into `public/`
- * on every build and dev start instead of being committed twice.
+ * Files the site serves whose sources live elsewhere: the app icon. It is
+ * copied into `public/` on every build and dev start instead of being
+ * committed twice.
  */
-const SHARED_FILES = [
-  ['../../apps/desktop/build/icon.svg', '../public/logo.svg'],
-  ['../../packages/sdk/schema/manifest.schema.json', '../public/schema/manifest.schema.json'],
-] as const;
+const SHARED_FILES = [['../../apps/desktop/build/icon.svg', '../public/logo.svg']] as const;
 
 const fromHere = (path: string): string => fileURLToPath(new URL(path, import.meta.url));
 
-const extensionsSidebar = [
-  {
-    text: 'Extensions',
-    items: [
-      { text: 'Writing an extension', link: '/extensions/' },
-      { text: 'Manifest', link: '/extensions/manifest' },
-      { text: 'Marketplace', link: '/extensions/marketplace' },
-      { text: 'SDK API reference', link: '/api/' },
-    ],
-  },
-];
-
 export default defineConfig({
   title: 'YapYap',
-  description: 'A fast, private, extensible desktop client for WhatsApp Web. Unofficial.',
+  description: 'A fast, private desktop client for WhatsApp Web, with an AI assistant. Unofficial.',
   lang: 'en-US',
   cleanUrls: true,
   lastUpdated: true,
   srcExclude: ['progress.md'],
   // ADR folders keep README.md so they also read well on GitHub.
   rewrites: { 'adr/README.md': 'adr/index.md' },
-  // Each marketplace extension's page is titled after the extension (#390).
-  transformPageData(pageData) {
-    const params: Readonly<Record<string, unknown>> = pageData.params ?? {};
-    const { name, summary } = params;
-    if (typeof name === 'string' && typeof summary === 'string') {
-      pageData.title = `${name} · Marketplace`;
-      pageData.description = summary;
-    }
-  },
   vite: {
     plugins: [
       {
@@ -69,13 +45,10 @@ export default defineConfig({
       { text: 'Download', link: '/guide/install' },
       { text: 'Guide', link: '/guide/' },
       { text: 'AI assistant', link: '/guide/ai-assistant' },
-      { text: 'Marketplace', link: '/marketplace/' },
       { text: 'Privacy', link: '/privacy' },
       {
         text: 'Developers',
         items: [
-          { text: 'Writing an extension', link: '/extensions/' },
-          { text: 'SDK API reference', link: '/api/' },
           { text: 'Architecture', link: '/architecture/' },
           { text: 'Decision records', link: '/adr/' },
           { text: 'Contributing', link: '/contributing' },
@@ -106,13 +79,10 @@ export default defineConfig({
             { text: 'Install', link: '/guide/install' },
             { text: 'Troubleshooting', link: '/guide/troubleshooting' },
             { text: 'Reference', link: '/guide/reference' },
-            { text: 'Call recorder', link: '/guide/call-recorder' },
             { text: 'FAQ', link: '/guide/faq' },
           ],
         },
       ],
-      '/extensions/': extensionsSidebar,
-      '/api/': extensionsSidebar,
       '/architecture/': [
         {
           text: 'Architecture',
@@ -133,7 +103,7 @@ export default defineConfig({
             { text: '0002 Toolchain', link: '/adr/0002-toolchain-and-resolved-versions' },
             { text: '0003 Packaging and updates', link: '/adr/0003-packaging-and-update-channels' },
             {
-              text: '0004 Extension trust model',
+              text: '0004 Extension trust model (superseded)',
               link: '/adr/0004-extension-isolation-and-trust-model',
             },
             { text: '0005 Test strategy', link: '/adr/0005-test-strategy' },
@@ -157,10 +127,11 @@ export default defineConfig({
               text: '0013 In-chat assistant',
               link: '/adr/0013-in-chat-assistant-bar',
             },
-            { text: '0014 Marketplace', link: '/adr/0014-extension-marketplace' },
-            { text: '0015 Call recording', link: '/adr/0015-call-recording' },
-            { text: '0016 Extensions', link: '/adr/0016-extensions-not-plugins' },
+            { text: '0014 Marketplace (superseded)', link: '/adr/0014-extension-marketplace' },
+            { text: '0015 Call recording (superseded)', link: '/adr/0015-call-recording' },
+            { text: '0016 Extensions (superseded)', link: '/adr/0016-extensions-not-plugins' },
             { text: '0017 Assistant built in', link: '/adr/0017-assistant-is-part-of-yapyap' },
+            { text: '0018 No extensions', link: '/adr/0018-no-extensions' },
           ],
         },
       ],

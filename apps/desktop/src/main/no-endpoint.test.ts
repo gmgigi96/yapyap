@@ -25,8 +25,8 @@ const ENDPOINT =
   /createServer|\.listen\(|from 'node:(?:http|https|http2|dgram)'|import (?!\{ createConnection \} from 'node:net')[^;]*from 'node:net'/;
 
 describe('local endpoints', () => {
-  // ADR 0004 and #94: nothing on this computer, an extension included, can drive
-  // YapYap from outside, because YapYap listens on no port or socket.
+  // Nothing else on this computer can drive YapYap from outside, because
+  // YapYap listens on no port or socket.
   it('are never opened by YapYap’s own code', () => {
     const files = sources(SOURCE);
     expect(files.length).toBeGreaterThan(100);

@@ -1,18 +1,20 @@
 import { readFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import {
+  assistantBarResult,
   barNames,
   barSays,
   CLAUDE_ANSWER,
   claudeAnswer,
   claudeRequests,
+  clickInBar,
   fakeModelServer,
   openAssistantSettings,
   quietPort,
   readyClaude,
   standInKeyring,
 } from './assistant-helpers.ts';
-import { assistantBarResult, chromePage, clickInBar, clickMenu } from './extension-helpers.ts';
+import { chromePage, clickMenu } from './chrome-helpers.ts';
 import { closeApp, expect, launchApp, mainWindow, test, whatsAppPage } from './fixtures.ts';
 
 test('sets Claude up in Settings › Assistant, with the key encrypted, tested and in use', async ({

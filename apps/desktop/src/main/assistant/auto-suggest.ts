@@ -8,11 +8,11 @@ export interface AutoSuggestDependencies {
   /** The WhatsApp page of the account on screen. */
   readonly activePage: () => AdapterPage;
   /**
-   * Whether to look now: the setting is on, the bar shows for an extension
-   * and is not already waiting for one, and YapYap's window is on screen.
+   * Whether to look now: the setting is on, the bar shows and is not
+   * already waiting for suggestions, and YapYap's window is on screen.
    */
   readonly active: () => boolean;
-  /** Asks the bar's extension for suggestions, as Suggest replies does. */
+  /** Asks the assistant for suggestions, as Suggest replies does. */
   readonly suggest: () => unknown;
   readonly every: (callback: () => void, ms: number) => unknown;
 }

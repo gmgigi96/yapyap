@@ -1,6 +1,6 @@
 # 0014. The extension marketplace
 
-- Status: Accepted
+- Status: Superseded by [0018](0018-no-extensions.md)
 - Date: 2026-10-27
 
 ## Context

@@ -1,4 +1,4 @@
-import { chromePage } from './extension-helpers.ts';
+import { chromePage } from './chrome-helpers.ts';
 import { closeApp, expect, launchApp, test, whatsAppPage } from './fixtures.ts';
 
 test('greets the first launch with a welcome whose choices apply at once, and never again', async ({
