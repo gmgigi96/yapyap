@@ -60,48 +60,6 @@
   line-height: 1.55;
 }
 
-.landing .download {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 10px;
-}
-
-.landing .download-button {
-  display: inline-flex;
-  align-items: center;
-  gap: 10px;
-  padding: 14px 28px;
-  border-radius: 999px;
-  background: var(--landing-gradient);
-  color: #fff;
-  font-size: 18px;
-  font-weight: 700;
-  text-decoration: none;
-  box-shadow: 0 10px 30px rgb(110 91 242 / 35%);
-  transition: transform 0.15s ease;
-}
-
-.landing .download-button:hover {
-  transform: translateY(-1px);
-}
-
-.landing .download-button svg {
-  width: 22px;
-  height: 22px;
-  fill: none;
-  stroke: currentcolor;
-  stroke-width: 2.2;
-  stroke-linecap: round;
-  stroke-linejoin: round;
-}
-
-.landing .download-detail {
-  margin: 0;
-  color: var(--vp-c-text-2);
-  font-size: 14px;
-}
-
 .landing .downloads {
   margin-top: 12px;
 }
@@ -383,11 +341,5 @@
 
   .landing .feature.reverse .feature-text {
     order: 2;
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .landing .download-button {
-    transition: none;
   }
 }

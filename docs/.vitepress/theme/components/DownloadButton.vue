@@ -72,3 +72,60 @@ onMounted(async () => {
     <p class="download-detail">{{ detail }} · <a :href="INSTALL">Other systems and formats</a></p>
   </div>
 </template>
+
+<!-- The button also sits on the install page, outside the home page's styles. -->
+<style scoped>
+.download {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 10px;
+  margin: 16px 0;
+}
+
+:global(.landing .download) {
+  align-items: center;
+  margin: 0;
+}
+
+.download-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 14px 28px;
+  border-radius: 999px;
+  background: linear-gradient(120deg, #6e5bf2 15%, #ff7a59);
+  color: #fff;
+  font-size: 18px;
+  font-weight: 700;
+  text-decoration: none;
+  box-shadow: 0 10px 30px rgb(110 91 242 / 35%);
+  transition: transform 0.15s ease;
+}
+
+.download-button:hover {
+  transform: translateY(-1px);
+}
+
+.download-button svg {
+  width: 22px;
+  height: 22px;
+  fill: none;
+  stroke: currentcolor;
+  stroke-width: 2.2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.download-detail {
+  margin: 0;
+  color: var(--vp-c-text-2);
+  font-size: 14px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .download-button {
+    transition: none;
+  }
+}
+</style>
