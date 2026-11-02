@@ -286,5 +286,6 @@ title, escape })` (`src/renderer/shared/mount.tsx`), which titles the
 - No compatibility before 1.0 (#562, C45 in ADR 0008): settings are
   schema version 1 with no migrations, and a file of another version is set
   aside like a damaged one; the read-only mode for a newer build's settings,
-  the assistant extension's import and its one-time bar note are gone.
+  the assistant extension's import and its one-time bar note are gone,
+  and the manifest guide no longer warns about older YapYap releases.
   From 1.0, settings migrations start again at version 1.

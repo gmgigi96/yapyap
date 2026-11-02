@@ -80,9 +80,6 @@ show whether the extension runs or not. An on-demand extension keeps
 nothing in memory from one start to the next: keep what must last in
 `host.storage`.
 
-YapYap 0.2.0 and earlier do not know `activation` and refuse a manifest
-that has it, so an extension that sets it needs a later YapYap.
-
 ## Capabilities
 
 | Capability                 | Lets the extension                                                            |
