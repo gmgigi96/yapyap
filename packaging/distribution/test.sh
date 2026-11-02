@@ -6,7 +6,7 @@
 # `brew audit` check the casks, in Homebrew's Linux container, so pull
 # requests need no macOS runner.
 #
-# Usage: test.sh   (needs podman or docker, and Node.js 24)
+# Usage: test.sh   (needs podman or docker, and Node.js 26)
 set -euo pipefail
 
 here=$(dirname "$(realpath "$0")")

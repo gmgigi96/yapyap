@@ -27,7 +27,7 @@ By participating you agree to the [Code of Conduct](CODE_OF_CONDUCT.md).
 
 ## Development setup
 
-You need Node.js 24 LTS and pnpm (version pinned in `package.json`, enable it
+You need Node.js 26 LTS and pnpm (version pinned in `package.json`, enable it
 with `corepack enable`). On Linux, run E2E tests as
 `dbus-run-session -- xvfb-run -a pnpm test:e2e`: `xvfb-run` keeps their
 windows off your desktop, and a private session bus keeps their tray icons

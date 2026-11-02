@@ -5,7 +5,7 @@
 # and the next beta), and checks at each step what a stable and a beta user
 # install and update to. It then checks that both refuse a tampered index.
 #
-# Usage: test.sh   (needs podman or docker, Node.js 24 and Python 3)
+# Usage: test.sh   (needs podman or docker, Node.js 26 and Python 3)
 #
 # The signing key is made for this run in a temporary GNUPGHOME and deleted
 # with it; nothing here touches a real key.

@@ -129,7 +129,8 @@ jobs:
       options: --privileged
     steps:
       # Fedora's mirrors, especially the openh264 one, sometimes drop downloads.
-      - run: dnf install -y --setopt=retries=10 git tar xz procps-ng xorg-x11-server-Xvfb
+      # Node.js 26 links libatomic, which Fedora's base image leaves out.
+      - run: dnf install -y --setopt=retries=10 git tar xz procps-ng xorg-x11-server-Xvfb libatomic
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
