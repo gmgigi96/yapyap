@@ -56,6 +56,21 @@ describe('openChat', () => {
     expect(pressed).toHaveBeenCalledOnce();
   });
 
+  it('skips a row whose title has no text', () => {
+    const empty = { querySelector: () => ({ textContent: null }), dispatchEvent: vi.fn() };
+    const rows = { querySelectorAll: () => [empty] };
+    expect(openChat(rows, PLACES, 'Ana', mouse)).toBe(false);
+    expect(empty.dispatchEvent).not.toHaveBeenCalled();
+  });
+
+  it('carries the chat list’s landmarks and a real left click into the page', () => {
+    const code = chatOpener('Ana');
+    expect(code).toContain(JSON.stringify(PLACES));
+    expect(code).toContain(
+      '(type) => new MouseEvent(type, { bubbles: true, cancelable: true, button: 0 })',
+    );
+  });
+
   it('names the chat as data, never as code', () => {
     expect(chatOpener('"); alert(1); ("')).toContain(JSON.stringify('"); alert(1); ("'));
   });
