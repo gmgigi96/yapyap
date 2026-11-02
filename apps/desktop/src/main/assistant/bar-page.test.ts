@@ -16,7 +16,7 @@ function fakePage() {
   return {
     executeJavaScriptInIsolatedWorld: vi.fn<
       (world: number, scripts: { code: string }[]) => Promise<unknown>
-    >(() => Promise.resolve(true)),
+    >(() => Promise.resolve('kept')),
   };
 }
 
@@ -31,11 +31,13 @@ function contentOf(page: ReturnType<typeof fakePage>, call = -1): unknown {
 function setup() {
   let active = fakePage();
   const onScreen = vi.fn(() => true);
+  const redrawn = vi.fn();
   let state = STATE;
-  const view = inPageAssistantBar(() => state, { activePage: () => active, onScreen });
+  const view = inPageAssistantBar(() => state, { activePage: () => active, onScreen, redrawn });
   return {
     view,
     onScreen,
+    redrawn,
     page: () => active,
     switchTo: (page: ReturnType<typeof fakePage>) => {
       active = page;
@@ -140,12 +142,28 @@ describe('inPageAssistantBar', () => {
     expect(t.page().executeJavaScriptInIsolatedWorld).toHaveBeenCalledTimes(3);
   });
 
+  it('says when WhatsApp drew the chat again, so the bar had to be placed anew', async () => {
+    const t = setup();
+    t.page().executeJavaScriptInIsolatedWorld.mockResolvedValueOnce('placed');
+    t.view.show(true);
+    await vi.waitFor(() => {
+      expect(t.redrawn).toHaveBeenCalledTimes(1);
+    });
+    t.page().executeJavaScriptInIsolatedWorld.mockResolvedValueOnce('away');
+    vi.advanceTimersByTime(1000);
+    vi.advanceTimersByTime(1000);
+    await vi.runOnlyPendingTimersAsync();
+    expect(t.redrawn).toHaveBeenCalledTimes(1);
+  });
+
   it('says whether the bar has a place in the active page now', async () => {
     const t = setup();
-    t.page().executeJavaScriptInIsolatedWorld.mockResolvedValueOnce(false);
+    t.page().executeJavaScriptInIsolatedWorld.mockResolvedValueOnce('away');
     expect(await t.view.onPage()).toBe(false);
-    t.page().executeJavaScriptInIsolatedWorld.mockResolvedValueOnce(true);
+    t.page().executeJavaScriptInIsolatedWorld.mockResolvedValueOnce('placed');
     expect(await t.view.onPage()).toBe(true);
+    t.page().executeJavaScriptInIsolatedWorld.mockResolvedValueOnce(true);
+    expect(await t.view.onPage()).toBe(false);
     t.page().executeJavaScriptInIsolatedWorld.mockRejectedValueOnce(new Error('loading'));
     expect(await t.view.onPage()).toBe(false);
   });

@@ -155,13 +155,17 @@ export interface BarKit {
   ) => BarNode;
 }
 
+/** Where a render left the bar. */
+export type BarPlacement = 'away' | 'kept' | 'placed';
+
 /**
  * Keeps the assistant bar right above the open chat's message box, so the
  * conversation moves up to make room (ADR 0013). Runs in the adapter's
  * isolated world as source text, so it uses only its arguments. WhatsApp
  * drops the bar when it redraws a chat, so every render puts the same bar
- * back; it changes the bar only when its content changed, and reports only
- * whether the bar is on the page.
+ * back; it changes the bar only when its content changed. It reports only
+ * where the bar is: away, kept where it was, or placed anew, which a chat
+ * WhatsApp drew again, such as another one, makes it.
  */
 export function renderAssistantBar(
   doc: BarDocument,
@@ -169,16 +173,17 @@ export function renderAssistantBar(
   content: BarContent,
   places: BarPlaces,
   kit: BarKit,
-): boolean {
+): BarPlacement {
   const footer = doc.querySelector(places.footer) as BarNode | null;
   const kept = scope[places.store] as BarStore | undefined;
   if (!content.visible || footer === null) {
     kept?.host.remove();
-    return false;
+    return 'away';
   }
   const store = kept ?? kit.build(doc, scope, places, kit);
   scope[places.store] = store;
-  if (footer.previousElementSibling !== store.host) {
+  const placed = footer.previousElementSibling !== store.host;
+  if (placed) {
     footer.before(store.host);
   }
   kit.align(scope, store.host, footer);
@@ -187,7 +192,7 @@ export function renderAssistantBar(
     store.key = key;
     kit.update(doc, store.parts, content, kit);
   }
-  return true;
+  return placed ? 'placed' : 'kept';
 }
 
 /**

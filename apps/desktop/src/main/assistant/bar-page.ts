@@ -1,4 +1,8 @@
-import { assistantBarRender, type BarContent } from '../../adapter/assistant-bar.ts';
+import {
+  assistantBarRender,
+  type BarContent,
+  type BarPlacement,
+} from '../../adapter/assistant-bar.ts';
 import { runInAdapterWorld, type AdapterPage } from '../../adapter/world.ts';
 import type { AssistantBarState } from '../../shared/assistant-bar-api.ts';
 import { en } from '../../shared/messages/en.ts';
@@ -23,6 +27,8 @@ export interface InPageBarPort {
   readonly activePage: () => AdapterPage;
   /** Whether the main window is visible and focused, the only time the bar needs putting back. */
   readonly onScreen: () => boolean;
+  /** WhatsApp drew the active page's chat again, which it does for another chat. */
+  readonly redrawn: () => void;
 }
 
 /** The bar's labels in the user's words, and the state as plain JSON. */
@@ -60,13 +66,13 @@ function contentOf(state: AssistantBarState, visible: boolean): BarContent {
 }
 
 /** A page that went away, or one between loads, simply has no bar until the next render. */
-async function renderIn(page: AdapterPage, content: BarContent): Promise<boolean> {
+async function renderIn(page: AdapterPage, content: BarContent): Promise<BarPlacement> {
   try {
-    const shown = await runInAdapterWorld(page, assistantBarRender(content));
-    return shown === true;
+    const where = await runInAdapterWorld(page, assistantBarRender(content));
+    return where === 'kept' || where === 'placed' ? where : 'away';
   } catch {
     // Nothing to do: the next render tries again, and the page's text is never logged.
-    return false;
+    return 'away';
   }
 }
 
@@ -90,7 +96,11 @@ export function inPageAssistantBar(
       void renderIn(last, contentOf(state(), false));
     }
     last = page;
-    void renderIn(page, contentOf(state(), visible));
+    void renderIn(page, contentOf(state(), visible)).then((where) => {
+      if (where === 'placed') {
+        port.redrawn();
+      }
+    });
   };
   const tick = (): void => {
     if (port.onScreen()) {
@@ -105,6 +115,6 @@ export function inPageAssistantBar(
       render();
     },
     publish: render,
-    onPage: () => renderIn(port.activePage(), contentOf(state(), visible)),
+    onPage: async () => (await renderIn(port.activePage(), contentOf(state(), visible))) !== 'away',
   };
 }

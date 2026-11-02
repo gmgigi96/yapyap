@@ -161,6 +161,7 @@ function fakes(env: Record<string, string | undefined> = {}, argv: readonly stri
       choose: vi.fn(() => Promise.resolve()),
       button: vi.fn(() => Promise.resolve()),
       privateModelChanged: vi.fn(() => Promise.resolve()),
+      chatRedrawn: vi.fn(() => Promise.resolve()),
     } satisfies AssistantBar,
     assistantBarView: undefined as AssistantBarView | undefined,
     attachAssistantBar: vi.fn((create: (bar: AssistantBar) => AssistantBarView) => {
@@ -926,10 +927,15 @@ describe('startApp', () => {
     await startApp(f);
     const view = f.runtime.assistantBarView;
     f.web.contents.executeJavaScriptInIsolatedWorld.mockClear();
+    // WhatsApp drew the chat again, so the bar was placed anew.
+    f.web.contents.executeJavaScriptInIsolatedWorld.mockResolvedValueOnce('placed');
     view?.show(true);
     expect(f.web.contents.executeJavaScriptInIsolatedWorld).toHaveBeenCalledWith(1000, [
       { code: expect.stringContaining('"visible":true') as unknown },
     ]);
+    await vi.waitFor(() => {
+      expect(f.runtime.assistantBar.chatRedrawn).toHaveBeenCalledOnce();
+    });
     view?.show(false);
     const fromPage = { sender: f.web.contents, senderFrame: { url: `${WHATSAPP_ORIGIN}/` } };
     f.ipcListeners.get('whatsapp:assistant-bar-send')?.(fromPage, 1);

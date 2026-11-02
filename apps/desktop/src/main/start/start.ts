@@ -576,7 +576,11 @@ function attachAssistantBar<Window extends WindowPort>(
       suggest: () => bar.suggestOnArrival(),
       every: setInterval,
     });
-    return inPageAssistantBar(bar.state, { activePage, onScreen });
+    return inPageAssistantBar(bar.state, {
+      activePage,
+      onScreen,
+      redrawn: () => void bar.chatRedrawn(),
+    });
   });
 }
 
