@@ -81,3 +81,14 @@ jobs:
     needs: publish
     uses: ./.github/workflows/repository.yml
     secrets: inherit
+
+  distribute:
+    name: Distribute
+    needs: [tag, publish]
+    uses: ./.github/workflows/distribute.yml
+    with:
+      tag: ${{ needs.tag.outputs.tag }}
+    secrets:
+      HOMEBREW_TAP_TOKEN: ${{ secrets.HOMEBREW_TAP_TOKEN }}
+      SCOOP_BUCKET_TOKEN: ${{ secrets.SCOOP_BUCKET_TOKEN }}
+      WINGET_TOKEN: ${{ secrets.WINGET_TOKEN }}

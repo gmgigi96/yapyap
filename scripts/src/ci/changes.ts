@@ -34,11 +34,14 @@ const PACKAGING = [
   'scripts/src/packaging/**',
   'scripts/src/release/**',
   'scripts/src/bin/aur.ts',
+  'scripts/src/bin/distribution.ts',
   'scripts/src/bin/stamp-metainfo.ts',
   'scripts/src/bin/verify-fuses.ts',
   '.github/workflows/package.yml',
   '.github/workflows/smoke.yml',
   '.github/workflows/release.yml',
+  '.github/workflows/beta.yml',
+  '.github/workflows/distribute.yml',
   // The setup every packaging and smoke job runs.
   '.github/actions/**',
 ];

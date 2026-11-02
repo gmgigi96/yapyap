@@ -1,6 +1,11 @@
-# extension-sdk
+# @yapyap/extension-sdk
 
-Types and the manifest schema for YapYap extensions (ADR 0004).
+Types and the manifest schema for [YapYap](https://yapyap.guita.org/)
+extensions (ADR 0004).
+
+```sh
+npm install --save-dev @yapyap/extension-sdk
+```
 
 - `ManifestSchema` and `Manifest`: the `manifest.json` format, as a TypeBox
   schema. `schema/manifest.schema.json` is generated from it with
@@ -9,4 +14,10 @@ Types and the manifest schema for YapYap extensions (ADR 0004).
 - `CAPABILITIES`: what an extension can ask for.
 - `defineExtension` and `ExtensionHost`: the typed host API an extension receives.
 
-See the [extension manifest guide](https://yapyap.guita.org/extensions/manifest).
+An extension needs only the types at build time, so nothing from the SDK
+ends up in its bundle. The SDK's version tells you which host API you build
+against: each release's notes name the YapYap release that brought its API.
+
+Start from the [extension template](https://github.com/vascoguita/yapyap/tree/master/templates/extension),
+and see the [extension guide](https://yapyap.guita.org/extensions/) and the
+[manifest reference](https://yapyap.guita.org/extensions/manifest).

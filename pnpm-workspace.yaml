@@ -2,6 +2,7 @@ packages:
   - apps/*
   - packages/*
   - extensions/*
+  - templates/*
   - docs
   - scripts
 
@@ -29,3 +30,8 @@ overrides:
   # Remove once @electron/get (through electron-builder) depends on
   # global-agent 4 or later.
   global-agent@3: 4.1.3
+  # The extension template names the published SDK and signing CLI, as an
+  # author's copy of it does; in this repository it builds against the
+  # workspace's own, so it is checked against every change to them.
+  '@yapyap/extension-sdk': 'workspace:*'
+  '@yapyap/extension-sign': 'workspace:*'

@@ -1,0 +1,5 @@
+node_modules/
+dist/
+*.yapyap-extension
+# Your signing key belongs in a password manager and a CI secret, never here.
+*.pem

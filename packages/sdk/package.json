@@ -1,8 +1,19 @@
 {
   "name": "@yapyap/extension-sdk",
   "version": "0.0.0",
-  "private": true,
   "description": "Typed SDK for building YapYap extensions",
+  "keywords": [
+    "yapyap",
+    "extension",
+    "sdk"
+  ],
+  "homepage": "https://yapyap.guita.org/extensions/",
+  "bugs": "https://github.com/vascoguita/yapyap/issues",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/vascoguita/yapyap.git",
+    "directory": "packages/sdk"
+  },
   "license": "MIT",
   "author": "Vasco Guita",
   "type": "module",
@@ -10,7 +21,24 @@
     ".": "./src/index.ts",
     "./schema/manifest.schema.json": "./schema/manifest.schema.json"
   },
+  "files": [
+    "dist",
+    "schema",
+    "CHANGELOG.md"
+  ],
+  "publishConfig": {
+    "access": "public",
+    "exports": {
+      ".": {
+        "types": "./dist/index.d.ts",
+        "default": "./dist/index.js"
+      },
+      "./schema/manifest.schema.json": "./schema/manifest.schema.json"
+    },
+    "types": "./dist/index.d.ts"
+  },
   "scripts": {
+    "build": "tsc -p tsconfig.build.json",
     "typecheck": "tsc -p tsconfig.json",
     "schema": "node src/bin/write-schema.ts"
   },

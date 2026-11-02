@@ -1,0 +1,25 @@
+{
+  "id": "org.example.greeter",
+  "name": "Greeter",
+  "version": "0.1.0",
+  "description": "Drafts a greeting in the open chat, for you to edit and send.",
+  "author": { "name": "Your name", "url": "https://example.org" },
+  "apiVersion": "^1.0.0",
+  "entry": "main.js",
+  "capabilities": ["composer:insert-draft"],
+  "network": { "hosts": [] },
+  "contributes": {
+    "commands": [{ "id": "draft-greeting", "title": "Draft a greeting" }],
+    "settings": {
+      "type": "object",
+      "properties": {
+        "greeting": {
+          "type": "string",
+          "title": "Greeting",
+          "description": "What the draft says.",
+          "maxLength": 200
+        }
+      }
+    }
+  }
+}

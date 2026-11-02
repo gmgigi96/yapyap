@@ -1,0 +1,64 @@
+name: Release
+
+on:
+  push:
+    tags: ['v*']
+
+permissions:
+  contents: read
+
+jobs:
+  release:
+    name: Build, sign and attach the extension
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      # YapYap offers an update only when the version rises, so a tag that
+      # disagrees with the manifest would publish nothing users can install.
+      - name: Check the tag matches the manifest
+        id: manifest
+        run: |
+          version=$(node -p "require('./public/manifest.json').version")
+          if [ "$GITHUB_REF_NAME" != "v$version" ]; then
+            echo "::error::The tag $GITHUB_REF_NAME does not match version $version in public/manifest.json."
+            exit 1
+          fi
+          echo "archive=$(node -p "require('./public/manifest.json').id").yapyap-extension" >> "$GITHUB_OUTPUT"
+      - run: npm ci --ignore-scripts
+      - run: npm run typecheck
+      - run: npm run build
+      # The key is written only for the signing command, never printed, and
+      # removed at once; the CLI prints its fingerprint, never the key.
+      - name: Sign and pack it
+        env:
+          EXTENSION_SIGNING_KEY: ${{ secrets.EXTENSION_SIGNING_KEY }}
+          ARCHIVE: ${{ steps.manifest.outputs.archive }}
+        run: |
+          if [ -z "$EXTENSION_SIGNING_KEY" ]; then
+            echo "::error::EXTENSION_SIGNING_KEY is missing: add your signing key as a repository secret (see README.md)."
+            exit 1
+          fi
+          key="$RUNNER_TEMP/signing-key.pem"
+          (umask 077 && printf '%s\n' "$EXTENSION_SIGNING_KEY" > "$key")
+          node_modules/.bin/yapyap-extension-sign sign --key "$key" dist
+          rm -f "$key"
+          node_modules/.bin/yapyap-extension-sign pack dist "$ARCHIVE"
+      # The same file name on every release keeps the releases/latest/download
+      # address pointing at the newest one.
+      - name: Attach it to the release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          ARCHIVE: ${{ steps.manifest.outputs.archive }}
+        run: |
+          if ! gh release view "$GITHUB_REF_NAME" --repo "$GITHUB_REPOSITORY" > /dev/null 2>&1; then
+            gh release create "$GITHUB_REF_NAME" --repo "$GITHUB_REPOSITORY" --title "$GITHUB_REF_NAME" --generate-notes
+          fi
+          gh release upload "$GITHUB_REF_NAME" "$ARCHIVE" --clobber --repo "$GITHUB_REPOSITORY"

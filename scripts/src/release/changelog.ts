@@ -99,12 +99,24 @@ export interface ReleaseTrack {
   readonly changelog: string;
 }
 
-/** YapYap's own release PR, and one for each first-party extension, which release on their own (#474). */
+const APP_TRACK: ReleaseTrack = { branch: RELEASE_BRANCH, changelog: 'CHANGELOG.md' };
+
+/**
+ * YapYap's own release PR, one for each first-party extension, which release
+ * on their own (#474), and one for each package published to npm (#477).
+ */
 export const RELEASE_TRACKS: readonly ReleaseTrack[] = [
-  { branch: RELEASE_BRANCH, changelog: 'CHANGELOG.md' },
+  APP_TRACK,
   ...['call-recorder'].map((name) => ({
     branch: `release-please--branches--master--components--${name}`,
     changelog: `extensions/${name}/CHANGELOG.md`,
+  })),
+  ...[
+    ['extension-sdk', 'packages/sdk'],
+    ['extension-sign', 'packages/extension-sign'],
+  ].map(([component, path]) => ({
+    branch: `release-please--branches--master--components--${String(component)}`,
+    changelog: `${String(path)}/CHANGELOG.md`,
   })),
 ];
 
@@ -133,7 +145,7 @@ const FIND = `query ($owner: String!, $name: String!, $branch: String!, $file: S
 export async function findReleasePullRequest(
   api: GitHubApi,
   repository: string,
-  track: ReleaseTrack = { branch: RELEASE_BRANCH, changelog: 'CHANGELOG.md' },
+  track: ReleaseTrack = APP_TRACK,
 ): Promise<ReleasePullRequest | undefined> {
   const [owner, name] = repository.split('/');
   const data = (await api.graphql(FIND, {

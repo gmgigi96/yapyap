@@ -88,6 +88,40 @@
       ],
       "component-no-space": true,
       "bump-patch-for-minor-pre-major": false
+    },
+    "packages/sdk": {
+      "package-name": "@yapyap/extension-sdk",
+      "component": "extension-sdk",
+      "include-component-in-tag": true,
+      "initial-version": "0.1.0",
+      "pull-request-title-pattern": "chore(${component}): release ${version}",
+      "changelog-path": "CHANGELOG.md",
+      "extra-files": [
+        {
+          "type": "json",
+          "path": "/templates/extension/package.json",
+          "jsonpath": "$.devDependencies['@yapyap/extension-sdk']"
+        }
+      ],
+      "component-no-space": true,
+      "bump-patch-for-minor-pre-major": false
+    },
+    "packages/extension-sign": {
+      "package-name": "@yapyap/extension-sign",
+      "component": "extension-sign",
+      "include-component-in-tag": true,
+      "initial-version": "0.1.0",
+      "pull-request-title-pattern": "chore(${component}): release ${version}",
+      "changelog-path": "CHANGELOG.md",
+      "extra-files": [
+        {
+          "type": "json",
+          "path": "/templates/extension/package.json",
+          "jsonpath": "$.devDependencies['@yapyap/extension-sign']"
+        }
+      ],
+      "component-no-space": true,
+      "bump-patch-for-minor-pre-major": false
     }
   },
   "bootstrap-sha": "9ef391e240bca0ee98cb7db947046b1eb24815d5",

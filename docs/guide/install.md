@@ -62,6 +62,39 @@ manager offers the next release when it comes out.
 Both channels keep their five latest versions, so you can install an older
 one to roll back.
 
+## Homebrew, winget and Scoop {#package-managers}
+
+Homebrew on macOS, and winget and Scoop on Windows, are coming. YapYap's
+release workflow is ready for them, and they start with the first release
+after they are set up. Like the Linux repositories, they download YapYap
+from its GitHub releases. Until then, use the download button above.
+
+Once they are available, these commands will install YapYap; the beta
+packages (`yapyap@beta`, `YapYap.YapYap.Beta` and `yapyap-beta`) get each
+beta and each release:
+
+::: code-group
+
+```sh [Homebrew]
+brew tap vascoguita/yapyap
+brew trust vascoguita/yapyap
+brew install --cask yapyap
+```
+
+```sh [winget]
+winget install YapYap.YapYap
+```
+
+```sh [Scoop]
+scoop bucket add yapyap https://github.com/vascoguita/scoop-yapyap
+scoop install yapyap/yapyap
+```
+
+:::
+
+Homebrew installs the same signed and notarized build as the DMG. Scoop
+installs the portable build, which Scoop updates.
+
 ## All formats {#all-formats}
 
 YapYap is available in these formats:
@@ -76,7 +109,9 @@ YapYap is available in these formats:
 | Arch Linux     | The pacman repository            | Through pacman                           |
 | Windows        | Installer (x64, arm64)           | Built-in updater                         |
 | Windows        | Portable (x64, arm64)            | Notifies you of new versions             |
+| Windows        | winget, Scoop (coming)           | Through winget or Scoop                  |
 | macOS          | Universal DMG                    | Built-in updater                         |
+| macOS          | Homebrew cask (coming)           | Through Homebrew                         |
 
 Releases are published on
 [GitHub](https://github.com/vascoguita/yapyap/releases).

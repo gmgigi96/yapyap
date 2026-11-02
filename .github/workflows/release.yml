@@ -28,6 +28,8 @@ jobs:
       tag_name: ${{ steps.release.outputs.tag_name }}
       # Each first-party extension has releases of its own (ADR 0014).
       extensions: ${{ steps.extensions.outputs.paths }}
+      # So does each package published to npm (#477).
+      packages: ${{ steps.extensions.outputs.packages }}
       outputs: ${{ toJSON(steps.release.outputs) }}
     steps:
       # A short-lived token from the YapYap automation GitHub App, so bot PRs
@@ -49,11 +51,13 @@ jobs:
           token: ${{ steps.app-token.outputs.token || secrets.GITHUB_TOKEN }}
           config-file: release-please-config.json
           manifest-file: .release-please-manifest.json
-      - name: List the extensions released
+      - name: List the extensions and npm packages released
         id: extensions
         env:
           RELEASED: ${{ steps.release.outputs.paths_released || '[]' }}
-        run: echo "paths=$(jq -c '[.[] | select(startswith("extensions/"))]' <<< "$RELEASED")" >> "$GITHUB_OUTPUT"
+        run: |
+          echo "paths=$(jq -c '[.[] | select(startswith("extensions/"))]' <<< "$RELEASED")" >> "$GITHUB_OUTPUT"
+          echo "packages=$(jq -c '[.[] | select(startswith("packages/"))]' <<< "$RELEASED")" >> "$GITHUB_OUTPUT"
       # release-please lists a change for its commit and again for its merge
       # commit, which carries the PR's Conventional Commit title (#358).
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -143,6 +147,82 @@ jobs:
             --title "chore(marketplace): list $TAG" \
             --body "Lists the signed archive attached to the $TAG release in the marketplace. Merging this PR is the review: the index is signed again with this version in it (ADR 0014)."
 
+  npm:
+    name: Publish ${{ matrix.path }} to npm
+    needs: release-please
+    # Only this repository's release workflow publishes, so the provenance
+    # names this workflow and this repository as the package's builder.
+    if: >-
+      github.repository == 'vascoguita/yapyap' &&
+      needs.release-please.outputs.packages != '' && needs.release-please.outputs.packages != '[]'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+    strategy:
+      matrix:
+        path: ${{ fromJSON(needs.release-please.outputs.packages) }}
+    env:
+      TAG: ${{ fromJSON(needs.release-please.outputs.outputs)[format('{0}--tag_name', matrix.path)] }}
+    steps:
+      - name: Check how npm publishing is set up
+        id: npm
+        env:
+          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+          TRUSTED_PUBLISHING: ${{ vars.NPM_TRUSTED_PUBLISHING }}
+        run: |
+          if [ "$TRUSTED_PUBLISHING" = 'true' ] || [ -n "$NPM_TOKEN" ]; then
+            echo "configured=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "::notice::Neither NPM_TRUSTED_PUBLISHING nor NPM_TOKEN is set: $TAG is released on GitHub but not published to npm (see CONTRIBUTING)."
+          fi
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        if: steps.npm.outputs.configured == 'true'
+        with:
+          ref: ${{ env.TAG }}
+          persist-credentials: false
+      - uses: pnpm/action-setup@ea17c68df8912ef543352723c149a84f56e3d413 # v6.1.0
+        if: steps.npm.outputs.configured == 'true'
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        if: steps.npm.outputs.configured == 'true'
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - if: steps.npm.outputs.configured == 'true'
+        run: pnpm install --frozen-lockfile
+      # pnpm packs the manifest as published: compiled exports and bin from
+      # publishConfig, and the repository's LICENSE.
+      - name: Build and pack it
+        if: steps.npm.outputs.configured == 'true'
+        env:
+          PACKAGE: ${{ matrix.path }}
+        run: |
+          pnpm --filter "./$PACKAGE" build
+          cd "$PACKAGE"
+          pnpm pack --pack-destination "$RUNNER_TEMP/pack"
+      # Trusted publishing needs npm 11.5.1 or later, newer than Node.js
+      # bundles; the token, when used, is read from the environment and never
+      # written to disk. A re-run skips a version npm already has.
+      - name: Publish it with provenance
+        if: steps.npm.outputs.configured == 'true'
+        env:
+          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+          PACKAGE: ${{ matrix.path }}
+        run: |
+          npm install --global --ignore-scripts npm@12.2.1
+          if [ -n "$NPM_TOKEN" ]; then
+            cat > "$RUNNER_TEMP/npmrc" << 'NPMRC'
+          //registry.npmjs.org/:_authToken=${NPM_TOKEN}
+          NPMRC
+            export NPM_CONFIG_USERCONFIG="$RUNNER_TEMP/npmrc"
+          fi
+          spec=$(node -p "const p = require('./$PACKAGE/package.json'); p.name + '@' + p.version")
+          if npm view "$spec" version > /dev/null 2>&1; then
+            echo "::notice::$spec is already on npm."
+            exit 0
+          fi
+          npm publish "$RUNNER_TEMP"/pack/*.tgz --provenance --access public
+
   package:
     name: Package
     needs: release-please
@@ -174,6 +254,17 @@ jobs:
     needs: publish
     uses: ./.github/workflows/repository.yml
     secrets: inherit
+
+  distribute:
+    name: Distribute
+    needs: [release-please, publish]
+    uses: ./.github/workflows/distribute.yml
+    with:
+      tag: ${{ needs.release-please.outputs.tag_name }}
+    secrets:
+      HOMEBREW_TAP_TOKEN: ${{ secrets.HOMEBREW_TAP_TOKEN }}
+      SCOOP_BUCKET_TOKEN: ${{ secrets.SCOOP_BUCKET_TOKEN }}
+      WINGET_TOKEN: ${{ secrets.WINGET_TOKEN }}
 
   aur:
     name: Publish to the AUR

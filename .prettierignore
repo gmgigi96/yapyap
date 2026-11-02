@@ -13,3 +13,5 @@ docs/api/
 # Generated from the SDK's TypeBox schema; a test keeps them identical to it.
 packages/sdk/schema/
 docs/public/schema/
+# Vendored from winget-cli and Scoop at the commits distribution.ts names.
+packaging/manifest-schemas/

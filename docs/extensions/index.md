@@ -8,6 +8,21 @@ example extension in
 It drafts a greeting in the open chat when you run its command, and lets you
 choose the greeting in its settings.
 
+## Start from the template
+
+Your extension lives in a repository of your own. Start it from a copy of
+[`templates/extension`](https://github.com/vascoguita/yapyap/tree/master/templates/extension),
+the same greeter set up to stand alone: a Vite build, the manifest in
+`public/`, and a GitHub Actions workflow that builds, signs and attaches
+each release with your own key. Its README lists the steps, from choosing
+your extension's ID to listing it in the marketplace.
+
+The template builds with two npm packages, both released from this
+repository with provenance: `@yapyap/extension-sdk`, the types and manifest
+schema, and `@yapyap/extension-sign`, the signing CLI. Their first release
+on npm is coming; until then, build the template inside a clone of this
+repository, where it uses the SDK and CLI from `packages/`.
+
 ## What an extension is made of
 
 ```text
@@ -201,6 +216,10 @@ Then sign the built folder and pack it into the archive users install:
 node packages/extension-sign/src/bin/yapyap-extension-sign.ts sign --key greeter-key.pem extensions/example/dist
 node packages/extension-sign/src/bin/yapyap-extension-sign.ts pack extensions/example/dist greeter.yapyap-extension
 ```
+
+In a repository started from the template, `npx yapyap-extension-sign`
+runs the same CLI, and its release workflow signs with the key you store as
+the `EXTENSION_SIGNING_KEY` secret.
 
 `sign` writes the public key and the signature into `manifest.json`. The
 signature covers the manifest and the SHA-256 of every file, so change

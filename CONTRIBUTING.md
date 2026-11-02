@@ -161,6 +161,10 @@ job summary instead of failing.
 | `PACKAGES_SIGNING_KEY` (secret)                                              | Signing the apt and dnf repositories at `packages.guita.org` (see [Package repository key](#package-repository-key))                                                                     | The repositories are not deployed                                                       |
 | `CLOUDFLARE_API_TOKEN` (secret), `CLOUDFLARE_ACCOUNT_ID` (variable)          | Deploying `packages.guita.org` to the `yapyap-packages` Cloudflare Pages project (a token with Pages Write only)                                                                         | The repositories are not deployed                                                       |
 | `SONAR_TOKEN`                                                                | SonarQube Cloud analysis (a project analysis token for `vascoguita_yapyap`, also stored as a Dependabot secret)                                                                          | The SonarQube Cloud job skips its analysis                                              |
+| `HOMEBREW_TAP_TOKEN` (secret)                                                | Pushing the `yapyap` and `yapyap@beta` casks to the `vascoguita/homebrew-yapyap` tap (see [Package managers](#package-managers))                                                         | The casks are generated but not published                                               |
+| `SCOOP_BUCKET_TOKEN` (secret)                                                | Pushing the `yapyap` and `yapyap-beta` manifests to the `vascoguita/scoop-yapyap` bucket                                                                                                 | The Scoop manifests are generated but not published                                     |
+| `WINGET_TOKEN` (secret)                                                      | Opening pull requests for `YapYap.YapYap` and `YapYap.YapYap.Beta` in `microsoft/winget-pkgs`, from a fork owned by the token's account                                                  | The winget manifests are generated but not proposed                                     |
+| `NPM_TRUSTED_PUBLISHING` (variable), `NPM_TOKEN` (secret)                    | Publishing `@yapyap/extension-sdk` and `@yapyap/extension-sign` to npm with provenance: `true` once trusted publishing is set up on npm, or a granular token as the fallback             | The packages are released on GitHub but not published to npm                            |
 
 Issues that need one of these are labelled `needs-maintainer`.
 
@@ -207,6 +211,46 @@ before it expires. Users import the new public key from
 Cloudflare token for `CLOUDFLARE_API_TOKEN` is an account API token with the
 **Pages Write** permission on the account that holds `guita.org`, and
 nothing else.
+
+### Package managers
+
+After every release and beta, the **Distribute** workflow
+(`.github/workflows/distribute.yml`) writes the Homebrew casks, the Scoop
+manifests and the winget manifests from the release's `SHA256SUMS` (#345,
+#346), checks the winget and Scoop ones against their schemas, and
+publishes each where its token exists. A release updates both the release
+and the beta packages; a beta updates only the beta ones. Each step needs
+one thing from the maintainer:
+
+1. **Homebrew.** Create the public repository `vascoguita/homebrew-yapyap`
+   with a README, so it has a default branch. Create a fine-grained token
+   for that repository only, with **Contents: read and write**, and store it:
+   `gh secret set HOMEBREW_TAP_TOKEN --repo vascoguita/yapyap`.
+2. **Scoop.** The same for the public repository `vascoguita/scoop-yapyap`,
+   stored as `SCOOP_BUCKET_TOKEN`.
+3. **winget.** Create a classic token with only the `public_repo` scope
+   (Komac cannot open winget-pkgs pull requests with a fine-grained token) and store it
+   as `WINGET_TOKEN`. The workflow uses [Komac](https://github.com/russellbanks/Komac),
+   which forks `microsoft/winget-pkgs` under the token's account on first use
+   and opens one pull request per package; winget's moderators review the
+   first one of each package.
+
+CI checks the casks with `brew style` and `brew audit` in Homebrew's Linux
+container, so no macOS runner is needed, and the other manifests against the
+winget 1.28.0 and Scoop schemas in `packaging/manifest-schemas/`
+(`bash packaging/distribution/test.sh`). `winget validate` itself needs
+Windows, so it runs only in winget's own pipeline, on the pull request.
+
+To publish the npm packages (#477), sign in to npm with an account that owns
+the `@yapyap` scope, and for each of `@yapyap/extension-sdk` and
+`@yapyap/extension-sign` add a trusted publisher for the GitHub repository
+`vascoguita/yapyap` and the workflow `release.yml`. A package must exist
+before it can get a trusted publisher, so publish the first version of each
+with a token, then switch: store a granular token with read and write
+access to the two packages as `NPM_TOKEN`, merge their release PRs, then
+add the trusted publishers, run
+`gh variable set NPM_TRUSTED_PUBLISHING --body true --repo vascoguita/yapyap`,
+and delete the `NPM_TOKEN` secret and the token.
 
 ## Extension marketplace
 
@@ -315,6 +359,19 @@ extension's release PR publishes that extension alone (see
 [Extension marketplace](#extension-marketplace)). There is no extension
 beta: test it with a development build before merging.
 
+The extension SDK (`packages/sdk`) and the signing CLI
+(`packages/extension-sign`) are released the same way, for authors who
+build extensions in their own repositories (#477): `chore(extension-sdk):
+release X.Y.Z` and `chore(extension-sign): release X.Y.Z` PRs, with their own
+`CHANGELOG.md` and `extension-sdk-vX.Y.Z` and `extension-sign-vX.Y.Z` tags.
+Their commits stay in YapYap's own release too, since the app ships the
+same code. Merging one publishes that package to npm from the release
+workflow, with provenance (see [Package managers](#package-managers)), and
+sets its version in `templates/extension/package.json`. The SDK's version
+tells authors which host API they build against, so merge an SDK release
+only once the YapYap release that brings its API is out, and name that
+release in the SDK release's notes.
+
 The release-please job runs only while the repository variable
 `RELEASES_ENABLED` is `true`, as it is now. Every update of the release PR
 runs the full check suite, which holds runners that feature PRs wait for, so
@@ -350,6 +407,10 @@ The release build (`.github/workflows/release.yml`) reuses the same packaging
    release's Debian packages, attached to the release, and pushed to the AUR
    when `AUR_SSH_KEY` exists. Pull requests build and install the same
    PKGBUILD in an Arch Linux container.
+5. The Homebrew casks, the Scoop manifests and the winget manifests are
+   generated from the release's `SHA256SUMS` and published where their
+   tokens exist (see [Package managers](#package-managers)). Betas do the
+   same for the beta packages.
 
 The release page exists for about 40 minutes before its assets arrive, so the
 updater must treat a release without update metadata as "no update yet".

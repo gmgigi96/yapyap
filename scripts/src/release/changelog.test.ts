@@ -149,7 +149,13 @@ describe('findReleasePullRequest', () => {
     expect(RELEASE_TRACKS.map(({ changelog }) => changelog)).toEqual([
       'CHANGELOG.md',
       'extensions/call-recorder/CHANGELOG.md',
+      'packages/sdk/CHANGELOG.md',
+      'packages/extension-sign/CHANGELOG.md',
     ]);
+    expect(RELEASE_TRACKS.find(({ changelog }) => changelog.startsWith('packages/sdk'))).toEqual({
+      branch: 'release-please--branches--master--components--extension-sdk',
+      changelog: 'packages/sdk/CHANGELOG.md',
+    });
     await findReleasePullRequest({ graphql }, 'o/r', recorder);
     expect(graphql.mock.calls[0]?.[1]).toMatchObject({
       branch: 'release-please--branches--master--components--call-recorder',

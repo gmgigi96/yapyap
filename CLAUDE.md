@@ -41,6 +41,9 @@ Use pnpm (version pinned in `package.json`) on Node.js 24 LTS.
 | Smoke-test an installed package   | `YAPYAP_PACKAGED_EXECUTABLE=<path> pnpm test:smoke`                                                              |
 | Verify hardened fuses             | `node scripts/src/bin/verify-fuses.ts <executable or .app>`                                                      |
 | AUR PKGBUILD and .SRCINFO         | `node scripts/src/bin/aur.ts <version> <amd64 .deb> <arm64 .deb> <output dir>`                                   |
+| Homebrew, winget, Scoop manifests | `node scripts/src/bin/distribution.ts <version> <SHA256SUMS> <output dir>`                                       |
+| Check those manifests             | `bash packaging/distribution/test.sh` (needs podman or docker; runs `brew style` and `brew audit`)               |
+| Build an npm package              | `pnpm --filter @yapyap/extension-sdk build` (or `@yapyap/extension-sign`; writes `dist/`)                        |
 | Sign, verify or pack an extension | `node packages/extension-sign/src/bin/yapyap-extension-sign.ts sign --key <pem> <folder>`                        |
 | Check the extension marketplace   | `node scripts/src/bin/marketplace-index.ts marketplace [site dir]` (signs with `EXTENSION_SIGNING_KEY` when set) |
 | Sign first-party extensions (CI)  | `EXTENSION_SIGNING_KEY=… node scripts/src/bin/sign-extensions.ts` after building `extensions/`                   |
@@ -62,6 +65,7 @@ Update this table in the PR that adds a command.
 | Extension SDK    | `packages/sdk/`                                                                   | Typed extension API and manifest JSON Schema (TSDoc on every export)                    |
 | Signing CLI      | `packages/extension-sign/`                                                        | Ed25519 signing and verification (PKCS#8 PEM keys)                                      |
 | Extensions       | `extensions/call-recorder/`, `extensions/example/`                                | First-party extensions                                                                  |
+| Template         | `templates/extension/`                                                            | Standalone extension repository for authors, built against the npm SDK and signing CLI  |
 | Docs             | `docs/`                                                                           | VitePress site, ADRs in `docs/adr/`                                                     |
 | Repo automation  | `scripts/`                                                                        | Tested automation such as pinned-version checks; entries in `scripts/src/bin/`          |
 | Packaging        | `apps/desktop/electron-builder.yml`, `packaging/`                                 | electron-builder targets, fuses, desktop entry, AppStream metainfo                      |
@@ -279,3 +283,10 @@ Update this table in the PR that adds a command.
 - Packaged builds disable the Node inspector fuse, so Playwright's Electron
   launcher cannot drive them. The smoke test connects over CDP through the
   `DevToolsActivePort` file in the profile directory instead.
+- `templates/extension/` is copied whole into authors' own repositories, so
+  it never uses `workspace:` versions or extends this repository's configs.
+  It names the npm versions of the SDK and signing CLI, which release-please
+  bumps; overrides in `pnpm-workspace.yaml` link them to `packages/` here, so
+  CI lints and typechecks it against every change. The published packages
+  compile `src/` to `dist/` and swap their `exports` and `bin` through
+  `publishConfig`; inside the workspace they stay on the `.ts` sources.

@@ -151,6 +151,13 @@ their reasons belong in the ADRs (`docs/adr/`), and released changes in
 - Package repositories (#344, #350): signed apt, dnf and pacman
   repositories on packages.guita.org, tested by `packaging/repository/test.sh`.
 
+- winget, Scoop and Homebrew, prepared (#345, #346): `distribution.ts`
+  writes the winget manifests, the Scoop manifests and the Homebrew casks
+  from a release's `SHA256SUMS`. The **Distribute** workflow publishes them
+  after each release and beta, and skips each channel with a notice until
+  its token exists. CI checks the manifests against vendored schemas and
+  runs `brew style` and `brew audit --strict` in Homebrew's Linux container.
+
 - Total downloads (#347): the daily docs build writes `downloads.json` and
   the README badge's data.
 
@@ -165,6 +172,12 @@ their reasons belong in the ADRs (`docs/adr/`), and released changes in
 
 - Scorecard (#404, #406): releases carry Sigstore bundles and in-toto
   provenance.
+
+- SDK and signing CLI on npm (#477): `packages/sdk` and
+  `packages/extension-sign` are release-please components of their own and
+  are published with provenance by the release workflow.
+  `templates/extension/` is a standalone extension repository that builds
+  against them and signs each tagged release with the author's key.
 
 - Repository hygiene (#478, #499): one setup action for CI, one Vitest
   project list shared with mutation, one copy of the app icon.
