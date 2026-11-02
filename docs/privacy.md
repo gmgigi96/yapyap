@@ -49,6 +49,14 @@ browser. YapYap does not read, copy or upload them.
   minimized, WhatsApp sees its page as hidden and does not mark new messages
   in the open chat as read. Turn off **Keep chats unread while YapYap is
   hidden** in Settings → Privacy if you prefer the open chat to keep reading.
+- **AI agents connect only if you let them.** YapYap listens for no
+  connection unless you turn on **Let AI agents connect** in Settings →
+  Agents. Then it listens on `127.0.0.1` alone, so only programs on your
+  computer can reach it, and each needs a token you create. Your chats go
+  to an agent only as its token allows, and from there to wherever that
+  agent sends them. YapYap keeps only a fingerprint of each token, the
+  chats it lists as fingerprints, and what agents did until it quits,
+  never what they read or wrote. See [AI agents](guide/ai-agents.md).
 - **Crash reports are opt-in.** They are off unless you turn on **Crash
   reports** in Settings → Privacy. Then, after YapYap closes unexpectedly, it
   saves a plain-text report in its data folder (`crash-report.txt`): the

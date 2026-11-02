@@ -879,6 +879,17 @@ describe('startApp', () => {
     );
   });
 
+  it('gives agents each running account’s page, and none for another', async () => {
+    const f = fakes();
+    await startApp(f);
+    const menu = accountMenu(f);
+    const [entry] = menu.entries;
+    expect(menu.agentPage('missing')).toBeUndefined();
+    const page = menu.agentPage(entry?.id ?? '');
+    f.web.contents.executeJavaScriptInIsolatedWorld.mockResolvedValueOnce('Draft');
+    await expect(page?.readDraft()).resolves.toBe('Draft');
+  });
+
   it('puts the assistant’s draft in the active account’s open chat, and only there', async () => {
     const f = fakes();
     await startApp(f);
@@ -1317,6 +1328,21 @@ describe('startApp', () => {
       showFrom(f, 0);
       showFrom(f, 1);
       expect(f.natives).toHaveLength(0);
+    });
+
+    it('stops AI agents from the tray, which shows them while they can connect', async () => {
+      const f = twoAccounts();
+      let settings: Settings = { ...defaultSettings(), agents: { enabled: true, port: 50_000 } };
+      f.settings.current = () => settings;
+      await startApp(f);
+      clickTray(f, 'Stop AI Agents');
+      const [change] = f.settings.update.mock.calls[0] as [(current: Settings) => Settings];
+      settings = change(settings);
+      expect(settings.agents).toEqual({ enabled: false, port: 50_000 });
+      for (const [listener] of f.settings.onChange.mock.calls as [(next: Settings) => void][]) {
+        listener(settings);
+      }
+      expect(trayItem(f, 'Stop AI Agents')).toBeUndefined();
     });
 
     it('sends chat links and focus to the active account', async () => {

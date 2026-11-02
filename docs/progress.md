@@ -350,3 +350,14 @@ title, escape })` (`src/renderer/shared/mount.tsx`), which titles the
   fine-grained tokens (scopes, accounts, chat allowlist, limits, expiry)
   that let AI agents read chats, write drafts and, with `messages:send`,
   send to allowed chats. Design only; no code yet.
+- MCP server for AI agents (#576, ADR 0019, C47 in ADR 0008): Settings ›
+  Agents turns on an MCP server on `127.0.0.1`, built on the official SDK
+  (`@modelcontextprotocol/server`). Tokens, created and narrowed there,
+  carry scopes, accounts, a chat list, limits (or Unlimited) and an
+  expiry; agents can list unread chats, read the open chat, open listed
+  chats, read and write drafts and, with `messages:send`, send to listed
+  chats. The tray stops it, the activity stays in memory, and
+  `no-endpoint.test.ts` allows the one listener file.
+- Install page button (#579): the download button carries its own styles,
+  so it shows as a button on the install page too, not only on the home
+  page.

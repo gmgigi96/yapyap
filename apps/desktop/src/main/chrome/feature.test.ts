@@ -149,6 +149,20 @@ function setup() {
     confirmRemoveAccount: vi.fn(() => Promise.resolve(true)),
     captureSources: vi.fn<ChromeFeatureDependencies['captureSources']>(() => Promise.resolve([])),
     windowOf: vi.fn<ChromeFeatureDependencies['windowOf']>(() => null),
+    agents: {
+      tokens: {
+        create: vi.fn(() => Promise.resolve('')),
+        verify: vi.fn(() => undefined),
+        list: vi.fn(() => Promise.resolve([])),
+        count: vi.fn(() => 0),
+        revoke: vi.fn(),
+        narrow: vi.fn(() => false),
+      },
+      serve: vi.fn(() => Promise.reject(new Error('Not in this test.'))),
+      random: () => 0,
+      now: () => 0,
+      version: '1.0.0',
+    },
   } satisfies ChromeFeatureDependencies;
   const views = new WeakMap<object, ViewInfo>();
   const feature = createChromeFeature(deps);
@@ -427,6 +441,7 @@ describe('createChromeFeature', () => {
         'assistant.autoSuggest': true,
         'assistant.messages': '10',
         'assistant.localServer': '',
+        'agents.enabled': false,
         'appearance.theme': 'system',
         'appearance.autoHideMenuBar': false,
         'appearance.zoom': 1,
@@ -605,6 +620,7 @@ describe('createChromeFeature', () => {
       replaceDraft: vi.fn(() => Promise.resolve(true)),
       readDraft: vi.fn(() => Promise.resolve(null)),
       pressEnter: vi.fn(() => Promise.resolve(false)),
+      agentPage: vi.fn(() => undefined),
       switchTo: vi.fn(),
       add: vi.fn(),
       privacyScreen: false,
@@ -668,6 +684,7 @@ describe('createChromeFeature', () => {
       replaceDraft: vi.fn(() => Promise.resolve(true)),
       readDraft: vi.fn(() => Promise.resolve(null)),
       pressEnter: vi.fn(() => Promise.resolve(false)),
+      agentPage: vi.fn(() => undefined),
       switchTo: vi.fn(),
       add: vi.fn(),
       privacyScreen: false,
@@ -677,7 +694,18 @@ describe('createChromeFeature', () => {
       permissions: vi.fn((): readonly string[] | undefined => undefined),
       forgetPermissions: vi.fn(),
     };
+    t.clickAccount('Manage Accounts…');
+    expect(await t.call('agents:view')).toMatchObject({ accounts: [] });
     runtime.setAccountMenu(menu);
+    expect(await t.call('agents:view')).toMatchObject({
+      address: null,
+      accounts: [
+        { id: 'a', name: 'Personal' },
+        { id: 'b', name: 'Work' },
+      ],
+    });
+    expect(await t.call('agents:open-chat', undefined, 'a')).toBeNull();
+    expect(menu.agentPage).toHaveBeenCalledWith('a');
     t.clickAccount('Personal');
     expect(menu.switchTo).toHaveBeenCalledWith('a');
     t.clickAccount('Add Account');
@@ -837,6 +865,7 @@ describe('createChromeFeature', () => {
       replaceDraft: vi.fn(() => Promise.resolve(true)),
       readDraft: vi.fn(() => Promise.resolve(null)),
       pressEnter: vi.fn(() => Promise.resolve(false)),
+      agentPage: vi.fn(() => undefined),
       switchTo: vi.fn(),
       add: vi.fn(),
       privacyScreen: false,
@@ -881,6 +910,7 @@ describe('createChromeFeature', () => {
       replaceDraft: vi.fn(() => Promise.resolve(true)),
       readDraft: vi.fn(() => Promise.resolve(null)),
       pressEnter: vi.fn(() => Promise.resolve(false)),
+      agentPage: vi.fn(() => undefined),
       switchTo: vi.fn(),
       add: vi.fn(),
       privacyScreen: false,
@@ -910,6 +940,7 @@ describe('createChromeFeature', () => {
       replaceDraft: vi.fn(() => Promise.resolve(true)),
       readDraft: vi.fn(() => Promise.resolve(null)),
       pressEnter: vi.fn(() => Promise.resolve(false)),
+      agentPage: vi.fn(() => undefined),
       switchTo: vi.fn(),
       add: vi.fn(),
       privacyScreen: false,

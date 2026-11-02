@@ -24,6 +24,6 @@ ADR that supersedes the old one.
 | [0016](0016-extensions-not-plugins.md)                | Extensions, not plugins                            | Superseded by 0018 |
 | [0017](0017-assistant-is-part-of-yapyap.md)           | The assistant is part of YapYap                    | Accepted           |
 | [0018](0018-no-extensions.md)                         | No extensions, marketplace or call recording       | Accepted           |
-| [0019](0019-mcp-server.md)                            | An MCP server for AI agents                        | Proposed           |
+| [0019](0019-mcp-server.md)                            | An MCP server for AI agents                        | Accepted           |
 
 New ADRs copy [`template.md`](template.md) and take the next free number.

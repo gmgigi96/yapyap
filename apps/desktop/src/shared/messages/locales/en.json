@@ -91,6 +91,7 @@
     "useDefaultFolder": "Use Downloads Folder",
     "sections": {
       "assistant": "Assistant",
+      "agents": "Agents",
       "general": "General",
       "spelling": "Spelling",
       "appearance": "Appearance",
@@ -164,6 +165,12 @@
         "localServer": {
           "label": "Model server address",
           "description": "A server on this computer that speaks OpenAI’s API, such as Ollama’s."
+        }
+      },
+      "agents": {
+        "enabled": {
+          "label": "Let AI agents connect",
+          "description": "Runs an MCP server on this computer, so AI agents holding a token you create here can read and write in the chats you allow. Nothing on the network can reach it."
         }
       },
       "general": {
@@ -611,6 +618,103 @@
       "laterHint": "You can set it up any time in Settings, under Assistant.",
       "done": "Done. You can change this in Settings, under Assistant."
     }
+  },
+  "agents": {
+    "intro": "AI agents such as Claude Code connect to YapYap over MCP. Each agent needs a token, which says exactly what it may do, in which accounts and chats, and for how long.",
+    "address": "Agents connect at",
+    "copy": "Copy",
+    "copied": "Copied",
+    "off": "Turn on “Let AI agents connect” to give agents an address.",
+    "portTaken": "Another program uses port {{port}}, so agents can’t connect. Pick another port.",
+    "newPort": "Pick Another Port",
+    "sent": "{{token}} sent a message to {{chat}}.",
+    "revokedToken": "A revoked token",
+    "problems": {
+      "invalid": "Give the token a name, at least one thing it may do, and at least one account.",
+      "unknownAccount": "One of the accounts no longer exists.",
+      "chatsNeeded": "A token that opens chats or sends messages must list the chats it may reach.",
+      "sendingExpiry": "A token that sends messages must expire within 30 days.",
+      "tooMany": "YapYap keeps at most 20 tokens. Revoke one first."
+    },
+    "tokens": {
+      "title": "Tokens",
+      "none": "No tokens yet.",
+      "create": "Create a Token…",
+      "revoke": "Revoke",
+      "remove": "Remove {{item}}",
+      "removeMark": "×",
+      "allChats": "All chats",
+      "chatCount_one": "1 chat",
+      "chatCount_other": "{{count}} chats",
+      "unnamedChat": "A chat YapYap couldn’t keep the name of",
+      "expires": "Expires {{date}}",
+      "neverExpires": "Never expires",
+      "expired": "Expired",
+      "lastUsed": "Last used {{date}}",
+      "neverUsed": "Not used yet",
+      "unlimited": "Unlimited",
+      "limits": "{{calls}} calls a minute",
+      "sendLimits": "{{minute}} messages a minute, {{day}} a day"
+    },
+    "form": {
+      "title": "New token",
+      "name": "Name",
+      "namePlaceholder": "Claude Code on this laptop",
+      "accounts": "Accounts",
+      "scopes": "What it can do",
+      "presets": {
+        "read": "Read Only",
+        "draft": "Read and Draft",
+        "custom": "Custom"
+      },
+      "chats": "Chats",
+      "allChats": "All chats",
+      "listedChats": "Only these chats",
+      "chatName": "Chat name, exactly as WhatsApp shows it",
+      "addChat": "Add",
+      "addOpenChat": "Add the Open Chat",
+      "noOpenChat": "No chat is open in that account.",
+      "limits": "Limits",
+      "callsPerMinute": "Calls a minute",
+      "sendsPerMinute": "Messages sent a minute",
+      "sendsPerDay": "Messages sent a day",
+      "unlimited": "Unlimited",
+      "unlimitedSending": "With no limit, nothing slows down an agent that a message has tricked, except the chats it may reach.",
+      "notify": "Notify me each time it sends",
+      "expiry": "Expires",
+      "expiryOptions": {
+        "1": "In 1 day",
+        "7": "In 7 days",
+        "30": "In 30 days",
+        "90": "In 90 days",
+        "never": "Never"
+      },
+      "sendWarning": "An agent that sends can be tricked by a message someone sends you into sending things you didn’t want, and WhatsApp may ban numbers that send automatically. Only list chats you trust it with.",
+      "create": "Create Token",
+      "cancel": "Cancel"
+    },
+    "created": {
+      "title": "Your new token",
+      "once": "Copy it now: YapYap keeps only a fingerprint of it and can’t show it again.",
+      "claudeCode": "Add it to Claude Code with:",
+      "other": "Other MCP clients connect over HTTP with this header:",
+      "done": "Done"
+    },
+    "scopes": {
+      "chat:read-unread-summary": "See unread chats: name, unread count and last message",
+      "chat:read-active": "Read the open chat’s latest messages",
+      "chat:open": "Open a chat it lists",
+      "composer:read-draft": "Read what is typed in the message box",
+      "composer:insert-draft": "Write drafts in the message box, without sending",
+      "messages:send": "Send messages, without asking you"
+    },
+    "activity": {
+      "title": "Recent activity",
+      "none": "No agent has connected since YapYap started.",
+      "entry": "{{time}} · {{token}} · {{tool}} in {{account}}: {{result}}",
+      "note": "Kept only until YapYap quits, and never with what agents read or wrote."
+    },
+    "trayStop": "Stop AI Agents"
   },
   "chatList": {
     "label": "Chat list width",

@@ -32,8 +32,9 @@ describe('exportSettings', () => {
   it('writes the settings under a format marker, readable by people', () => {
     const settings = defaultSettings();
     const text = exportSettings(settings);
-    const { assistant, ...exported } = settings;
+    const { assistant, agents, ...exported } = settings;
     expect(assistant).toMatchObject({ provider: 'auto' });
+    expect(agents).toEqual({ enabled: false, port: 0 });
     expect(JSON.parse(text)).toEqual({ format: 'yapyap-settings', settings: exported });
     expect(text).toMatch(/^\{\n {2}"format": "yapyap-settings",\n/);
     expect(text.endsWith('}\n')).toBe(true);
@@ -42,8 +43,9 @@ describe('exportSettings', () => {
   it('leaves out anything the schema does not define, whatever got into memory', () => {
     const settings = { ...defaultSettings(), session: 'cookie=secret' };
     const exported = JSON.parse(exportSettings(settings)) as { settings: Record<string, unknown> };
-    const { assistant, ...expected } = defaultSettings();
+    const { assistant, agents, ...expected } = defaultSettings();
     expect(assistant).toBeDefined();
+    expect(agents).toBeDefined();
     expect(exported.settings).toEqual(expected);
     expect(settings.session).toBe('cookie=secret');
   });
@@ -146,5 +148,11 @@ describe('keepLocal', () => {
     };
     expect(keepLocal(imported, current)).toEqual({ ...imported, assistant: local });
     expect(keepLocal(current, imported).assistant).toEqual(imported.assistant);
+  });
+
+  it('never lets an imported file turn on the MCP server for agents (ADR 0019)', () => {
+    const current = defaultSettings();
+    const imported = { ...defaultSettings(), agents: { enabled: true, port: 50_000 } };
+    expect(keepLocal(imported, current).agents).toEqual({ enabled: false, port: 0 });
   });
 });

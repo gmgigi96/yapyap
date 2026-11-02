@@ -38,9 +38,10 @@ export const EXPORTED_SECTIONS = [
 /**
  * Sections that stay with this installation: never exported, and kept as
  * they are on import. A file someone hands the user must not be able to
- * point the assistant at another provider or server (ADR 0017).
+ * point the assistant at another provider or server (ADR 0017), or turn on
+ * the MCP server for agents (ADR 0019).
  */
-export const LOCAL_SECTIONS = ['assistant'] as const;
+export const LOCAL_SECTIONS = ['assistant', 'agents'] as const;
 
 /** Imported settings, with this installation's own sections left as they are. */
 export function keepLocal(imported: Settings, current: Settings): Settings {

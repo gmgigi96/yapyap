@@ -5,9 +5,10 @@ Windows and macOS. It wraps `https://web.whatsapp.com` in a hardened Electron
 shell, so WhatsApp runs on the stock Chromium it is built for. It adds isolated
 multi-account sessions, native notifications, a tray, and recovery tools. Its
 main feature is a built-in AI writing assistant, with a private model on the
-user's computer or the provider they choose (ADR 0017). It has no extension
-system (ADR 0018), no telemetry, and it is not affiliated with WhatsApp or
-Meta.
+user's computer or the provider they choose (ADR 0017). AI agents can
+connect to it over MCP, when the user allows it (ADR 0019). It has no
+extension system (ADR 0018), no telemetry, and it is not affiliated with
+WhatsApp or Meta.
 
 Start every session by reading this file, `docs/progress.md`, and the ADRs
 under `docs/adr/`.
@@ -57,6 +58,7 @@ Update this table in the PR that adds a command.
 | Chrome renderer  | `apps/desktop/src/renderer/`                                                      | YapYap's own UI (Preact), served from `app://`                                          |
 | WhatsApp adapter | `apps/desktop/src/adapter/`                                                       | **The only place** with WhatsApp DOM knowledge; versioned selectors; returns plain data |
 | AI assistant     | `apps/desktop/src/main/assistant/`, `src/renderer/engine/`, `src/preload/engine/` | Setup, providers, bar, private model and its engine window (ADR 0017)                   |
+| MCP server       | `apps/desktop/src/main/agents/`                                                   | Opt-in server for AI agents on 127.0.0.1, its tokens and tools (ADR 0019)               |
 | Docs             | `docs/`                                                                           | VitePress site, ADRs in `docs/adr/`                                                     |
 | Repo automation  | `scripts/`                                                                        | Tested automation such as pinned-version checks; entries in `scripts/src/bin/`          |
 | Packaging        | `apps/desktop/electron-builder.yml`, `packaging/`                                 | electron-builder targets, fuses, desktop entry, AppStream metainfo                      |
@@ -91,8 +93,9 @@ Update this table in the PR that adds a command.
    WhatsApp itself. See ADR 0001.
 8. **No extensions.** YapYap runs no third-party code beside WhatsApp, and
    has no extension host, marketplace or call recorder (ADR 0018). A
-   feature goes into YapYap itself. Nothing sends a message for the user:
-   the assistant inserts drafts only.
+   feature goes into YapYap itself. Nothing sends a message for the user
+   but an AI agent whose token has `messages:send`, to the chats it lists
+   (ADR 0019): the assistant inserts drafts only.
 9. **Privacy.** No telemetry. Never log or persist message content, phone
    numbers or secrets. Secrets go through `safeStorage`.
 10. **Versions.** Latest stable releases only, pinned exactly. Justify new
@@ -261,13 +264,22 @@ Update this table in the PR that adds a command.
   idle. Never open it at startup: the startup bench budgets renderer
   processes (ADR 0009). It runs on `app://engine` under its own CSP; serve
   nothing else there.
-- The `assistant` settings section is local: never exported or imported (`LOCAL_SECTIONS` in `settings/transfer.ts`). The
+- The `assistant` and `agents` settings sections are local: never exported or imported (`LOCAL_SECTIONS` in `settings/transfer.ts`). The
   assistant's state that is no preference lives in `assistant.json` and
   `assistant-chats.json`, its keys and chat names in `secrets.json`.
 - The assistant never sends a message: it puts drafts in the message box.
   Only the user's click on a suggestion's send button sends, after the bar
   checks the chat is unchanged. Its UI text, including the bar's, lives in
   `en.json` under `assistant`.
+- YapYap listens on no port but the MCP server's (ADR 0019):
+  `src/main/agents/listener.ts`, on `127.0.0.1`, only while **Let AI
+  agents connect** is on. `no-endpoint.test.ts` fails if any other file
+  opens a server. Every request passes `request-checks.ts` and a token
+  before the official SDK (`@modelcontextprotocol/server`) sees it; each
+  tool checks the token's accounts, scopes and chats again before it
+  touches WhatsApp. The `agents` settings section is local like
+  `assistant`, tokens live in `agent-tokens.json` as hashes, and their
+  chat names in `secrets.json`.
 - Packaged builds disable the Node inspector fuse, so Playwright's Electron
   launcher cannot drive them. The smoke test connects over CDP through the
   `DevToolsActivePort` file in the profile directory instead.

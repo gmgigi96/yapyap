@@ -48,6 +48,15 @@ function blank() {
     spelling: { languages: vi.fn(), choose: vi.fn() },
     customCode: { get: vi.fn(), save: vi.fn(), preview: vi.fn() },
     proxyLogin: { request: vi.fn(), answer: vi.fn() },
+    agents: {
+      view: vi.fn(),
+      create: vi.fn(),
+      revoke: vi.fn(),
+      narrow: vi.fn(),
+      newPort: vi.fn(),
+      openChat: vi.fn(),
+      copy: vi.fn(),
+    },
   } satisfies ChromeApi;
 }
 

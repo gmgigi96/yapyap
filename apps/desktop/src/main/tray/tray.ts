@@ -24,6 +24,8 @@ export interface TrayDependencies {
   readonly setDoNotDisturb: (on: boolean) => void;
   readonly stopSharing: (account: string) => void;
   readonly togglePrivacyScreen: () => void;
+  /** Turns the MCP server for AI agents off (ADR 0019). */
+  readonly stopAgents: () => void;
   readonly quit: () => void;
 }
 
@@ -36,6 +38,8 @@ export interface TrayState {
   /** Accounts sharing a screen or window, which the tray must always show (#161). */
   readonly sharing: readonly string[];
   readonly privacyScreen: boolean;
+  /** The MCP server for AI agents is on. */
+  readonly agents: boolean;
 }
 
 /** The running accounts, when there is a choice; picking one shows it. */
@@ -123,6 +127,8 @@ function menuOf(
     ...accountItems(state, window, deps),
     { type: 'separator' },
     ...switchItems(state, deps),
+    // While agents can connect, one click cuts them off (ADR 0019).
+    ...(state.agents ? [{ label: en.agents.trayStop, click: deps.stopAgents }] : []),
     { label: en.tray.settings, click: deps.openSettings },
     { type: 'separator' },
     { label: en.tray.quit, click: deps.quit },

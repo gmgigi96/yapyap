@@ -75,6 +75,7 @@ export default defineConfig({
           items: [
             { text: 'Get started', link: '/guide/get-started' },
             { text: 'AI assistant', link: '/guide/ai-assistant' },
+            { text: 'AI agents (MCP)', link: '/guide/ai-agents' },
             { text: 'User guide', link: '/guide/' },
             { text: 'Install', link: '/guide/install' },
             { text: 'Troubleshooting', link: '/guide/troubleshooting' },
@@ -132,6 +133,7 @@ export default defineConfig({
             { text: '0016 Extensions (superseded)', link: '/adr/0016-extensions-not-plugins' },
             { text: '0017 Assistant built in', link: '/adr/0017-assistant-is-part-of-yapyap' },
             { text: '0018 No extensions', link: '/adr/0018-no-extensions' },
+            { text: '0019 MCP server for agents', link: '/adr/0019-mcp-server' },
           ],
         },
       ],

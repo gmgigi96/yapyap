@@ -45,6 +45,7 @@ const DEFAULTS = {
     messages: '10',
     localServer: '',
   },
+  agents: { enabled: false, port: 0 },
   shortcuts: { custom: {}, global: { toggleWindow: '' } },
   downloads: { askWhere: false, openWhenDone: false, folder: '' },
   spelling: { enabled: false, languages: [] },

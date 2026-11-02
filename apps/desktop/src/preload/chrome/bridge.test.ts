@@ -42,6 +42,22 @@ describe('createChromeBridge', () => {
     expect(await api.assistant.findServers()).toBe('ignored');
     await api.assistant.privateModel('download');
     await api.assistant.forgetChat('a', 'b');
+    const spec = {
+      name: 'Agent',
+      scopes: ['chat:read-active'],
+      accounts: ['a'],
+      chats: 'all',
+      limits: { callsPerMinute: 60, sendsPerMinute: 5, sendsPerDay: 100 },
+      expiresInDays: 30,
+      notify: true,
+    } as const;
+    expect(await api.agents.view()).toBe('ignored');
+    expect(await api.agents.create(spec)).toBe('ignored');
+    await api.agents.revoke('0123456789abcdef');
+    expect(await api.agents.narrow('0123456789abcdef', { scope: 'chat:open' })).toBe('ignored');
+    await api.agents.newPort();
+    expect(await api.agents.openChat('a')).toBe('ignored');
+    await api.agents.copy('yapyap_mcp_x');
     expect(await api.accounts.list()).toBe('ignored');
     const change = { name: 'Work', color: 'blue', enabled: true, muted: false, proxy: '' };
     expect(await api.accounts.save('a', change)).toBe('ignored');
@@ -97,6 +113,13 @@ describe('createChromeBridge', () => {
       ['assistant:find-servers'],
       ['assistant:private-model', 'download'],
       ['assistant:forget-chat', 'a', 'b'],
+      ['agents:view'],
+      ['agents:create', spec],
+      ['agents:revoke', '0123456789abcdef'],
+      ['agents:narrow', '0123456789abcdef', { scope: 'chat:open' }],
+      ['agents:new-port'],
+      ['agents:open-chat', 'a'],
+      ['agents:copy', 'yapyap_mcp_x'],
       ['accounts:list'],
       [
         'accounts:save',
@@ -137,6 +160,7 @@ describe('createChromeBridge', () => {
       'recovery',
       'settings',
       'assistant',
+      'agents',
       'chat',
       'accounts',
       'sidebar',
@@ -158,6 +182,15 @@ describe('createChromeBridge', () => {
       'onState',
     ]);
     expect(Object.keys(api.chat)).toEqual(['openNumber']);
+    expect(Object.keys(api.agents)).toEqual([
+      'view',
+      'create',
+      'revoke',
+      'narrow',
+      'newPort',
+      'openChat',
+      'copy',
+    ]);
     expect(Object.keys(api.shortcuts)).toEqual(['list', 'set']);
     expect(Object.keys(api.downloads)).toEqual(['list', 'act', 'clear']);
     expect(Object.keys(api.spelling)).toEqual(['languages', 'choose']);

@@ -86,6 +86,7 @@ export interface Messages {
     readonly useDefaultFolder: string;
     readonly sections: {
       readonly assistant: string;
+      readonly agents: string;
       readonly general: string;
       readonly spelling: string;
       readonly appearance: string;
@@ -141,6 +142,9 @@ export interface Messages {
           readonly options: { readonly '5': string; readonly '10': string; readonly '20': string };
         };
         readonly localServer: { readonly label: string; readonly description: string };
+      };
+      readonly agents: {
+        readonly enabled: { readonly label: string; readonly description: string };
       };
       readonly general: {
         readonly startMinimized: { readonly label: string; readonly description: string };
@@ -529,6 +533,110 @@ export interface Messages {
       readonly laterHint: string;
       readonly done: string;
     };
+  };
+  readonly agents: {
+    readonly intro: string;
+    readonly address: string;
+    readonly copy: string;
+    readonly copied: string;
+    readonly off: string;
+    readonly portTaken: (params: { readonly port: string | number }) => string;
+    readonly newPort: string;
+    readonly sent: (params: {
+      readonly chat: string | number;
+      readonly token: string | number;
+    }) => string;
+    readonly revokedToken: string;
+    readonly problems: {
+      readonly invalid: string;
+      readonly unknownAccount: string;
+      readonly chatsNeeded: string;
+      readonly sendingExpiry: string;
+      readonly tooMany: string;
+    };
+    readonly tokens: {
+      readonly title: string;
+      readonly none: string;
+      readonly create: string;
+      readonly revoke: string;
+      readonly remove: (params: { readonly item: string | number }) => string;
+      readonly removeMark: string;
+      readonly allChats: string;
+      readonly chatCount: (params: { readonly count: number }) => string;
+      readonly unnamedChat: string;
+      readonly expires: (params: { readonly date: string | number }) => string;
+      readonly neverExpires: string;
+      readonly expired: string;
+      readonly lastUsed: (params: { readonly date: string | number }) => string;
+      readonly neverUsed: string;
+      readonly unlimited: string;
+      readonly limits: (params: { readonly calls: string | number }) => string;
+      readonly sendLimits: (params: {
+        readonly day: string | number;
+        readonly minute: string | number;
+      }) => string;
+    };
+    readonly form: {
+      readonly title: string;
+      readonly name: string;
+      readonly namePlaceholder: string;
+      readonly accounts: string;
+      readonly scopes: string;
+      readonly presets: { readonly read: string; readonly draft: string; readonly custom: string };
+      readonly chats: string;
+      readonly allChats: string;
+      readonly listedChats: string;
+      readonly chatName: string;
+      readonly addChat: string;
+      readonly addOpenChat: string;
+      readonly noOpenChat: string;
+      readonly limits: string;
+      readonly callsPerMinute: string;
+      readonly sendsPerMinute: string;
+      readonly sendsPerDay: string;
+      readonly unlimited: string;
+      readonly unlimitedSending: string;
+      readonly notify: string;
+      readonly expiry: string;
+      readonly expiryOptions: {
+        readonly '1': string;
+        readonly '7': string;
+        readonly '30': string;
+        readonly '90': string;
+        readonly never: string;
+      };
+      readonly sendWarning: string;
+      readonly create: string;
+      readonly cancel: string;
+    };
+    readonly created: {
+      readonly title: string;
+      readonly once: string;
+      readonly claudeCode: string;
+      readonly other: string;
+      readonly done: string;
+    };
+    readonly scopes: {
+      readonly 'chat:read-unread-summary': string;
+      readonly 'chat:read-active': string;
+      readonly 'chat:open': string;
+      readonly 'composer:read-draft': string;
+      readonly 'composer:insert-draft': string;
+      readonly 'messages:send': string;
+    };
+    readonly activity: {
+      readonly title: string;
+      readonly none: string;
+      readonly entry: (params: {
+        readonly account: string | number;
+        readonly result: string | number;
+        readonly time: string | number;
+        readonly token: string | number;
+        readonly tool: string | number;
+      }) => string;
+      readonly note: string;
+    };
+    readonly trayStop: string;
   };
   readonly chatList: { readonly label: string; readonly hint: string };
   readonly notifications: {

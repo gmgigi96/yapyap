@@ -1,3 +1,9 @@
+import type {
+  AgentNarrowingStep,
+  AgentsView,
+  AgentTokenCreated,
+  AgentTokenSpec,
+} from './agents-api.ts';
 import type { SettingValue } from './settings-fields.ts';
 import type { CustomCode } from './custom-code.ts';
 import type { ActiveShortcut } from './shortcuts.ts';
@@ -155,6 +161,21 @@ export interface ChromeApi {
     readonly findServers: () => Promise<readonly FoundServer[]>;
     readonly privateModel: (action: PrivateModelAction) => Promise<void>;
     readonly forgetChat: (account: string, id: string) => Promise<void>;
+  };
+  /** Settings › Agents: the MCP server's tokens and what agents did (ADR 0019). */
+  readonly agents: {
+    readonly view: () => Promise<AgentsView>;
+    /** A new token, shown once; or why YapYap refused it. */
+    readonly create: (spec: AgentTokenSpec) => Promise<AgentTokenCreated>;
+    readonly revoke: (id: string) => Promise<void>;
+    /** Takes one scope, account or chat away; false when the token would be left with none. */
+    readonly narrow: (id: string, step: AgentNarrowingStep) => Promise<boolean>;
+    /** Moves the server to another port; agents must then be given the new address. */
+    readonly newPort: () => Promise<void>;
+    /** The name of the chat open in `account`, to add to a token; null when none is open. */
+    readonly openChat: (account: string) => Promise<string | null>;
+    /** Copies a new token, or a command that holds it, which chrome pages cannot do themselves. */
+    readonly copy: (text: string) => Promise<void>;
   };
   readonly chat: {
     /** Opens the chat with an international number; false when WhatsApp cannot yet. */
@@ -372,6 +393,13 @@ export const CHROME_CHANNELS = {
   assistantFindServers: 'assistant:find-servers',
   assistantPrivateModel: 'assistant:private-model',
   assistantForgetChat: 'assistant:forget-chat',
+  agentsView: 'agents:view',
+  agentsCreate: 'agents:create',
+  agentsRevoke: 'agents:revoke',
+  agentsNarrow: 'agents:narrow',
+  agentsNewPort: 'agents:new-port',
+  agentsOpenChat: 'agents:open-chat',
+  agentsCopy: 'agents:copy',
 } as const;
 
 /** Tells the sidebar how the accounts stand. */
