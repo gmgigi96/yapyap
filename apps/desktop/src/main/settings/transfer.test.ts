@@ -32,8 +32,7 @@ describe('exportSettings', () => {
   it('writes the settings under a format marker, readable by people', () => {
     const settings = defaultSettings();
     const text = exportSettings(settings);
-    const { extensions, assistant, ...exported } = settings;
-    expect(extensions).toEqual({ developerMode: false, chatMessages: '20' });
+    const { assistant, ...exported } = settings;
     expect(assistant).toMatchObject({ provider: 'auto' });
     expect(JSON.parse(text)).toEqual({ format: 'yapyap-settings', settings: exported });
     expect(text).toMatch(/^\{\n {2}"format": "yapyap-settings",\n/);
@@ -43,8 +42,8 @@ describe('exportSettings', () => {
   it('leaves out anything the schema does not define, whatever got into memory', () => {
     const settings = { ...defaultSettings(), session: 'cookie=secret' };
     const exported = JSON.parse(exportSettings(settings)) as { settings: Record<string, unknown> };
-    const { extensions, assistant, ...expected } = defaultSettings();
-    expect([extensions, assistant]).not.toContain(undefined);
+    const { assistant, ...expected } = defaultSettings();
+    expect(assistant).toBeDefined();
     expect(exported.settings).toEqual(expected);
     expect(settings.session).toBe('cookie=secret');
   });
@@ -137,15 +136,15 @@ describe('readImport', () => {
 });
 
 describe('keepLocal', () => {
-  it('keeps the extension settings as they are, whatever the imported file says', () => {
-    const local = { developerMode: true, chatMessages: '5', autoSuggest: false } as const;
-    const current = { ...defaultSettings(), extensions: local };
+  it('keeps the assistant settings as they are, whatever the imported file says', () => {
+    const local = { ...defaultSettings().assistant, provider: 'local', localServer: '' } as const;
+    const current = { ...defaultSettings(), assistant: local };
     const imported = {
       ...defaultSettings(),
       general: { ...defaultSettings().general, autostart: true },
-      extensions: { developerMode: false, chatMessages: '50', autoSuggest: true } as const,
+      assistant: { ...defaultSettings().assistant, provider: 'openai' } as const,
     };
-    expect(keepLocal(imported, current)).toEqual({ ...imported, extensions: local });
-    expect(keepLocal(current, imported).extensions).toEqual(imported.extensions);
+    expect(keepLocal(imported, current)).toEqual({ ...imported, assistant: local });
+    expect(keepLocal(current, imported).assistant).toEqual(imported.assistant);
   });
 });

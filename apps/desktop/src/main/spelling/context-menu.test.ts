@@ -122,35 +122,4 @@ describe('attachContextMenu', () => {
       expect(popup).toHaveBeenCalledOnce();
     });
   });
-
-  it('adds others’ items after its own, apart, or alone where it offers nothing', async () => {
-    const clicked = page();
-    const popup = vi.fn();
-    const extension = { label: 'Hello: Translate' };
-    const added = vi.fn(() => Promise.resolve([extension]));
-    attachContextMenu(clicked, actions(), popup, added);
-    clicked.click(params({ isEditable: false }));
-    await vi.waitFor(() => {
-      expect(popup).toHaveBeenLastCalledWith([extension]);
-    });
-    expect(added).toHaveBeenCalledWith(params({ isEditable: false }));
-    clicked.click(params());
-    await vi.waitFor(() => {
-      expect(popup).toHaveBeenCalledTimes(2);
-    });
-    const [items] = popup.mock.lastCall as [{ label?: string; type?: string }[]];
-    expect(items.slice(-2)).toEqual([{ type: 'separator' }, extension]);
-  });
-
-  it('still shows its own items when the others fail', async () => {
-    const clicked = page();
-    const popup = vi.fn();
-    attachContextMenu(clicked, actions(), popup, () => Promise.reject(new Error('gone')));
-    clicked.click(params());
-    await vi.waitFor(() => {
-      expect(popup).toHaveBeenCalledOnce();
-    });
-    const [items] = popup.mock.lastCall as [{ role?: string }[]];
-    expect(items.at(0)?.role).toBe('cut');
-  });
 });

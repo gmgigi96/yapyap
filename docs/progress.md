@@ -305,3 +305,8 @@ title, escape })` (`src/renderer/shared/mount.tsx`), which titles the
 - CI job timeouts (#569): smoke jobs stop after 20 minutes and package
   jobs after 60, so a hung runner step no longer holds a CI run for six
   hours.
+- No extensions (#571, ADR 0018): the extension host, the marketplace, the
+  SDK and signing CLI, the extension template and the call recorder are
+  gone, with their settings, windows, menu items, shortcuts, install links,
+  release components and docs. The assistant keeps the chat readers and the
+  capped download it shared with them.

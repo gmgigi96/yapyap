@@ -197,7 +197,7 @@ export async function whatsAppPage(app: ElectronApplication, besides?: Page): Pr
 /**
  * The web contents of the first account's WhatsApp, in the main process,
  * once its page has appeared. Every other web contents is YapYap's own, on
- * `app:` or `extension:`, so WhatsApp's is the one on HTTP.
+ * `app:`, so WhatsApp's is the one on HTTP.
  */
 export async function whatsAppContents(
   app: ElectronApplication,

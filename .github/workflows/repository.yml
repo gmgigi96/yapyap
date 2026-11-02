@@ -7,13 +7,6 @@ name: Package repositories
 on:
   workflow_call:
   workflow_dispatch:
-  # The extension index expires 30 days after it is signed (ADR 0014), so it is
-  # signed again every week, and as soon as the marketplace entries change.
-  schedule:
-    - cron: '17 4 * * 1'
-  push:
-    branches: [master]
-    paths: [marketplace/**]
 
 permissions:
   contents: read
@@ -39,8 +32,6 @@ jobs:
       - uses: ./.github/actions/setup
         with:
           install: 'false'
-      # The extension index is checked with the SDK's schemas and the signing package.
-      - run: pnpm install --frozen-lockfile --ignore-scripts
       - name: Check the signing key and deploy token exist
         id: ready
         run: |
@@ -55,16 +46,6 @@ jobs:
         run: |
           gh api "repos/$GITHUB_REPOSITORY/releases" --paginate --slurp | jq 'add' > "$RUNNER_TEMP/releases.json"
           node scripts/src/bin/package-repository.ts "$SITE" < "$RUNNER_TEMP/releases.json"
-      - name: Build and sign the extension marketplace index
-        if: steps.ready.outputs.ready == 'true'
-        env:
-          EXTENSION_SIGNING_KEY: ${{ secrets.EXTENSION_SIGNING_KEY }}
-        run: |
-          if [[ -z $EXTENSION_SIGNING_KEY ]]; then
-            echo "::error::EXTENSION_SIGNING_KEY is missing, so the extension index cannot be signed."
-            exit 1
-          fi
-          node scripts/src/bin/marketplace-index.ts marketplace "$SITE"
       - name: Download the planned packages
         if: steps.ready.outputs.ready == 'true'
         run: |
@@ -132,12 +113,3 @@ jobs:
             # -dd: the package alone, without the files of its dependencies.
             file=$(pacman -Sddp --print-format "%f" yapyap-bin)
             curl -sI "https://packages.guita.org/arch/beta/x86_64/$file" | grep -qi "^location: https://github.com/vascoguita/yapyap/releases/download/"'
-      - name: Check the extension index is served, signed, and its archives redirect to releases
-        if: steps.ready.outputs.ready == 'true'
-        run: |
-          curl -fsS https://packages.guita.org/extensions/index.json -o "$RUNNER_TEMP/index.json"
-          curl -fsS https://packages.guita.org/extensions/index.json.sig -o /dev/null
-          path=$(head -n 1 <(grep '^/extensions/' "$SITE/_redirects") | cut -d ' ' -f 1)
-          if [[ -n $path ]]; then
-            curl -sI "https://packages.guita.org$path" | grep -qi "^location: https://github.com/vascoguita/yapyap/releases/download/"
-          fi

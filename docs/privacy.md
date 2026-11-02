@@ -111,33 +111,13 @@ spelling dictionary are kept with the account's data.
 | `logs/`                                 | Redacted logs                                                                                                                                          | YapYap deletes them after 14 days; delete them yourself at any time     |
 | `Dictionaries/`                         | Spelling dictionaries downloaded once you turned spell checking on                                                                                     | Delete it while YapYap is closed                                        |
 
-### Extensions
-
-| Path                             | What it holds                                                                                                                  | How to delete it                             |
-| -------------------------------- | ------------------------------------------------------------------------------------------------------------------------------ | -------------------------------------------- |
-| `extensions/<id>/`               | The extension's files                                                                                                          | **Remove…** in **Extensions…**               |
-| `extensions/.extensions.json`    | Each extension's version, signing key fingerprint, permissions, approved hosts and settings                                    | **Remove…** deletes the extension's entry    |
-| `extensions/.storage/<id>.json`  | Data the extension stored for itself                                                                                           | **Remove…**                                  |
-| `extensions/.secrets.json`       | Secrets extensions keep, such as API keys, encrypted by your system's keychain                                                 | **Remove…** deletes that extension's secrets |
-| `Partitions/…extension…`         | For an extension allowed to keep its own data, its browser data, apart from WhatsApp's and other extensions'. Others keep none | **Remove…**                                  |
-| `extensions/audit.log`, `.log.1` | Which operations extensions called and how each went: never what they sent or received. Two files of 256 KiB at most           | Delete them while YapYap is closed           |
-
-### Call recordings
-
-| Path                                                             | What it holds                                                                                           | How to delete it                            |
-| ---------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------- | ------------------------------------------- |
-| `YapYap/` in your Music folder, or the folder chosen in Settings | The calls you chose to record, named by date and time only, never by contact                            | Delete the files; YapYap stops listing them |
-| `recordings.json`                                                | Each recording's file name, start time and length, so extensions can list them without seeing the files | Delete it while YapYap is closed            |
-| `recording-consent.json`                                         | That you confirmed the warning about asking everyone on a call before recording it, and which version   | Delete it to see the warning again          |
-
 ### Everything else
 
 The remaining files and folders are Chromium's own caches and state. YapYap
 deletes memory dumps Chromium leaves behind at every start.
 
 YapYap writes outside its profile folder only where you tell it to:
-downloads, performance traces, exported settings, and the calls you
-record, in the `YapYap` folder of your Music folder or the folder you chose.
+downloads, performance traces and exported settings.
 
 To remove everything, quit YapYap and delete its profile folder. This logs
 every account out of WhatsApp; your chats stay on your phone.

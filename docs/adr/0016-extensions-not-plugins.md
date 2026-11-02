@@ -1,6 +1,6 @@
 # 0016. Extensions, not plugins
 
-- Status: Accepted
+- Status: Superseded by [0018](0018-no-extensions.md)
 - Date: 2026-10-28
 
 ## Context

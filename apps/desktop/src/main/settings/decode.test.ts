@@ -39,7 +39,6 @@ const DEFAULTS = {
     blurWhenIdle: false,
   },
   network: { proxyMode: 'system', proxyServer: '' },
-  extensions: { developerMode: false, chatMessages: '20' },
   assistant: {
     enabled: true,
     provider: 'auto',
@@ -48,9 +47,8 @@ const DEFAULTS = {
     messages: '10',
     localServer: '',
   },
-  shortcuts: { custom: {}, extensions: {}, global: { toggleWindow: '' } },
+  shortcuts: { custom: {}, global: { toggleWindow: '' } },
   downloads: { askWhere: false, openWhenDone: false, folder: '' },
-  recording: { folder: '', format: 'webm' },
   spelling: { enabled: false, languages: [] },
 };
 

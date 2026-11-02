@@ -1,4 +1,4 @@
-import { compareVersions } from '@yapyap/extension-sdk';
+import { compareVersions } from './version.ts';
 import type { UpdatePolicy } from './update-policy.ts';
 import { en } from '../../shared/messages/en.ts';
 

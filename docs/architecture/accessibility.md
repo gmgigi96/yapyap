@@ -1,6 +1,6 @@
 # Accessibility
 
-YapYap's own windows, such as Settings, Accounts and Extensions, aim for WCAG
+YapYap's own windows, such as Settings, Accounts and Downloads, aim for WCAG
 2.2 AA. WhatsApp itself runs as Meta ships it; YapYap does not change its
 page for accessibility, and its zoom setting scales it.
 
@@ -42,12 +42,9 @@ and VoiceOver on macOS. Record what you find in the release PR.
    Section headings must be announced as headings.
 3. **Changes.** Change a setting that shows a notice, such as one that needs
    a restart. The notice must be announced without moving focus.
-4. **Extensions window.** Install an extension with Developer Mode on. Its
-   _Unsigned_ badge, permissions and settings must be announced with the
-   extension's name, so they cannot be mistaken for another extension's.
-5. **Text size.** Set the system's text size to 200% and reopen each window.
+4. **Text size. Set the system's text size to 200% and reopen each window.
    Nothing may be cut off or overlap, and the windows must scroll.
-6. **High contrast.** Turn on Windows' contrast themes or macOS's Increase
+5. **High contrast.** Turn on Windows' contrast themes or macOS's Increase
    contrast. Every control and its focus ring must stay visible.
 
 Report a failure as an issue with the `area: a11y` label.

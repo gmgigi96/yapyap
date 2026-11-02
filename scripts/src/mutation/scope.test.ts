@@ -4,11 +4,11 @@ import { inMutationScope, MUTATION_SCOPE, mutationShard, mutationTargets } from 
 describe('inMutationScope', () => {
   it.each([
     'apps/desktop/src/adapter/selectors/v1.ts',
-    'apps/desktop/src/main/extensions/capabilities.ts',
+    'apps/desktop/src/main/permissions/session-guard.ts',
     'apps/desktop/src/main/settings/decode.ts',
     'apps/desktop/src/main/settings/store.ts',
     'apps/desktop/src/main/whatsapp-origin.ts',
-    'packages/extension-sign/src/sign.ts',
+    'scripts/src/release/aur.ts',
     'apps/desktop/src/main/assistant/providers/anthropic.ts',
     'apps\\desktop\\src\\adapter\\unread.ts',
   ])('includes %s', (path) => {
@@ -18,8 +18,8 @@ describe('inMutationScope', () => {
   it.each([
     'apps/desktop/src/adapter/unread.test.ts',
     'apps/desktop/src/main/start.ts',
-    'packages/extension-sign/src/bin/cli.ts',
-    'packages/sdk/src/index.d.ts',
+    'scripts/src/bin/aur.ts',
+    'apps/desktop/src/shared/global.d.ts',
     'README.md',
   ])('excludes %s', (path) => {
     expect(inMutationScope(path)).toBe(false);
@@ -29,9 +29,8 @@ describe('inMutationScope', () => {
     expect(MUTATION_SCOPE).toEqual(
       expect.arrayContaining([
         expect.stringContaining('adapter'),
-        expect.stringContaining('extensions'),
+        expect.stringContaining('permissions'),
         expect.stringContaining('settings'),
-        expect.stringContaining('extension-sign'),
         expect.stringContaining('providers'),
       ]),
     );
@@ -59,8 +58,8 @@ describe('mutationShard', () => {
     'apps/desktop/src/adapter/composer.test.ts',
     'apps/desktop/src/main/start.ts',
     'apps/desktop/src/adapter/page-state.ts',
-    'packages/extension-sign/src/cli.ts',
-    'packages/sdk/schema/manifest.schema.json',
+    'scripts/src/release/aur.ts',
+    'docs/index.md',
   ];
 
   it('deals the in-scope modules out in turn, so every one lands in exactly one shard', () => {
@@ -70,7 +69,7 @@ describe('mutationShard', () => {
     ]);
     expect(mutationShard(files, 2, 2)).toEqual([
       'apps/desktop/src/adapter/page-state.ts',
-      'packages/extension-sign/src/cli.ts',
+      'scripts/src/release/aur.ts',
     ]);
     expect(mutationShard(files, 1, 1)).toHaveLength(4);
   });

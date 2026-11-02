@@ -20,14 +20,6 @@ body:
     id: alternatives
     attributes:
       label: Alternatives considered
-  - type: dropdown
-    id: extension
-    attributes:
-      label: Could this be an extension instead?
-      options:
-        - Not sure
-        - 'Yes'
-        - 'No'
   - type: checkboxes
     id: checks
     attributes:

@@ -51,7 +51,6 @@ import type { ManagedWindow } from '../window/main-window.ts';
 import type { Rect } from '../window/window-state.ts';
 import type { GlobalShortcutPort } from '../shortcuts/global-shortcuts.ts';
 import type { ContextMenuItem, MenuPage } from '../spelling/context-menu.ts';
-import type { ClickedPage } from '../extensions/extension-menu-items.ts';
 import type { SpellingController, SpellingSession } from '../spelling/spelling.ts';
 import type { AuthInfo, LoginCallback } from '../network/proxy-login.ts';
 import type { SecretStore } from '../secrets/secret-store.ts';
@@ -119,7 +118,6 @@ export type AccountContents = WhatsAppContents &
   ReadyPage &
   FocusablePage &
   MenuPage &
-  ClickedPage &
   CodePage &
   AvatarPage & {
     replaceMisspelling(word: string): void;

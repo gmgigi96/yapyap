@@ -4,5 +4,5 @@
     "lib": ["es2024", "dom"],
     "types": ["node", "vitepress/client"]
   },
-  "include": [".vitepress/**/*.ts", "marketplace/**/*.ts"]
+  "include": [".vitepress/**/*.ts"]
 }

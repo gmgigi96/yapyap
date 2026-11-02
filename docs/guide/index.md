@@ -148,51 +148,9 @@ keeps its sound either way, so the voice messages and videos you play still
 work. Unread counts keep updating, and chats you mute in WhatsApp itself
 never notify.
 
-## Extensions
-
-Extensions add features to YapYap. Each runs in its own sandbox and can do
-only what you allow when you install it.
-
-- **Install Extension…** (in the File menu, or the YapYap menu on macOS) opens
-  a `.yapyap-extension` file. YapYap checks its signature and contents first,
-  then shows who made it, which key signed it, and everything it asks to
-  do. Nothing is installed until you agree.
-- Extensions by other authors work too, but YapYap has not reviewed them: you
-  install them at your own risk, and **Install** stays off until you tick
-  that you understand. YapYap remembers the author's key, and refuses an
-  update signed by a different one.
-- An update that asks for more than before shows what is new and asks
-  again; one that asks for nothing new installs without asking.
-- **Extensions…** lists what is installed, marking extensions by other authors as
-  **Third-party** and extensions nobody signed as **Not signed**.
-  Under **Recent activity**, it shows what each extension asked YapYap to do,
-  and whether YapYap did it or refused, but never what the extension sent or
-  received.
-- An extension's commands appear in the File menu (the YapYap menu on macOS)
-  under **Extension Commands**, each named after its extension.
-- An extension that has settings shows them under **Settings** in the Extensions
-  window; each one is saved as soon as you change it.
-- **Remove…** in the Extensions window stops an extension and deletes it, with its
-  settings, its stored data, its saved secrets and its browsing data. Its
-  past calls stay under **Recent activity**.
-- Under **Permissions**, each extension lists what you allowed it to do. Turn
-  anything off at any time, for the extension or, for reading chats and
-  writing drafts, account by account; it applies to the extension's very next
-  request.
-- An extension reaches only the internet hosts you allowed when you installed
-  it. If it tries another one, such as an AI service you set it up to use,
-  YapYap asks you first; **Deny** is the default, and YapYap remembers your
-  answer.
-- An extension that keeps using too much of your computer's processor or
-  memory is restarted. If that keeps happening, YapYap stops it and tells
-  you; install it again to start it.
-- **Developer Mode** (Settings → Extensions) lets you install unsigned extensions
-  while you write your own. YapYap warns while it is on. It is never part
-  of an exported settings file.
-
 ## Custom CSS and JavaScript
 
-**Custom CSS and JavaScript…** (beside Extensions) lets you restyle WhatsApp
+**Custom CSS and JavaScript…** (beside Settings) lets you restyle WhatsApp
 or add small scripts of your own. It is meant for people who write code:
 anything you add here runs in WhatsApp and can read your chats, so only add
 code you understand, and never paste code someone sent you.

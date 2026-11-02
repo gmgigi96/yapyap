@@ -15,7 +15,6 @@ import type { ContextMenuItem, ContextMenuParams } from '../spelling/context-men
 import type { ProxyLoginAnswer } from '../../shared/chrome-api.ts';
 import { WHATSAPP_ORIGIN } from '../whatsapp-origin.ts';
 import type { WindowOptions } from '../window/windows.ts';
-import type { ExtensionAction } from '../extensions/runtime.ts';
 import type { AssistantBar } from '../assistant/bar.ts';
 import type { AssistantBarView } from '../assistant/bar-page.ts';
 
@@ -140,9 +139,6 @@ function fakes(env: Record<string, string | undefined> = {}, argv: readonly stri
     }),
     panel,
     attachQuickPanel: vi.fn<(owner: PanelOwner) => typeof panel>(() => panel),
-    extensionActions: vi.fn<() => readonly ExtensionAction[]>(() => []),
-    runExtensionCommand: vi.fn(() => true),
-    installExtensionFromLink: vi.fn(),
     assistantBar: {
       state: vi.fn(() => ({
         status: '',
@@ -170,10 +166,6 @@ function fakes(env: Record<string, string | undefined> = {}, argv: readonly stri
     attachAssistantBar: vi.fn((create: (bar: AssistantBar) => AssistantBarView) => {
       runtime.assistantBarView = create(runtime.assistantBar);
     }),
-    recorder: {
-      gate: { recording: () => false, callFrame: () => undefined },
-      stop: vi.fn(() => Promise.resolve()),
-    },
   };
   const createSidebar = vi.fn(() => ({
     webContents: { loadURL: vi.fn(() => Promise.resolve()), send: vi.fn() },
@@ -893,7 +885,7 @@ describe('startApp', () => {
     expect(f.runtime.panel).toHaveBeenLastCalledWith(sidebar(f));
   });
 
-  it('reads the active account’s open chat for an extension, through the adapter', async () => {
+  it('reads the active account’s open chat for the assistant, through the adapter', async () => {
     const f = fakes();
     await startApp(f);
     const menu = accountMenu(f);
@@ -913,7 +905,7 @@ describe('startApp', () => {
     );
   });
 
-  it('puts an extension’s draft in the active account’s open chat, and only there', async () => {
+  it('puts the assistant’s draft in the active account’s open chat, and only there', async () => {
     const f = fakes();
     await startApp(f);
     f.web.contents.executeJavaScriptInIsolatedWorld.mockResolvedValueOnce(true);
@@ -1482,27 +1474,6 @@ describe('startApp', () => {
       expect(f.runtime.openSettings).toHaveBeenCalledOnce();
     });
 
-    it('adds the running extensions’ items for where the user clicked, and runs the one picked', async () => {
-      const f = fakes();
-      f.runtime.extensionActions.mockReturnValue([
-        {
-          extension: 'org.example.hello',
-          extensionName: 'Hello',
-          command: 'fix',
-          title: 'Fix',
-          on: 'composer',
-        },
-      ]);
-      f.web.contents.executeJavaScriptInIsolatedWorld.mockResolvedValue('composer');
-      const items = await rightClick(f);
-      expect(items.at(-1)?.label).toBe('Hello: Fix');
-      items.at(-1)?.click?.();
-      expect(f.runtime.runExtensionCommand).toHaveBeenCalledExactlyOnceWith(
-        'org.example.hello',
-        'fix',
-      );
-    });
-
     it('turns spell checking off at once, and opens the languages', async () => {
       const f = fakes();
       const on = { ...defaultSettings(), spelling: { enabled: true, languages: [] } };
@@ -1606,26 +1577,6 @@ describe('startApp', () => {
     secondInstance({}, ['/opt/YapYap/yapyap', 'whatsapp://send?text=Hi']);
     expect(f.window.focus).toHaveBeenCalledOnce();
     expect(f.web.contents.loadURL).toHaveBeenLastCalledWith(`${WHATSAPP_ORIGIN}/send?text=Hi`);
-  });
-
-  it('installs from an extension link, whether it started YapYap or came with a later launch', async () => {
-    const f = fakes({}, ['/opt/YapYap/yapyap', 'yapyap://extensions/install/org.example.hello']);
-    await startApp(f);
-    expect(f.runtime.installExtensionFromLink).toHaveBeenCalledExactlyOnceWith('org.example.hello');
-    const secondInstance = f.listeners.get('second-instance') as unknown as (
-      event: unknown,
-      argv: readonly string[],
-    ) => void;
-    secondInstance({}, ['/opt/YapYap/yapyap', 'yapyap://extensions/install/org.example.other']);
-    expect(f.runtime.installExtensionFromLink).toHaveBeenLastCalledWith('org.example.other');
-  });
-
-  it('keeps a call recording in progress when YapYap quits', async () => {
-    const f = fakes();
-    await startApp(f);
-    const beforeQuit = f.listeners.get('before-quit') as unknown as () => void;
-    beforeQuit();
-    expect(f.runtime.recorder.stop).toHaveBeenCalledOnce();
   });
 
   it('reopens the window where it was left and quits on termination signals', async () => {

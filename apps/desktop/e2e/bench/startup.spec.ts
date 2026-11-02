@@ -1,7 +1,6 @@
 import { expect, test } from '@playwright/test';
 import { readFile, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
-import { installedFirstParty } from './installed.ts';
 import { measureOnce, median, type Sample } from './measure.ts';
 
 const RUNS = 7;
@@ -60,31 +59,5 @@ test('stays within the cold-start and idle-memory budgets', async ({}, testInfo)
   // A count, not a measure: any launch over it means a renderer with nothing to do.
   expect
     .soft(result.idleRenderers, 'most renderer processes at idle')
-    .toBeLessThanOrEqual(budget.idleRenderers);
-});
-
-const EXTENSION_RUNS = 3;
-
-test('runs no renderer for idle extensions', async ({}, testInfo) => {
-  test.setTimeout((EXTENSION_RUNS + 2) * 60_000);
-  const budget = await budgetHere();
-  const extensions = await installedFirstParty();
-  const samples: Sample[] = [];
-  for (let run = 0; run < EXTENSION_RUNS; run += 1) {
-    samples.push(await measureOnce(extensions));
-  }
-  const result = {
-    platform: process.platform,
-    idleMemoryMb: median(samples.map((sample) => sample.idleMemoryMb)),
-    idleRenderers: Math.max(...samples.map((sample) => sample.renderers)),
-    processesMb: medianByProcess(samples),
-    budget,
-    samples,
-  };
-  await writeFile(testInfo.outputPath('extensions.json'), JSON.stringify(result, null, 2));
-  console.log(JSON.stringify(result));
-  // Installed extensions start when the user first needs them, so they add no renderer (#495).
-  expect
-    .soft(result.idleRenderers, 'most renderer processes at idle, with extensions installed')
     .toBeLessThanOrEqual(budget.idleRenderers);
 });

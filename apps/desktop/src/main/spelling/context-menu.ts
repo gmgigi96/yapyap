@@ -113,37 +113,16 @@ export interface MenuPage {
   on(event: 'context-menu', listener: (event: unknown, params: ContextMenuParams) => void): unknown;
 }
 
-/** Items others add to a right click, such as extensions' (#98), once they know where it was. */
-export type AddedItems = (params: ContextMenuParams) => Promise<ContextMenuItem[]>;
-
-const NONE: AddedItems = () => Promise.resolve([]);
-
-/** YapYap's own items first; added ones follow, apart, and never stop the menu. */
-async function menuOf(
-  params: ContextMenuParams,
-  actions: ContextMenuActions,
-  added: AddedItems,
-): Promise<ContextMenuItem[]> {
-  const own = contextMenuOf(params, actions);
-  const extra = await added(params).catch(() => []);
-  if (extra.length === 0) {
-    return own;
-  }
-  return own.length === 0 ? extra : [...own, SEPARATOR, ...extra];
-}
-
 /** Shows the context menu on a page; nothing at all where there is nothing to offer. */
 export function attachContextMenu(
   page: MenuPage,
   actions: ContextMenuActions,
   popup: (items: ContextMenuItem[]) => void,
-  added: AddedItems = NONE,
 ): void {
   page.on('context-menu', (_event, params) => {
-    void menuOf(params, actions, added).then((items) => {
-      if (items.length > 0) {
-        popup(items);
-      }
-    });
+    const items = contextMenuOf(params, actions);
+    if (items.length > 0) {
+      popup(items);
+    }
   });
 }

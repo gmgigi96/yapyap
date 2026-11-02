@@ -3,7 +3,7 @@ import DownloadButton from './DownloadButton.vue';
 
 /**
  * The home page (#383): for people who want more from WhatsApp on their
- * computer first, then for extension users, then for developers. Every claim
+ * computer first, then for people who like to tinker, then for developers. Every claim
  * here must be true of the released app; planned features say so, and the
  * comparison lists only facts anyone can check.
  */
@@ -57,7 +57,6 @@ const everyday: readonly Highlight[] = [
 const comparison: readonly string[] = [
   'A desktop app for Linux, as well as Windows and macOS',
   'A built-in AI assistant with the model you choose, even one on your own computer',
-  'Sandboxed extensions',
   'Your own CSS and JavaScript',
   'Open source',
 ];
@@ -92,8 +91,8 @@ const faqs: readonly { readonly question: string; readonly answer: string }[] = 
       <p class="eyebrow">The most advanced WhatsApp client ever built</p>
       <h1>WhatsApp, supercharged.</h1>
       <p class="lead">
-        AI that writes with you. Every account in one window. Extensions for anything. On Linux,
-        Windows and macOS, free, and without tracking you.
+        AI that writes with you. Every account in one window. On Linux, Windows and macOS, free, and
+        without tracking you.
       </p>
       <DownloadButton />
       <p class="downloads" data-downloads hidden></p>
@@ -114,7 +113,6 @@ const faqs: readonly { readonly question: string; readonly answer: string }[] = 
     <ul class="proof" aria-label="At a glance">
       <li>AI built in</li>
       <li>Up to 32 accounts</li>
-      <li>Extensions</li>
       <li>Linux · Windows · macOS</li>
       <li>Zero tracking</li>
       <li>Open source</li>
@@ -172,28 +170,22 @@ const faqs: readonly { readonly question: string; readonly answer: string }[] = 
 
     <section class="feature">
       <div class="feature-text">
-        <p class="kicker">Extensions</p>
-        <h2>If you can imagine it, an extension can do it.</h2>
+        <p class="kicker">Make it yours</p>
+        <h2>WhatsApp, the way you like it.</h2>
         <p>
-          YapYap grows with extensions. Each one is signed, runs in its own sandbox, and gets only
-          the permissions you hand it, account by account, so it can never read more than you allow
-          or send a message behind your back.
+          Restyle WhatsApp with your own CSS, add your own JavaScript, and put every action on the
+          keys you want. For all accounts at once, or one account at a time.
         </p>
         <ul>
-          <li>
-            A marketplace of official and reviewed extensions, installed in one click
-            <span class="planned">Coming soon</span>
-          </li>
-          <li>
-            Call recording, with consent built in
-            <span class="planned">Coming soon</span>
-          </li>
-          <li>Your own CSS and JavaScript, if you like to tinker</li>
+          <li>Your own CSS, previewed as you type, and your own JavaScript</li>
+          <li>Every keyboard shortcut yours to change</li>
+          <li>Light, dark, or whatever your system uses</li>
         </ul>
-        <a class="more" href="/extensions/">Build an extension</a>
+        <a class="more" href="/guide/">Read the guide</a>
       </div>
       <div class="feature-shot tiles" aria-hidden="true">
-        <span>Signed</span><span>Sandboxed</span><span>Per account</span><span>You approve</span>
+        <span>Your CSS</span><span>Your JavaScript</span><span>Your keys</span
+        ><span>Your theme</span>
       </div>
     </section>
 

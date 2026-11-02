@@ -8,7 +8,6 @@ import {
   dialog,
   ipcMain,
   Menu,
-  MessageChannelMain,
   Tray,
   globalShortcut,
   nativeImage,
@@ -21,7 +20,6 @@ import {
   screen,
   session,
   shell,
-  webContents,
   type WebContents,
 } from 'electron';
 import { spawnSync } from 'node:child_process';
@@ -39,11 +37,6 @@ import { readFile } from 'node:fs/promises';
 import { textFileAt, writeTextAtomically } from './atomic-write.ts';
 import { chatListWidths } from './chat-list/widths.ts';
 import { createCustomCode } from './custom-code/custom-code.ts';
-import { EXTENSION_PORT_CHANNEL } from '../shared/extension-rpc.ts';
-import { hostMethods } from './extensions/host-methods.ts';
-import { keyValueStore, removeStore } from './extensions/key-value-store.ts';
-import { RPC_OPTIONS } from './extensions/rpc.ts';
-import { auditFileAt, createAuditLog } from './extensions/audit-log.ts';
 import { availableParallelism, homedir, release, totalmem } from 'node:os';
 import { join } from 'node:path';
 import { createDownloadList } from './downloads/download-list.ts';
@@ -62,9 +55,6 @@ import { profileCrashFiles, readPreviousLog } from './crash/crash-files.ts';
 import { recordTrace } from './crash/trace.ts';
 import trayIcon from '../../build/icons/32x32.png?asset';
 import { PRODUCT_NAME } from './identity/product.ts';
-import { rewriteClientHints } from './identity/user-agent.ts';
-import { callWindowAmong } from './recording/electron.ts';
-import { recordingsFolder } from './recording/library.ts';
 import { createLogger } from './logging/logger.ts';
 import { logProcessErrors } from './process-errors.ts';
 import { readInstallEvidence } from './updates/install-evidence.ts';
@@ -83,11 +73,6 @@ import {
   reviewCrashWithDialog,
 } from './dialogs/prompts.ts';
 import { startApp } from './start/start.ts';
-import { MARKETPLACE_INDEX_MAX_BYTES } from '@yapyap/extension-sdk';
-import { ARCHIVE_LIMITS, anchorFingerprints, TRUST_ANCHORS } from '@yapyap/extension-sign';
-import { cappedFetcher } from './marketplace/fetch.ts';
-import { marketplaceSource } from './marketplace/source.ts';
-import { electronExtensionDialogs } from './extensions/extension-dialogs.ts';
 import { findLocalModels, loopbackRequest, modelServerPorts } from './assistant/local-servers.ts';
 import { ENGINE_CHANNELS } from '../shared/engine-api.ts';
 import { assistantState } from './assistant/state.ts';
@@ -116,7 +101,6 @@ const DOWNLOADS_STATE = join(app.getPath('userData'), 'downloads.json');
 const CUSTOM_CODE = join(app.getPath('userData'), 'custom-code.json');
 const QUICK_PANEL_STATE = join(app.getPath('userData'), 'quick-panel.json');
 const CHAT_LIST_STATE = join(app.getPath('userData'), 'chat-list.json');
-const EXTENSION_STORAGE = join(app.getPath('userData'), 'extensions', '.storage');
 // The assistant's state and allowed chats are no preferences, so they live apart from settings (ADR 0017).
 const ASSISTANT_STATE = join(app.getPath('userData'), 'assistant.json');
 const ASSISTANT_CHATS = join(app.getPath('userData'), 'assistant-chats.json');
@@ -202,13 +186,6 @@ const downloadList = createDownloadList((path) => {
 
 const customCode = createCustomCode(textFileAt(CUSTOM_CODE), warn);
 
-// Extensions' secrets live apart from YapYap's own, so no mistake in an extension's namespace reaches them (#96).
-const extensionSecrets = openSecretStore(
-  secretFileAt(join(app.getPath('userData'), 'extensions', '.secrets.json')),
-  safeStorage,
-  process.platform,
-);
-
 const secrets = openSecretStore(
   secretFileAt(join(app.getPath('userData'), 'secrets.json')),
   safeStorage,
@@ -245,15 +222,6 @@ const assistantFetch = confinedFetch(
   (input, init) => assistantSession().fetch(input, init),
   assistantReach,
 );
-
-/**
- * A plain request for the marketplace (ADR 0014), on an in-memory session of
- * its own: no cookies, no cache and nothing that identifies the user.
- */
-const marketplaceRequest = (url: string) =>
-  session
-    .fromPartition('yapyap-marketplace')
-    .fetch(url, { credentials: 'omit', cache: 'no-store' });
 
 const chrome = createChromeFeature({
   notify,
@@ -311,25 +279,6 @@ const chrome = createChromeFeature({
     available: () => session.defaultSession.availableSpellCheckerLanguages,
     system: () => app.getPreferredSystemLanguages(),
   },
-  recording: {
-    // Capturing a call window's sound is unverified on macOS (#392), so it is not offered there.
-    supported: process.platform !== 'darwin',
-    format: () => settings.current().recording.format,
-    paths: {
-      // Read each time, so a new choice in Settings, or a moved Music folder, applies at once.
-      get folder() {
-        return recordingsFolder(settings.current().recording.folder, () =>
-          join(app.getPath('music'), PRODUCT_NAME),
-        );
-      },
-      index: join(app.getPath('userData'), 'recordings.json'),
-    },
-    consentFile: join(app.getPath('userData'), 'recording-consent.json'),
-    callWindowOf: (main, views) => callWindowAmong(webContents.getAllWebContents(), main, views),
-    show: (file) => {
-      shell.showItemInFolder(file);
-    },
-  },
   assistant: {
     catalog,
     keys,
@@ -351,105 +300,6 @@ const chrome = createChromeFeature({
     now: Date.now,
     enginePreload: join(import.meta.dirname, '..', 'preload', 'engine.cjs'),
     engineProtocol: () => session.fromPartition(ENGINE_PARTITION).protocol,
-  },
-  extensions: {
-    ...electronExtensionDialogs,
-    forgetData: async (id) => {
-      await removeStore(EXTENSION_STORAGE, id);
-      extensionSecrets.forgetAll(`${id}/`);
-    },
-    root: join(app.getPath('userData'), 'extensions'),
-    anchors: anchorFingerprints(TRUST_ANCHORS),
-    marketplace: {
-      source: marketplaceSource(process.env, app.isPackaged, TRUST_ANCHORS),
-      appVersion: app.getVersion(),
-      fetchIndex: cappedFetcher(marketplaceRequest, MARKETPLACE_INDEX_MAX_BYTES),
-      fetchArchive: cappedFetcher(marketplaceRequest, ARCHIVE_LIMITS.archiveBytes),
-      now: () => new Date(),
-    },
-    sessionOf: (partition) => session.fromPartition(partition),
-    presentHeaders: (headers) => rewriteClientHints(headers, process.versions.chrome),
-    // An extension's code runs in a window never shown; its UI is YapYap's, or its panel (ADR 0004).
-    createHost: (partition) => {
-      const host = createSecureWindow(
-        { show: false, skipTaskbar: true, focusable: false, paintWhenInitiallyHidden: false },
-        { partition, preload: join(import.meta.dirname, '..', 'preload', 'extension.cjs') },
-      );
-      return {
-        webContents: host.webContents,
-        loadURL: (url) => host.loadURL(url),
-        destroy: () => {
-          host.destroy();
-        },
-        openPort: () => {
-          const { port1, port2 } = new MessageChannelMain();
-          host.webContents.postMessage(EXTENSION_PORT_CHANNEL, null, [port2]);
-          return port1;
-        },
-      };
-    },
-    // No preload: a panel gets no port, so it reaches the host API only through its extension's page.
-    createPanel: (partition, title) => {
-      const panel = createSecureWindow(
-        { title, width: 420, height: 640, autoHideMenuBar: true },
-        { partition },
-      );
-      // The title names the extension, so its page may not change it.
-      panel.on('page-title-updated', (event) => {
-        event.preventDefault();
-      });
-      return {
-        webContents: panel.webContents,
-        loadURL: (url) => panel.loadURL(url),
-        focus: () => {
-          panel.focus();
-        },
-        // Only called while the window is open: closing it forgets it first.
-        destroy: () => {
-          panel.destroy();
-        },
-        onClosed: (listener) => {
-          panel.once('closed', listener);
-        },
-      };
-    },
-    methodsFor: (extension, chats) =>
-      hostMethods(extension, {
-        insertDraft: chats.insertDraft,
-        replaceDraft: chats.replaceDraft,
-        readDraft: chats.readDraft,
-        readActiveChat: () =>
-          chats.readActiveChat(Number(settings.current().extensions.chatMessages)),
-        readUnreadSummary: chats.readUnreadSummary,
-        notify: (heading, text) => {
-          new Notification({ title: heading, body: text, icon: trayIcon }).show();
-        },
-        quiet: () => settings.current().general.doNotDisturb,
-        secrets: extensionSecrets,
-        storage: keyValueStore(EXTENSION_STORAGE, extension.id),
-        calls: chats.calls,
-      }),
-    limits: {
-      metrics: () => app.getAppMetrics(),
-      notify: (message) => {
-        new Notification({ title: PRODUCT_NAME, body: message, icon: trayIcon }).show();
-      },
-      every: (callback, ms) => setInterval(callback, ms),
-      now: Date.now,
-      cores: availableParallelism(),
-    },
-    audit: createAuditLog(
-      auditFileAt(join(app.getPath('userData'), 'extensions', 'audit.log')),
-      () => new Date(),
-      warn,
-    ),
-    rpc: {
-      ...RPC_OPTIONS,
-      now: Date.now,
-      after: (ms, callback) => {
-        setTimeout(callback, ms);
-      },
-    },
   },
   restart: () => {
     app.relaunch();

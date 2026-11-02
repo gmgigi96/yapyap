@@ -60,10 +60,6 @@ YapYap is young and not yet at 1.0. Follow what comes next on the
 - Multiple accounts with fully isolated sessions
 - Native notifications, tray or menu bar with unread counts, and do-not-disturb
 - Recovery tools that fix a stuck session without logging you out
-- A sandboxed, signed extension system with per-account permissions, and a
-  marketplace of official and reviewed extensions
-- Call recording, which starts only when you click Record and confirm that
-  everyone on the call agrees
 - No telemetry
 
 ## Documentation
