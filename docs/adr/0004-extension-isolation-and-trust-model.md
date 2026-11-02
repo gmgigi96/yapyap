@@ -1,6 +1,6 @@
 # 0004. Extension isolation and trust model
 
-- Status: Accepted
+- Status: Superseded by [0018](0018-no-extensions.md)
 - Date: 2026-10-18
 
 ## Context

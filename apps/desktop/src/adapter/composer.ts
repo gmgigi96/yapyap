@@ -33,8 +33,7 @@ interface DraftBox {
 /**
  * What the user typed in the open chat's message box so far, or null when
  * no chat is open. Like the chat reader, it returns page text, so it runs
- * only when an extension holding `composer:read-draft` asks, and nothing logs
- * it. It runs inside the page as source text, so it must stay self-contained.
+ * only when the assistant asks, and nothing logs it. It runs inside the page as source text, so it must stay self-contained.
  */
 export function readComposer(doc: FocusableDocument, selector: string, max: number): unknown {
   const box = doc.querySelector(selector) as DraftBox | null;

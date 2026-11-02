@@ -14,8 +14,6 @@ const DISK_CACHE = 'reliability.diskCacheMb';
 const JS_HEAP = 'reliability.jsHeapMb';
 const PINCH = 'appearance.pinchZoom';
 const TRAY_ICON = 'appearance.trayIcon';
-const DEVELOPER = 'extensions.developerMode';
-const CHAT_MESSAGES = 'extensions.chatMessages';
 const ASK_WHERE = 'downloads.askWhere';
 const OPEN_DONE = 'downloads.openWhenDone';
 const FOLDER = 'downloads.folder';
@@ -166,8 +164,6 @@ describe('settingsHandlers', () => {
         [BLUR_IDLE]: false,
         [PROXY]: 'system',
         [PROXY_SERVER]: '',
-        [DEVELOPER]: false,
-        [CHAT_MESSAGES]: '20',
         'assistant.enabled': true,
         'assistant.provider': 'auto',
         'assistant.model': 'auto',
@@ -177,8 +173,6 @@ describe('settingsHandlers', () => {
         [ASK_WHERE]: false,
         [OPEN_DONE]: false,
         [FOLDER]: '',
-        'recording.folder': '',
-        'recording.format': 'webm',
         [SPELLING]: false,
         [AUTOSTART]: false,
         [START_MINIMIZED]: false,
@@ -270,8 +264,6 @@ describe('settingsHandlers', () => {
         [BLUR_IDLE]: false,
         [PROXY]: 'system',
         [PROXY_SERVER]: '',
-        [DEVELOPER]: false,
-        [CHAT_MESSAGES]: '20',
         'assistant.enabled': true,
         'assistant.provider': 'auto',
         'assistant.model': 'auto',
@@ -281,8 +273,6 @@ describe('settingsHandlers', () => {
         [ASK_WHERE]: false,
         [OPEN_DONE]: false,
         [FOLDER]: '',
-        'recording.folder': '',
-        'recording.format': 'webm',
         [SPELLING]: false,
         [AUTOSTART]: false,
         [START_MINIMIZED]: false,

@@ -1,8 +1,5 @@
 import {
   CHROME_CHANNELS,
-  EXTENSIONS_CHANGED_EVENT,
-  RECORD_PROMPT_STATE_EVENT,
-  RECORDER_COMMAND_EVENT,
   SIDEBAR_STATE_EVENT,
   type ChromeEvents,
   type AboutInfo,
@@ -11,11 +8,7 @@ import {
   type ChromeApi,
   type FoundServer,
   type DownloadEntry,
-  type MarketplaceView,
   type PickerOffer,
-  type ExtensionConsent,
-  type ExtensionList,
-  type RecordPromptState,
   type ShortcutChange,
   type ShortcutList,
   type CustomCodeView,
@@ -33,38 +26,6 @@ type Listen = <Event extends keyof ChromeEvents>(
   event: Event,
   listener: (payload: ChromeEvents[Event]) => void,
 ) => void;
-
-function recordPromptBridge(invoke: Invoke, listen: Listen): ChromeApi['recordPrompt'] {
-  return {
-    state: () => invoke(CHROME_CHANNELS.recordPromptState) as Promise<RecordPromptState>,
-    answer: async (record, consented) => {
-      await invoke(CHROME_CHANNELS.recordPromptAnswer, record, consented);
-    },
-    stop: async () => {
-      await invoke(CHROME_CHANNELS.recordPromptStop);
-    },
-    onState: (listener) => {
-      listen(RECORD_PROMPT_STATE_EVENT, listener);
-    },
-  };
-}
-
-function recorderBridge(invoke: Invoke, listen: Listen): ChromeApi['recorder'] {
-  return {
-    onCommand: (listener) => {
-      listen(RECORDER_COMMAND_EVENT, listener);
-    },
-    chunk: async (bytes) => {
-      await invoke(CHROME_CHANNELS.recorderChunk, bytes);
-    },
-    ended: async () => {
-      await invoke(CHROME_CHANNELS.recorderEnded);
-    },
-    failed: async () => {
-      await invoke(CHROME_CHANNELS.recorderFailed);
-    },
-  };
-}
 
 function assistantBridge(invoke: Invoke): ChromeApi['assistant'] {
   return {
@@ -113,36 +74,6 @@ function sidebarBridge(invoke: Invoke, listen: Listen): ChromeApi['sidebar'] {
     },
     onState: (listener) => {
       listen(SIDEBAR_STATE_EVENT, listener);
-    },
-  };
-}
-
-function extensionsBridge(invoke: Invoke, listen: Listen): ChromeApi['extensions'] {
-  return {
-    list: () => invoke(CHROME_CHANNELS.extensionsList) as Promise<ExtensionList>,
-    consent: () => invoke(CHROME_CHANNELS.extensionsConsent) as Promise<ExtensionConsent>,
-    answer: async (install, acknowledged) => {
-      await invoke(CHROME_CHANNELS.extensionsAnswer, install, acknowledged);
-    },
-    setSetting: (id, key, value) =>
-      invoke(CHROME_CHANNELS.extensionsSetSetting, id, key, value) as Promise<ExtensionList>,
-    setGrant: (id, capability, account, granted) =>
-      invoke(
-        CHROME_CHANNELS.extensionsSetGrant,
-        id,
-        capability,
-        account,
-        granted,
-      ) as Promise<ExtensionList>,
-    remove: (id) => invoke(CHROME_CHANNELS.extensionsRemove, id) as Promise<ExtensionList>,
-    marketplace: () => invoke(CHROME_CHANNELS.extensionsMarketplace) as Promise<MarketplaceView>,
-    installListed: async (id) => {
-      await invoke(CHROME_CHANNELS.extensionsInstallListed, id);
-    },
-    onChange: (listener) => {
-      listen(EXTENSIONS_CHANGED_EVENT, () => {
-        listener();
-      });
     },
   };
 }
@@ -289,9 +220,6 @@ export function createChromeBridge(invoke: Invoke, listen: Listen): ChromeApi {
     accounts: accountsBridge(invoke),
     sidebar: sidebarBridge(invoke, listen),
     quickPanel: quickPanelBridge(invoke),
-    extensions: extensionsBridge(invoke, listen),
-    recordPrompt: recordPromptBridge(invoke, listen),
-    recorder: recorderBridge(invoke, listen),
     report: reportBridge(invoke),
     spelling: spellingBridge(invoke),
     picker: pickerBridge(invoke),

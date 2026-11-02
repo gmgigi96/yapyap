@@ -85,8 +85,6 @@ export interface Messages {
     readonly defaultFolder: string;
     readonly chooseFolder: string;
     readonly useDefaultFolder: string;
-    readonly defaultRecordingFolder: string;
-    readonly useDefaultRecordingFolder: string;
     readonly sections: {
       readonly assistant: string;
       readonly general: string;
@@ -94,10 +92,8 @@ export interface Messages {
       readonly appearance: string;
       readonly reliability: string;
       readonly downloads: string;
-      readonly recording: string;
       readonly privacy: string;
       readonly network: string;
-      readonly extensions: string;
     };
     readonly backup: {
       readonly title: string;
@@ -260,31 +256,10 @@ export interface Messages {
         };
         readonly proxyServer: { readonly label: string; readonly description: string };
       };
-      readonly extensions: {
-        readonly developerMode: { readonly label: string; readonly description: string };
-        readonly chatMessages: {
-          readonly label: string;
-          readonly description: string;
-          readonly options: {
-            readonly '5': string;
-            readonly '10': string;
-            readonly '20': string;
-            readonly '50': string;
-          };
-        };
-      };
       readonly downloads: {
         readonly askWhere: { readonly label: string; readonly description: string };
         readonly folder: { readonly label: string; readonly description: string };
         readonly openWhenDone: { readonly label: string; readonly description: string };
-      };
-      readonly recording: {
-        readonly format: {
-          readonly label: string;
-          readonly description: string;
-          readonly options: { readonly webm: string; readonly wav: string };
-        };
-        readonly folder: { readonly label: string; readonly description: string };
       };
     };
   };
@@ -577,128 +552,6 @@ export interface Messages {
     };
   };
   readonly chatList: { readonly label: string; readonly hint: string };
-  readonly extensions: {
-    readonly notificationTitle: (params: {
-      readonly extension: string | number;
-      readonly title: string | number;
-    }) => string;
-    readonly stopped: (params: { readonly extension: string | number }) => string;
-    readonly title: string;
-    readonly hint: string;
-    readonly listFailed: string;
-    readonly changeFailed: string;
-    readonly empty: string;
-    readonly browse: string;
-    readonly fileType: string;
-    readonly version: (params: { readonly version: string | number }) => string;
-    readonly trust: {
-      readonly 'first-party': string;
-      readonly reviewed: string;
-      readonly 'third-party': string;
-      readonly developer: string;
-    };
-    readonly pulled: (params: { readonly reason: string | number }) => string;
-    readonly developerMode: string;
-    readonly result: {
-      readonly installed: (params: {
-        readonly name: string | number;
-        readonly version: string | number;
-      }) => string;
-      readonly rejected: string;
-      readonly failed: string;
-    };
-    readonly reason: {
-      readonly unreadable: string;
-      readonly manifestInvalid: (params: { readonly problem: string | number }) => string;
-      readonly missingFile: (params: { readonly file: string | number }) => string;
-      readonly developerModeOnly: string;
-      readonly firstPartyName: string;
-      readonly updateUnsigned: string;
-    };
-    readonly consent: {
-      readonly install: (params: { readonly name: string | number }) => string;
-      readonly update: (params: {
-        readonly name: string | number;
-        readonly version: string | number;
-      }) => string;
-      readonly author: (params: { readonly name: string | number }) => string;
-      readonly key: string;
-      readonly unsigned: string;
-      readonly firstParty: string;
-      readonly reviewed: string;
-      readonly asks: string;
-      readonly updateAsks: string;
-      readonly added: string;
-      readonly hosts: string;
-      readonly nothing: string;
-      readonly risk: string;
-      readonly unsignedRisk: string;
-      readonly acknowledge: string;
-      readonly confirmInstall: string;
-      readonly confirmUpdate: string;
-    };
-    readonly settings: string;
-    readonly remove: string;
-    readonly removeLabel: (params: { readonly extension: string | number }) => string;
-    readonly settingDefault: string;
-    readonly settingSaved: string;
-    readonly settingRefused: string;
-    readonly permissions: string;
-    readonly permissionsHint: string;
-    readonly connectTo: (params: { readonly host: string | number }) => string;
-    readonly capabilities: {
-      readonly 'chat:read-active': string;
-      readonly 'chat:read-unread-summary': string;
-      readonly 'composer:insert-draft': string;
-      readonly 'local-network': string;
-      readonly 'composer:read-draft': string;
-      readonly 'notifications:show': string;
-      readonly 'storage:local': string;
-      readonly 'secrets:own': string;
-      readonly 'calls:record': string;
-    };
-    readonly activity: {
-      readonly title: string;
-      readonly hint: string;
-      readonly empty: string;
-      readonly outcomes: {
-        readonly ok: string;
-        readonly invalid: string;
-        readonly 'not-granted': string;
-        readonly 'rate-limited': string;
-        readonly timeout: string;
-        readonly failed: string;
-      };
-    };
-    readonly marketplace: {
-      readonly installedTab: string;
-      readonly marketplaceTab: string;
-      readonly tabsLabel: string;
-      readonly search: string;
-      readonly loading: string;
-      readonly unreachable: string;
-      readonly invalid: string;
-      readonly outdated: string;
-      readonly retry: string;
-      readonly empty: string;
-      readonly by: (params: { readonly name: string | number }) => string;
-      readonly version: (params: { readonly version: string | number }) => string;
-      readonly install: string;
-      readonly installLabel: (params: { readonly extension: string | number }) => string;
-      readonly update: (params: { readonly version: string | number }) => string;
-      readonly updateLabel: (params: {
-        readonly extension: string | number;
-        readonly version: string | number;
-      }) => string;
-      readonly installed: string;
-      readonly incompatible: string;
-      readonly whatsNew: (params: { readonly version: string | number }) => string;
-      readonly homepage: string;
-      readonly privacy: string;
-      readonly mismatch: string;
-      readonly unlisted: string;
-    };
-  };
   readonly notifications: {
     readonly titled: (params: {
       readonly account: string | number;
@@ -748,8 +601,6 @@ export interface Messages {
   readonly shortcuts: {
     readonly global: string;
     readonly globalHint: string;
-    readonly extensions: string;
-    readonly extensionsHint: string;
     readonly none: string;
     readonly remove: string;
     readonly notRegistered: string;
@@ -848,14 +699,7 @@ export interface Messages {
     readonly resetSession: string;
     readonly addAccount: string;
     readonly manageAccounts: string;
-    readonly extensions: string;
-    readonly installExtension: string;
     readonly customCode: string;
-    readonly extensionCommands: string;
-    readonly extensionCommand: (params: {
-      readonly extension: string | number;
-      readonly title: string | number;
-    }) => string;
     readonly removeAccount: string;
     readonly doNotDisturb: string;
     readonly muteAccount: string;
@@ -881,41 +725,16 @@ export interface Messages {
     readonly newChat: string;
     readonly spellingLanguages: string;
     readonly accounts: string;
-    readonly extensions: string;
     readonly shortcuts: string;
     readonly customCode: string;
     readonly quickPanel: string;
     readonly downloads: string;
-    readonly extensionConsent: string;
     readonly welcome: string;
     readonly report: string;
     readonly proxyLogin: string;
     readonly offline: (params: { readonly pageTitle: string | number }) => string;
   };
   readonly dialogs: {
-    readonly extensionHost: {
-      readonly message: (params: {
-        readonly extension: string | number;
-        readonly host: string | number;
-      }) => string;
-      readonly detail: string;
-      readonly allow: string;
-      readonly deny: string;
-    };
-    readonly extensionLocalServer: {
-      readonly message: (params: {
-        readonly extension: string | number;
-        readonly server: string | number;
-      }) => string;
-      readonly detail: string;
-      readonly allow: string;
-      readonly deny: string;
-    };
-    readonly removeExtension: {
-      readonly message: (params: { readonly extension: string | number }) => string;
-      readonly detail: string;
-      readonly confirm: string;
-    };
     readonly resetSession: {
       readonly message: string;
       readonly detail: string;
@@ -964,20 +783,5 @@ export interface Messages {
     readonly downloaded: (params: { readonly name: string | number }) => string;
     readonly downloadFailed: (params: { readonly name: string | number }) => string;
     readonly saved: (params: { readonly name: string | number }) => string;
-  };
-  readonly recording: {
-    readonly windowTitle: string;
-    readonly asks: (params: { readonly extension: string | number }) => string;
-    readonly consentHint: string;
-    readonly record: string;
-    readonly notNow: string;
-    readonly recording: string;
-    readonly stop: string;
-    readonly saved: string;
-    readonly consent: {
-      readonly message: string;
-      readonly detail: string;
-      readonly checkbox: string;
-    };
   };
 }

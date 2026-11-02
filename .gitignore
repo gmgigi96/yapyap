@@ -10,16 +10,13 @@ node_modules/
 out/
 dist/
 apps/*/release/
-extensions-out/
 *.tsbuildinfo
 # Vite bundles its config next to it while loading it.
 *.timestamp-*.mjs
 docs/.vitepress/cache/
 docs/.vitepress/dist/
-docs/api/
-# Copied from the app and the SDK by the docs build.
+# Copied from the app by the docs build.
 docs/public/logo.svg
-docs/public/schema/
 
 # Test, coverage and mutation reports
 coverage/
@@ -29,7 +26,6 @@ reports/
 .stryker-tmp/
 
 # Packaging and signing
-*.yapyap-extension
 *.pem
 !**/test/**/fixtures/**/*.pem
 .flatpak-builder/

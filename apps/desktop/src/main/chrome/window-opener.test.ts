@@ -1,7 +1,11 @@
 import { describe, expect, it, vi } from 'vitest';
 import { SHOW_FALLBACK_MS } from '../window/show-when-ready.ts';
 import type { ViewInfo } from '../security/views.ts';
-import { createChromeWindowSlot, type ChromeWindowPort } from './window-opener.ts';
+import {
+  createChromeWindowSlot,
+  openPromptWindow,
+  type ChromeWindowPort,
+} from './window-opener.ts';
 
 function fakeWindow() {
   let ready: () => void = () => undefined;
@@ -115,21 +119,20 @@ describe('createChromeWindowSlot opening', () => {
   });
 });
 
-describe('createChromeWindowSlot', () => {
-  it('tells its window about a change only while the window is open', () => {
+describe('openPromptWindow', () => {
+  it('closes its window once, and hears when it is gone', () => {
     const t = setup();
-    const slot = createChromeWindowSlot(
+    const prompt = openPromptWindow(
       { createWindow: t.createWindow, views: t.views, warn: t.warn },
-      { path: 'extensions.html', window: {} },
+      { path: 'proxy-login.html', window: {} },
     );
-    slot.notify('extensions:changed');
-    slot.open();
-    slot.notify('extensions:changed');
-    expect(t.windows[0].window.webContents.send).toHaveBeenCalledExactlyOnceWith(
-      'extensions:changed',
-    );
-    t.windows[0].destroy();
-    slot.notify('extensions:changed');
-    expect(t.windows[0].window.webContents.send).toHaveBeenCalledOnce();
+    const [{ window, destroy }] = t.windows;
+    const closed = vi.fn();
+    prompt.onClosed(closed);
+    expect(window.once).toHaveBeenLastCalledWith('closed', closed);
+    prompt.close();
+    destroy();
+    prompt.close();
+    expect(window.close).toHaveBeenCalledOnce();
   });
 });

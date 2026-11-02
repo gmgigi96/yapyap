@@ -35,7 +35,6 @@ function setup() {
   const whatsAppPreload = '/app/preload/whatsapp.cjs';
   installSecurity(app, {
     views,
-    recording: { recording: () => false, callFrame: () => undefined },
     openExternal,
     warn: vi.fn(),
     askMedia,

@@ -1,7 +1,6 @@
 import { Type } from 'typebox';
 import { Value } from 'typebox/value';
-import type { Fetcher } from '../marketplace/index-client.ts';
-import { cappedFetcher, type StreamedResponse } from '../marketplace/fetch.ts';
+import { cappedFetcher, type Fetcher, type StreamedResponse } from './capped-fetch.ts';
 
 const OLLAMA_PORT = 11_434;
 /** Alpaca runs an Ollama of its own, one port up, so both can run. */

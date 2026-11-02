@@ -51,7 +51,7 @@ export function openChromeWindow<Window extends ChromeWindowPort>(
  * permission and navigation guards. Settles once the load ends, however it
  * ends; a failure is logged.
  */
-export function loadChromePage(
+function loadChromePage(
   deps: Pick<ChromeWindowDependencies, 'views' | 'warn'>,
   window: Pick<ChromeWindowPort, 'webContents' | 'loadURL'>,
   path: string,
@@ -65,12 +65,10 @@ export function loadChromePage(
   );
 }
 
-/** A chrome window opened at most once, which YapYap can tell about changes while it is open. */
+/** A chrome window opened at most once. */
 export interface ChromeWindowSlot {
   /** Opens the window, or focuses it when it is already open. */
   readonly open: () => void;
-  /** Sends `channel` to the window's page, if the window is open. */
-  readonly notify: (channel: string) => void;
 }
 
 export function createChromeWindowSlot(
@@ -89,9 +87,6 @@ export function createChromeWindowSlot(
         shown.focus();
       }
     },
-    notify: (channel) => {
-      open()?.webContents.send(channel);
-    },
   };
 }
 
@@ -109,7 +104,7 @@ export function openPromptWindow(deps: ChromeWindowDependencies, page: ChromePag
 }
 
 /** `window` as a prompt window, which closing twice cannot break. */
-export function asPromptWindow(window: ChromeWindowPort): PromptWindow {
+function asPromptWindow(window: ChromeWindowPort): PromptWindow {
   return {
     webContents: window.webContents,
     close: () => {

@@ -1,13 +1,110 @@
 import { createServer } from 'node:http';
 import type { AddressInfo } from 'node:net';
 import type { ElectronApplication, Page } from '@playwright/test';
-import { expect } from './fixtures.ts';
-import {
-  assistantBarControls,
-  assistantBarStatus,
-  chromePage,
-  clickMenu,
-} from './extension-helpers.ts';
+import { chromePage, clickMenu } from './chrome-helpers.ts';
+import { expect, whatsAppContents } from './fixtures.ts';
+
+/** A control of the assistant bar, and where on the page the user would click it. */
+interface BarControl {
+  readonly name: string;
+  readonly disabled: boolean;
+  readonly x: number;
+  readonly y: number;
+}
+
+interface KeptBar {
+  readonly host: HTMLElement;
+  readonly parts: { readonly input: HTMLElement };
+}
+
+/**
+ * Runs in the adapter's isolated world, where YapYap keeps the bar: its
+ * shadow root is closed, so nothing else, Playwright included, can look in.
+ */
+function readBarControls(): BarControl[] | null {
+  const kept = (globalThis as { yapyapAssistantBarView?: KeptBar }).yapyapAssistantBarView;
+  if (kept?.host.isConnected !== true) {
+    return null;
+  }
+  kept.host.scrollIntoView({ block: 'center' });
+  const root = kept.parts.input.getRootNode() as ShadowRoot;
+  return (
+    [
+      ...root.querySelectorAll<HTMLButtonElement | HTMLInputElement | HTMLSelectElement>(
+        'button, input, select',
+      ),
+    ]
+      // Controls inside a closed part of the bar take no room, and cannot be clicked.
+      .filter((control) => !control.hidden && control.getClientRects().length > 0)
+      .map((control) => {
+        const box = control.getBoundingClientRect();
+        return {
+          name: control.getAttribute('aria-label') ?? control.textContent,
+          disabled: control.disabled,
+          x: box.x + box.width / 2,
+          y: box.y + box.height / 2,
+        };
+      })
+  );
+}
+
+/** Runs in the adapter's isolated world, as {@link readBarControls} does: the bar's status line. */
+function readBarStatus(): string | null {
+  const kept = (globalThis as { yapyapAssistantBarView?: { parts: { status: HTMLElement } } })
+    .yapyapAssistantBarView;
+  return kept?.parts.status.textContent ?? null;
+}
+
+/** Runs in the adapter's isolated world: the longer text the bar shows, or null for none. */
+function readBarResult(): string | null {
+  const kept = (globalThis as { yapyapAssistantBarView?: { parts: { result: HTMLElement } } })
+    .yapyapAssistantBarView;
+  return kept === undefined || kept.parts.result.hidden ? null : kept.parts.result.textContent;
+}
+
+/** Runs `read` in the adapter's isolated world of WhatsApp's page, where the bar lives. */
+const inBarWorld = async (app: ElectronApplication, read: () => unknown): Promise<unknown> =>
+  (await whatsAppContents(app)).evaluate(
+    (page, code): Promise<unknown> => page.executeJavaScriptInIsolatedWorld(1000, [{ code }]),
+    `(${read.toString()})()`,
+  );
+
+/** The assistant bar's longer text, such as a summary or what is sent, or null while it shows none. */
+export const assistantBarResult = async (app: ElectronApplication): Promise<string | null> => {
+  const result = await inBarWorld(app, readBarResult);
+  return typeof result === 'string' ? result : null;
+};
+
+/** The assistant bar's status line in the active account's WhatsApp, or null while it is not there. */
+const assistantBarStatus = async (app: ElectronApplication): Promise<string | null> => {
+  const status = await inBarWorld(app, readBarStatus);
+  return typeof status === 'string' ? status : null;
+};
+
+/** The assistant bar's controls in the active account's WhatsApp, or null while it is not there. */
+const assistantBarControls = async (app: ElectronApplication): Promise<BarControl[] | null> =>
+  ((await inBarWorld(app, readBarControls)) ?? null) as BarControl[] | null;
+
+/**
+ * Clicks a control of the assistant bar as the user would, with the mouse:
+ * the bar ignores clicks that page scripts make up.
+ */
+export async function clickInBar(
+  app: ElectronApplication,
+  page: Page,
+  name: string,
+): Promise<void> {
+  const find = async (): Promise<BarControl | undefined> =>
+    (await assistantBarControls(app))?.find(
+      (control) => control.name === name && !control.disabled,
+    );
+  await expect.poll(find, { message: `the bar’s ${name}` }).toBeDefined();
+  const control = await find();
+  if (control === undefined) {
+    throw new Error(`The bar has no ${name}.`);
+  }
+  await page.mouse.click(control.x, control.y);
+}
 
 /** Claude's streamed answer saying `text`, as the Messages API sends it. */
 export const claudeAnswer = (text: string): string =>

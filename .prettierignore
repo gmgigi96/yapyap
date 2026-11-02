@@ -2,16 +2,11 @@ pnpm-lock.yaml
 CHANGELOG.md
 # release-please writes these in its own format on every release PR.
 .release-please-manifest.json
-extensions/*/public/manifest.json
 coverage/
 out/
 apps/*/release/
 reports/
 docs/.vitepress/cache/
 docs/.vitepress/dist/
-docs/api/
-# Generated from the SDK's TypeBox schema; a test keeps them identical to it.
-packages/sdk/schema/
-docs/public/schema/
 # Vendored from winget-cli and Scoop at the commits distribution.ts names.
 packaging/manifest-schemas/

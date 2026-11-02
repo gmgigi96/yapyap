@@ -1,6 +1,6 @@
 import fc from 'fast-check';
 import { describe, expect, it } from 'vitest';
-import { compareVersions } from '../../../packages/sdk/src/version.ts';
+import { compareVersions } from '../../../apps/desktop/src/main/updates/version.ts';
 import { latestNodeLts } from './versions.ts';
 
 const version = fc

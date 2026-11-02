@@ -5,8 +5,7 @@ import { join } from 'node:path';
 import { CLAUDE_ANSWER, readyClaude } from '../assistant-helpers.ts';
 import { startFakeWhatsApp } from '../fake-whatsapp-server.ts';
 import { closeApp, expect, launchApp, seedSettings, test } from '../fixtures.ts';
-import { chromePage, clickMenu } from '../extension-helpers.ts';
-import { fakeMarketplace, marketplaceEnv, type Listing } from '../marketplace-helpers.ts';
+import { chromePage, clickMenu } from '../chrome-helpers.ts';
 
 /**
  * Screenshots of YapYap's own windows for the website (#384), taken on the
@@ -163,50 +162,19 @@ test('Settings window', async ({ profile }) => {
   }
 });
 
-/** What the Marketplace shows in the get-started guide: the call recorder, and an invented extension. */
-const LISTINGS: readonly Listing[] = [
-  {
-    id: 'org.guita.yapyap.call-recorder',
-    name: 'Call recorder',
-    summary: 'Records the call on screen, after you agree, and keeps the files on this computer.',
-    review: 'official',
-    author: 'YapYap',
-    capabilities: ['calls:record'],
-    hosts: [],
-  },
-  {
-    id: 'org.example.translate',
-    name: 'Translate',
-    summary: 'Translates your draft into the language of the chat before you send it.',
-    review: 'reviewed',
-    capabilities: ['composer:read-draft', 'composer:insert-draft'],
-    hosts: ['api.example.org'],
-  },
-];
-
-test('Accounts and Extensions windows, for the get-started guide (#385)', async ({ profile }) => {
+test('Accounts window, for the get-started guide (#385)', async ({ profile }) => {
   const showcase = await startFakeWhatsApp('showcase.html');
-  const marketplace = await fakeMarketplace(LISTINGS);
   await seed(profile, 'light');
   await preparePersonas(showcase.origin, profile);
-  const app = await launchApp(
-    showcase.origin,
-    profile,
-    [`--force-device-scale-factor=${String(SCALE)}`],
-    { env: marketplaceEnv(marketplace) },
-  );
+  const app = await launchApp(showcase.origin, profile, [
+    `--force-device-scale-factor=${String(SCALE)}`,
+  ]);
   try {
     await clickMenu(app, 'Manage Accounts…');
     await captureWindow(app, '/accounts.html', 'accounts', ['webp']);
-    await clickMenu(app, 'Extensions…');
-    const extensions = await chromePage(app, '/extensions.html');
-    await extensions.getByRole('tab', { name: 'Marketplace' }).click();
-    await expect(extensions.getByText('Translate', { exact: true })).toBeVisible();
-    await captureWindow(app, '/extensions.html', 'extensions', ['webp']);
   } finally {
     await closeApp(app);
     await showcase.close();
-    marketplace.server.close();
   }
 });
 

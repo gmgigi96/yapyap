@@ -49,13 +49,3 @@ model server you already run, or your own key for Claude or OpenAI.
 [Set up the assistant](/guide/ai-assistant).
 
 ![Settings for the AI assistant](/screenshots/assistant.webp)
-
-## 6. Add extensions
-
-Extensions add features to YapYap. Open **File → Extensions…** (on macOS,
-**YapYap → Extensions…**), pick one in the
-**Marketplace** tab, and choose **Install**. YapYap shows what it asks to do,
-and installs nothing until you agree. You can take any permission back
-later. [Browse the marketplace](/marketplace/).
-
-![The Marketplace tab, listing the call recorder and a reviewed extension](/screenshots/extensions.webp)

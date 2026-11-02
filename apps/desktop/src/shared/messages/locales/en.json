@@ -90,8 +90,6 @@
     "defaultFolder": "Your Downloads folder",
     "chooseFolder": "Choose…",
     "useDefaultFolder": "Use Downloads Folder",
-    "defaultRecordingFolder": "YapYap in your Music folder",
-    "useDefaultRecordingFolder": "Use Default Folder",
     "sections": {
       "assistant": "Assistant",
       "general": "General",
@@ -99,10 +97,8 @@
       "appearance": "Appearance",
       "reliability": "Reliability",
       "downloads": "Downloads",
-      "recording": "Call recordings",
       "privacy": "Privacy",
-      "network": "Network",
-      "extensions": "Extensions"
+      "network": "Network"
     },
     "backup": {
       "title": "Backup",
@@ -342,22 +338,6 @@
           "description": "Used when Proxy is set to “This proxy”: http://, https:// or socks5://, a host and a port. Press Enter to save it."
         }
       },
-      "extensions": {
-        "developerMode": {
-          "label": "Developer Mode",
-          "description": "Lets you install unsigned extensions while you write them. Nobody vouches for an unsigned extension, so YapYap marks it wherever it appears."
-        },
-        "chatMessages": {
-          "label": "Messages an extension may read",
-          "description": "How many of the open chat’s latest messages an extension you allowed to read chats receives when it asks.",
-          "options": {
-            "5": "5",
-            "10": "10",
-            "20": "20",
-            "50": "50"
-          }
-        }
-      },
       "downloads": {
         "askWhere": {
           "label": "Ask where to save each file",
@@ -370,20 +350,6 @@
         "openWhenDone": {
           "label": "Open files when they finish downloading",
           "description": "Opens PDFs, pictures, sound, video and text in their usual app. Anything that could run a program is only saved."
-        }
-      },
-      "recording": {
-        "format": {
-          "label": "Record as",
-          "description": "Applies to the next recording.",
-          "options": {
-            "webm": "Opus in WebM: small files that browsers and players such as VLC open",
-            "wav": "WAV: many times larger, but every program opens it"
-          }
-        },
-        "folder": {
-          "label": "Save recordings to",
-          "description": "Where YapYap keeps the calls you record. If the folder is gone, recordings go to the default folder again."
         }
       }
     }
@@ -671,116 +637,6 @@
     "label": "Chat list width",
     "hint": "Drag, or use the arrow keys, to resize the chat list. Double-click or press Enter to go back to WhatsApp’s own width."
   },
-  "extensions": {
-    "notificationTitle": "{{extension}}: {{title}}",
-    "stopped": "{{extension}} kept using too much of your computer, so YapYap stopped it. Install it again to start it.",
-    "title": "Extensions",
-    "hint": "Each extension runs in its own sandbox and can do only what you allowed when you installed it.",
-    "listFailed": "The installed extensions could not be listed. Close this window and open it again.",
-    "changeFailed": "YapYap could not make that change. Try again.",
-    "empty": "No extensions are installed.",
-    "browse": "Browse the Marketplace",
-    "fileType": "YapYap extensions",
-    "version": "Version {{version}}",
-    "trust": {
-      "first-party": "By YapYap",
-      "reviewed": "Reviewed by YapYap",
-      "third-party": "Third-party",
-      "developer": "Not signed"
-    },
-    "pulled": "The marketplace pulled this version, so it does not run: {{reason}} Remove it, or install another version from the Marketplace tab.",
-    "developerMode": "Developer Mode is on, so unsigned extensions can be installed. Turn it off in Settings when you no longer need it.",
-    "result": {
-      "installed": "{{name}} {{version}} is installed.",
-      "rejected": "This extension cannot be installed.",
-      "failed": "The extension could not be installed. Try again."
-    },
-    "reason": {
-      "unreadable": "This file is not a YapYap extension, or it is damaged.",
-      "manifestInvalid": "Its manifest.json is not valid: {{problem}}.",
-      "missingFile": "It is missing {{file}}, which its manifest names.",
-      "developerModeOnly": "Unsigned extensions install only in Developer Mode.",
-      "firstPartyName": "Only YapYap can publish extensions under its own name.",
-      "updateUnsigned": "This update is not signed, but the installed extension is."
-    },
-    "consent": {
-      "install": "Install {{name}}?",
-      "update": "Update {{name}} to {{version}}?",
-      "author": "By {{name}}",
-      "key": "Signing key",
-      "unsigned": "Not signed",
-      "firstParty": "Signed by YapYap.",
-      "reviewed": "YapYap reviewed this version for the marketplace. A review looks for harmful or undeclared behavior; it is not a guarantee.",
-      "asks": "It asks to:",
-      "updateAsks": "This update asks for more than before:",
-      "added": "New",
-      "hosts": "Connect to:",
-      "nothing": "It asks for nothing.",
-      "risk": "YapYap has not reviewed this extension. Install it only if you trust its author: you install it at your own risk.",
-      "unsignedRisk": "Nobody signed this extension, so nothing shows who made it or that it is unchanged. Install it only if you wrote it yourself.",
-      "acknowledge": "I understand that I install this extension at my own risk",
-      "confirmInstall": "Install",
-      "confirmUpdate": "Update"
-    },
-    "settings": "Settings",
-    "remove": "Remove…",
-    "removeLabel": "Remove {{extension}}",
-    "settingDefault": "Extension’s default",
-    "settingSaved": "Saved",
-    "settingRefused": "Not saved: YapYap could not use this value",
-    "permissions": "Permissions",
-    "permissionsHint": "Turn off anything you no longer want this extension to do. Turning something back on gives back only what you allowed when you installed it.",
-    "connectTo": "Connect to {{host}}",
-    "capabilities": {
-      "chat:read-active": "Read the messages of the chat you have open",
-      "chat:read-unread-summary": "See which chats have unread messages, and the latest message of each",
-      "composer:insert-draft": "Write drafts in the message box, which you send yourself",
-      "local-network": "Connect to servers running on this computer, such as a local AI model",
-      "composer:read-draft": "Read what you type in the message box",
-      "notifications:show": "Show notifications",
-      "storage:local": "Keep its own data on this computer",
-      "secrets:own": "Keep its own secrets, such as API keys, encrypted",
-      "calls:record": "Ask to record your calls; YapYap records only when you click Record, and the extension never gets the recording"
-    },
-    "activity": {
-      "title": "Recent activity",
-      "hint": "What each extension asked YapYap to do, and how it went. YapYap never records what an extension sent or received.",
-      "empty": "No extension has asked for anything yet.",
-      "outcomes": {
-        "ok": "Done",
-        "invalid": "Refused: not a valid request",
-        "not-granted": "Refused: not allowed",
-        "rate-limited": "Refused: too many requests",
-        "timeout": "Took too long",
-        "failed": "Failed"
-      }
-    },
-    "marketplace": {
-      "installedTab": "Installed",
-      "marketplaceTab": "Marketplace",
-      "tabsLabel": "Extensions",
-      "search": "Search extensions",
-      "loading": "Loading the marketplace…",
-      "unreachable": "The marketplace could not be reached. Check your connection and try again.",
-      "invalid": "The marketplace sent a list YapYap could not verify, so nothing is shown. Try again later.",
-      "outdated": "The marketplace list is out of date, so nothing is shown. Try again later.",
-      "retry": "Try Again",
-      "empty": "No extensions match.",
-      "by": "By {{name}}",
-      "version": "Version {{version}}",
-      "install": "Install",
-      "installLabel": "Install {{extension}}",
-      "update": "Update to {{version}}",
-      "updateLabel": "Update {{extension}} to {{version}}",
-      "installed": "Installed",
-      "incompatible": "Needs a newer YapYap",
-      "whatsNew": "What’s new in {{version}}",
-      "homepage": "Website",
-      "privacy": "YapYap downloads the marketplace list only while this tab is open, without saying who you are.",
-      "mismatch": "The download does not match what the marketplace lists, so it was not installed.",
-      "unlisted": "The marketplace does not list this extension for this version of YapYap."
-    }
-  },
   "notifications": {
     "titled": "{{account}}: {{title}}",
     "hiddenSender": "WhatsApp",
@@ -821,8 +677,6 @@
   "shortcuts": {
     "global": "From any app",
     "globalHint": "These work while you use other apps. They have no keys until you give them some.",
-    "extensions": "Extension commands",
-    "extensionsHint": "Keys the extensions suggest, as long as nothing else uses them. Change or remove them here; Reset goes back to the extension’s suggestion.",
     "none": "None",
     "remove": "Remove",
     "notRegistered": "Another app already uses those keys, or this system does not let apps use keys everywhere.",
@@ -925,11 +779,7 @@
     "resetSession": "Reset Session…",
     "addAccount": "Add Account",
     "manageAccounts": "Manage Accounts…",
-    "extensions": "Extensions…",
-    "installExtension": "Install Extension…",
     "customCode": "Custom CSS and JavaScript…",
-    "extensionCommands": "Extension Commands",
-    "extensionCommand": "{{extension}}: {{title}}",
     "removeAccount": "Remove Account…",
     "doNotDisturb": "Do Not Disturb",
     "muteAccount": "Mute This Account",
@@ -955,35 +805,16 @@
     "newChat": "New Chat",
     "spellingLanguages": "Spelling Languages",
     "accounts": "Accounts",
-    "extensions": "Extensions",
     "shortcuts": "Keyboard Shortcuts",
     "customCode": "Custom CSS and JavaScript",
     "quickPanel": "YapYap",
     "downloads": "Downloads",
-    "extensionConsent": "Review Extension",
     "welcome": "Welcome",
     "report": "Report a Problem",
     "proxyLogin": "Sign In to the Proxy",
     "offline": "{{pageTitle}} (offline)"
   },
   "dialogs": {
-    "extensionHost": {
-      "message": "Let {{extension}} connect to {{host}}?",
-      "detail": "The extension wants to send data there and read the answer. Only allow a host you trust, such as a service you set up for this extension.",
-      "allow": "Allow",
-      "deny": "Deny"
-    },
-    "extensionLocalServer": {
-      "message": "Let {{extension}} use the server at {{server}} on this computer?",
-      "detail": "The extension could then use everything that server offers, such as a local AI model, and read its answers. Only allow a server you set up for this extension.",
-      "allow": "Allow",
-      "deny": "Deny"
-    },
-    "removeExtension": {
-      "message": "Remove {{extension}}?",
-      "detail": "This stops the extension and deletes it, with its settings, its stored data and its saved secrets, such as API keys. Its past activity stays listed.",
-      "confirm": "Remove Extension"
-    },
     "resetSession": {
       "message": "Reset this WhatsApp session?",
       "detail": "This logs you out and deletes WhatsApp’s data on this computer. Your chats stay on your phone. To use WhatsApp here again, link this device again.",
@@ -1032,20 +863,5 @@
     "downloaded": "Downloaded {{name}} to your Downloads folder.",
     "downloadFailed": "Could not download {{name}}.",
     "saved": "Saved {{name}}."
-  },
-  "recording": {
-    "windowTitle": "Call recording",
-    "asks": "{{extension}} wants to record this call.",
-    "consentHint": "Ask everyone on the call before you record it.",
-    "record": "Record",
-    "notNow": "Cancel",
-    "recording": "Recording",
-    "stop": "Stop Recording",
-    "saved": "The recording is saved.",
-    "consent": {
-      "message": "Before you record calls",
-      "detail": "In many places it is against the law to record a call without the consent of everyone on it. Ask the people on the call before you record, and keep the recording to yourself. YapYap saves recordings only on this computer.",
-      "checkbox": "I know the law where I or the people I call live may require everyone’s consent, and I will ask for it"
-    }
   }
 }

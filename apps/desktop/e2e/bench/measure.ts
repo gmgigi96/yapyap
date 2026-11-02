@@ -1,5 +1,5 @@
 import type { ElectronApplication } from '@playwright/test';
-import { cp, mkdtemp, rm } from 'node:fs/promises';
+import { mkdtemp, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { startFakeWhatsApp } from '../fake-whatsapp-server.ts';
@@ -50,16 +50,10 @@ async function memoryByProcess(
 
 const megabytes = (kilobytes: number): number => Math.round(kilobytes / 1024);
 
-/**
- * One cold start on a fresh profile, as a first launch after install, or
- * with `extensions` (a profile's `extensions` folder) already installed.
- */
-export async function measureOnce(extensions?: string): Promise<Sample> {
+/** One cold start on a fresh profile, as a first launch after install. */
+export async function measureOnce(): Promise<Sample> {
   const fake = await startFakeWhatsApp();
   const profile = await mkdtemp(join(tmpdir(), 'yapyap-bench-'));
-  if (extensions !== undefined) {
-    await cp(extensions, join(profile, 'extensions'), { recursive: true });
-  }
   const started = performance.now();
   const app = await launchApp(fake.origin, profile);
   try {

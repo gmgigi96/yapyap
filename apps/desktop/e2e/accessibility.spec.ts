@@ -9,7 +9,6 @@ const PAGES = [
   ['About YapYap', 'about.html'],
   ['Settings…', 'settings.html'],
   ['Manage Accounts…', 'accounts.html'],
-  ['Extensions…', 'extensions.html'],
   ['Custom CSS and JavaScript…', 'custom-code.html'],
   ['Keyboard Shortcuts…', 'shortcuts.html'],
   ['Downloads…', 'downloads.html'],

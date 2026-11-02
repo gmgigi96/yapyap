@@ -12,9 +12,6 @@ artifactName: ${productName}-${version}-${os}-${arch}.${ext}
 protocols:
   - name: WhatsApp link
     schemes: [whatsapp]
-  # Install in YapYap links from the website: they only name a marketplace extension (ADR 0014).
-  - name: YapYap extension link
-    schemes: [yapyap]
 publish:
   provider: github
   owner: vascoguita

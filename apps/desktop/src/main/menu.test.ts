@@ -15,18 +15,7 @@ function actions(accounts: AccountSummary[] = []) {
     setMuted: vi.fn(),
     openAbout: vi.fn(),
     openSettings: vi.fn(),
-    openExtensions: vi.fn(),
-    installExtension: vi.fn(),
     openCustomCode: vi.fn(),
-    extensionCommands: [] as {
-      extension: string;
-      extensionName: string;
-      id: string;
-      title: string;
-    }[],
-    runExtensionCommand: vi.fn(),
-    extensionPanels: [] as { extension: string; extensionName: string; title: string }[],
-    openExtensionPanel: vi.fn(),
     openNewChat: vi.fn(),
     clearCache: vi.fn(),
     resetSession: vi.fn(),
@@ -166,8 +155,6 @@ describe('buildMenuTemplate', () => {
     ]);
     expect(items(template[0])).toEqual([
       { label: 'Settings…', accelerator: 'CmdOrCtrl+,', click: a.openSettings },
-      { label: 'Extensions…', click: a.openExtensions },
-      { label: 'Install Extension…', click: a.installExtension },
       { label: 'Custom CSS and JavaScript…', click: a.openCustomCode },
       { type: 'separator' },
       { role: 'quit', accelerator: 'CmdOrCtrl+Q' },
@@ -228,7 +215,7 @@ describe('buildMenuTemplate', () => {
     expect(on.setMuted).toHaveBeenCalledWith(false);
   });
 
-  it('puts About, Settings and Extensions in the app menu on macOS', () => {
+  it('puts About, Settings and custom code in the app menu on macOS', () => {
     const a = actions();
     const [appMenu, ...rest] = buildMenuTemplate('darwin', a);
     expect(appMenu?.label).toBe('YapYap');
@@ -239,16 +226,10 @@ describe('buildMenuTemplate', () => {
       accelerator: 'CmdOrCtrl+,',
       click: a.openSettings,
     });
-    expect(entries.slice(3, 6)).toEqual([
-      { label: 'Extensions…', click: a.openExtensions },
-      { label: 'Install Extension…', click: a.installExtension },
-      { label: 'Custom CSS and JavaScript…', click: a.openCustomCode },
-    ]);
+    expect(entries[3]).toEqual({ label: 'Custom CSS and JavaScript…', click: a.openCustomCode });
     expect(entries.map((item) => item.role ?? item.type)).toEqual([
       undefined,
       'separator',
-      undefined,
-      undefined,
       undefined,
       undefined,
       'separator',
@@ -365,73 +346,5 @@ describe('custom shortcuts in the menus', () => {
         .slice(0, 2)
         .map((item) => item.accelerator),
     ).toEqual(['Alt+1', 'Alt+2']);
-  });
-
-  it('lists the running extensions’ commands in a submenu of their own, named after each extension', () => {
-    const a = {
-      ...actions(),
-      extensionCommands: [
-        {
-          extension: 'org.example.hello',
-          extensionName: 'Hello',
-          id: 'translate',
-          title: 'Translate draft',
-        },
-      ],
-    };
-    const [file] = buildMenuTemplate('linux', a);
-    const commands = items(file).find((item) => item.label === 'Extension Commands');
-    const [command] = Array.isArray(commands?.submenu) ? commands.submenu : [];
-    expect(command?.label).toBe('Hello: Translate draft');
-    (command?.click as (() => void) | undefined)?.();
-    expect(a.runExtensionCommand).toHaveBeenCalledExactlyOnceWith('org.example.hello', 'translate');
-    expect(items(buildMenuTemplate('linux', actions())[0]).map((item) => item.label)).not.toContain(
-      'Extension Commands',
-    );
-  });
-
-  it('gives an extension command the keys its manifest suggests, unless they are taken', () => {
-    const a = {
-      ...actions(),
-      extensionCommands: [
-        { extension: 'org.example.rec', extensionName: 'Rec', id: 'record', title: 'Record' },
-        { extension: 'org.example.rec', extensionName: 'Rec', id: 'go', title: 'Go' },
-        { extension: 'org.example.rec', extensionName: 'Rec', id: 'again', title: 'Again' },
-      ].map((command, index) => ({
-        ...command,
-        shortcut: ['CmdOrCtrl+Shift+E', 'CmdOrCtrl+R', 'Ctrl+Shift+E'][index],
-      })),
-    };
-    const found = items(buildMenuTemplate('linux', a)[0]).find(
-      (item) => item.label === 'Extension Commands',
-    );
-    const submenu = Array.isArray(found?.submenu) ? found.submenu : [];
-    expect(submenu.map((item) => item.accelerator)).toEqual([
-      'CmdOrCtrl+Shift+E',
-      undefined,
-      undefined,
-    ]);
-  });
-
-  it('lists the running extensions’ panels after their commands, and opens the one picked', () => {
-    const panel = { extension: 'org.example.hello', extensionName: 'Hello', title: 'Notes' };
-    const command = { ...panel, id: 'translate', title: 'Translate draft' };
-    const submenu = (a: ReturnType<typeof actions>) => {
-      const found = items(buildMenuTemplate('linux', a)[0]).find(
-        (item) => item.label === 'Extension Commands',
-      );
-      return Array.isArray(found?.submenu) ? found.submenu : [];
-    };
-    const a = { ...actions(), extensionCommands: [command], extensionPanels: [panel] };
-    const both = submenu(a);
-    expect(both.map((item) => item.label ?? item.type)).toEqual([
-      'Hello: Translate draft',
-      'separator',
-      'Hello: Notes',
-    ]);
-    (both[2]?.click as (() => void) | undefined)?.();
-    expect(a.openExtensionPanel).toHaveBeenCalledExactlyOnceWith('org.example.hello');
-    const alone = submenu({ ...actions(), extensionPanels: [panel] });
-    expect(alone.map((item) => item.label)).toEqual(['Hello: Notes']);
   });
 });

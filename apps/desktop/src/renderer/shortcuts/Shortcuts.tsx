@@ -1,11 +1,6 @@
 import type { JSX } from 'preact';
 import { useCallback, useEffect, useLayoutEffect, useState } from 'preact/hooks';
-import type {
-  ChromeApi,
-  ExtensionShortcutState,
-  GlobalShortcutState,
-  ShortcutList,
-} from '../../shared/chrome-api.ts';
+import type { ChromeApi, GlobalShortcutState, ShortcutList } from '../../shared/chrome-api.ts';
 import { en } from '../../shared/messages/en.ts';
 import { acceleratorFromKeys } from '../../shared/shortcut-keys.ts';
 import { keysOf, type ActiveShortcut } from '../../shared/shortcuts.ts';
@@ -223,76 +218,6 @@ function GlobalTable(props: {
   );
 }
 
-function ExtensionRow(props: {
-  readonly shortcut: ExtensionShortcutState;
-  readonly platform: string;
-  readonly listening: boolean;
-  readonly onChange: (id: string) => void;
-  readonly onApply: (id: string, accelerator: string | null) => void;
-}): JSX.Element {
-  const { shortcut } = props;
-  const keys =
-    shortcut.accelerator === '' ? (
-      text.none
-    ) : (
-      <Keys accelerator={shortcut.accelerator} platform={props.platform} />
-    );
-  // Reset goes back to the extension's suggestion; Remove leaves the command without keys.
-  const second = shortcut.custom ? text.reset : undefined;
-  const { onApply } = props;
-  const onSecond = useCallback(
-    (id: string) => {
-      onApply(id, shortcut.custom ? null : '');
-    },
-    [onApply, shortcut.custom],
-  );
-  return (
-    <tr>
-      <td>{shortcut.label}</td>
-      <td>{props.listening ? <output>{text.press}</output> : keys}</td>
-      <Buttons
-        id={shortcut.id}
-        label={shortcut.label}
-        second={second ?? (shortcut.accelerator === '' ? undefined : text.remove)}
-        onChange={props.onChange}
-        onSecond={onSecond}
-      />
-    </tr>
-  );
-}
-
-/** The running extensions' commands and their keys (#443); nothing when none has commands. */
-function ExtensionTable(props: {
-  readonly list: ShortcutList;
-  readonly listening: string | undefined;
-  readonly onChange: (id: string) => void;
-  readonly onApply: (id: string, accelerator: string | null) => void;
-}): JSX.Element | null {
-  if (props.list.extensions.length === 0) {
-    return null;
-  }
-  return (
-    <section>
-      <h2>{text.extensions}</h2>
-      <p class="hint">{text.extensionsHint}</p>
-      <table>
-        <tbody>
-          {props.list.extensions.map((shortcut) => (
-            <ExtensionRow
-              key={shortcut.id}
-              shortcut={shortcut}
-              platform={props.list.platform}
-              listening={props.listening === shortcut.id}
-              onChange={props.onChange}
-              onApply={props.onApply}
-            />
-          ))}
-        </tbody>
-      </table>
-    </section>
-  );
-}
-
 /** The shortcuts as main has them, and the last change's problem, if any. */
 function useShortcuts(api: ChromeApi) {
   const [list, setList] = useState<ShortcutList>();
@@ -340,12 +265,6 @@ export function Shortcuts({ api }: { readonly api: ChromeApi }): JSX.Element {
         <>
           <Table list={list} listening={listening} onChange={setListening} onReset={reset} />
           <GlobalTable list={list} listening={listening} onChange={setListening} onRemove={reset} />
-          <ExtensionTable
-            list={list}
-            listening={listening}
-            onChange={setListening}
-            onApply={apply}
-          />
         </>
       )}
     </main>

@@ -47,14 +47,6 @@ jobs:
       - uses: ./.github/actions/setup
       - run: pnpm lint
       - run: pnpm typecheck
-      - name: The embedded extension trust anchor matches EXTENSION_SIGNING_PUBLIC_KEY
-        env:
-          EXTENSION_SIGNING_PUBLIC_KEY: ${{ vars.EXTENSION_SIGNING_PUBLIC_KEY }}
-        run: node scripts/src/bin/check-trust-anchor.ts
-      # Downloads every listed archive and checks it as the index will
-      # (ADR 0014), so a broken entry fails the pull request that adds it.
-      - name: The extension marketplace entries and their archives
-        run: node scripts/src/bin/marketplace-index.ts marketplace
       - name: Commit messages
         if: github.event_name == 'pull_request'
         env:

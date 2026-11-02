@@ -1,5 +1,4 @@
 import { chatLinkInArguments, chatLinkTarget } from './navigation/deep-link.ts';
-import { extensionLinkInArguments, extensionLinkTarget } from './navigation/extension-link.ts';
 
 export interface InstanceApp {
   requestSingleInstanceLock(): boolean;
@@ -28,18 +27,16 @@ export interface LinkPage {
 
 export interface Instances {
   /**
-   * Hands chat links to WhatsApp and extension install links to `install`,
-   * including any that arrived before them, and brings the window to the
-   * front for later launches.
+   * Hands chat links to WhatsApp, including any that arrived before it, and
+   * brings the window to the front for later launches.
    */
-  readonly attach: (window: LinkWindow, page: LinkPage, install: (id: string) => void) => void;
+  readonly attach: (window: LinkWindow, page: LinkPage) => void;
 }
 
-/** Where each kind of link goes once YapYap can take it. */
+/** Where chat links go once YapYap can take them. */
 interface LinkTargets {
   readonly window: () => LinkWindow | undefined;
   readonly open: (target: string) => void;
-  readonly install: (id: string) => void;
 }
 
 export function bringToFront(window: LinkWindow): void {
@@ -50,19 +47,13 @@ export function bringToFront(window: LinkWindow): void {
   window.focus();
 }
 
-/** A link handed to the running app: a chat link, an extension install link, or neither. */
+/** A link handed to the running app: a chat link, or something else. */
 function follow(url: string, home: string, links: LinkTargets): boolean {
   const target = chatLinkTarget(url, home);
   if (target !== undefined) {
     links.open(target);
-    return true;
   }
-  const extension = extensionLinkTarget(url);
-  if (extension !== undefined) {
-    links.install(extension);
-    return true;
-  }
-  return false;
+  return target !== undefined;
 }
 
 /** Hands every later launch, and every macOS link event, to the links' targets. */
@@ -78,12 +69,8 @@ function listenForLaunches(
       bringToFront(window);
     }
     const target = chatLinkInArguments(argv, home);
-    const extension = extensionLinkInArguments(argv);
     if (target !== undefined) {
       links.open(target);
-    }
-    if (extension !== undefined) {
-      links.install(extension);
     }
   });
   // macOS hands links to the running app instead of starting another one.
@@ -91,7 +78,7 @@ function listenForLaunches(
     event.preventDefault();
     if (!follow(url, home, links)) {
       // The link itself is never logged: a chat link names a phone number.
-      warn('Ignored a link that is neither a WhatsApp chat link nor an extension install link.');
+      warn('Ignored a link that is not a WhatsApp chat link.');
     }
   });
 }
@@ -113,29 +100,19 @@ export function claimSingleInstance(
   }
   let window: LinkWindow | undefined;
   let page: LinkPage | undefined;
-  let installer: ((id: string) => void) | undefined;
   let pending: string | undefined;
-  let pendingExtension: string | undefined;
   const open = (target: string): void => {
     pending = page === undefined ? target : undefined;
     // A failed load is reported by the recovery monitor.
     page?.loadURL(target).catch(() => undefined);
   };
-  const install = (id: string): void => {
-    pendingExtension = installer === undefined ? id : undefined;
-    installer?.(id);
-  };
-  listenForLaunches(app, home, warn, { window: () => window, open, install });
+  listenForLaunches(app, home, warn, { window: () => window, open });
   return {
-    attach: (attachedWindow, attachedPage, attachedInstaller) => {
+    attach: (attachedWindow, attachedPage) => {
       window = attachedWindow;
       page = attachedPage;
-      installer = attachedInstaller;
       if (pending !== undefined) {
         open(pending);
-      }
-      if (pendingExtension !== undefined) {
-        install(pendingExtension);
       }
     },
   };

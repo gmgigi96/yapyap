@@ -1,4 +1,4 @@
-import { compareVersions } from '../../../packages/sdk/src/version.ts';
+import { compareVersions } from '../../../apps/desktop/src/main/updates/version.ts';
 
 export interface NodeRelease {
   readonly version: string;
