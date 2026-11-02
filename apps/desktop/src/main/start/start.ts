@@ -106,7 +106,7 @@ function headingOf(running: RunningAccounts<OpenedAccount>, id: string): string 
  * then waits in the chat's message box for the user to send it (#60).
  */
 function notifierAccount<Window extends WindowPort>(
-  { deps, window, running }: AccountWiring<Window>,
+  { deps, window, running, avatars }: AccountWiring<Window>,
   account: Account,
   contents: AccountContents,
 ): NotifierAccount {
@@ -132,6 +132,7 @@ function notifierAccount<Window extends WindowPort>(
         });
       void draftReply(contents, text, { wait, warn: deps.warn });
     },
+    picture: (url) => avatars.picture(contents, url),
   };
 }
 
@@ -154,6 +155,10 @@ function notifyFor<Window extends WindowPort>(
       },
       inlineReply: supportsInlineReply(deps.platform),
       now: Date.now,
+      wait: (ms) =>
+        new Promise<void>((resolve) => {
+          setTimeout(resolve, ms);
+        }),
       warn: deps.warn,
     },
     notifierAccount(wiring, account, contents),

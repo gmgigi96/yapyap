@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
-import { accountNotifier, type NativeOptions } from './notifier.ts';
+import { accountNotifier, notificationIcon, type NativeOptions } from './notifier.ts';
 
 function setup(heading?: string) {
   const natives: {
@@ -34,6 +34,7 @@ function setup(heading?: string) {
     inlineReply: false,
     privacy: vi.fn(() => ({ sender: true, text: true })),
     now: () => time,
+    wait: vi.fn(() => new Promise<void>(() => undefined)),
     warn: vi.fn(),
   };
   const account = {
@@ -41,6 +42,7 @@ function setup(heading?: string) {
     silenced: vi.fn(() => false),
     onClick: vi.fn(),
     onReply: vi.fn(),
+    picture: vi.fn((url: string) => Promise.resolve<string | undefined>(`data:${url}`)),
   };
   return {
     deps,
@@ -147,6 +149,13 @@ describe('accountNotifier', () => {
     expect(t.natives[1]?.options).toEqual({ title: 'Alice', body: '', silent: false });
   });
 
+  it.each([42, 'x'.repeat(2049)])('shows a notification without an odd picture: %j', (icon) => {
+    const t = setup();
+    t.notifier.show(request('1', { icon }));
+    expect(t.account.picture).not.toHaveBeenCalled();
+    expect(t.natives[0]?.options).toEqual({ title: 'Alice', body: 'Hi', silent: false });
+  });
+
   it.each([
     null,
     'text',
@@ -189,5 +198,143 @@ describe('accountNotifier', () => {
     t.deps.isSupported.mockReturnValue(false);
     t.notifier.show(request('4'));
     expect(t.deps.warn).toHaveBeenCalledTimes(2);
+  });
+});
+
+describe('accountNotifier with chat pictures', () => {
+  const flush = () => new Promise<void>((resolve) => setTimeout(resolve, 0));
+
+  it('shows the chat’s picture once it is fetched', async () => {
+    const t = setup();
+    t.notifier.show(request('1', { icon: 'https://pps.whatsapp.net/a' }));
+    expect(t.deps.create).not.toHaveBeenCalled();
+    await flush();
+    expect(t.account.picture).toHaveBeenCalledWith('https://pps.whatsapp.net/a');
+    expect(t.natives[0]?.options).toEqual({
+      title: 'Alice',
+      body: 'Hi',
+      silent: false,
+      icon: 'data:https://pps.whatsapp.net/a',
+    });
+  });
+
+  it('fetches nothing when the sender is hidden, since the picture would tell who wrote', () => {
+    const t = setup();
+    t.deps.privacy.mockReturnValue({ sender: false, text: true });
+    t.notifier.show(request('1', { icon: 'https://pps.whatsapp.net/a' }));
+    expect(t.account.picture).not.toHaveBeenCalled();
+    expect(t.natives[0]?.options).toEqual({ title: 'WhatsApp', body: 'Hi', silent: false });
+  });
+
+  it('leaves the picture out when the sender is hidden while it is fetched', async () => {
+    const t = setup();
+    t.notifier.show(request('1', { icon: 'https://pps.whatsapp.net/a' }));
+    t.deps.privacy.mockReturnValue({ sender: false, text: true });
+    await flush();
+    expect(t.natives[0]?.options).toEqual({ title: 'WhatsApp', body: 'Hi', silent: false });
+  });
+
+  it('shows the notification without a picture that cannot be fetched', async () => {
+    const t = setup();
+    t.account.picture.mockResolvedValueOnce(undefined);
+    t.notifier.show(request('1', { icon: 'https://example.com/a' }));
+    await flush();
+    expect(t.natives[0]?.options).toEqual({ title: 'Alice', body: 'Hi', silent: false });
+  });
+
+  it('waits for a slow picture only briefly, and keeps it once it comes', async () => {
+    const t = setup();
+    let deliver: (picture: string) => void = () => undefined;
+    t.account.picture.mockReturnValueOnce(
+      new Promise((resolve) => {
+        deliver = resolve;
+      }),
+    );
+    t.deps.wait.mockResolvedValueOnce(undefined);
+    t.notifier.show(request('1', { icon: 'https://pps.whatsapp.net/a' }));
+    await flush();
+    expect(t.deps.wait).toHaveBeenCalledWith(1500);
+    expect(t.natives[0]?.options).toEqual({ title: 'Alice', body: 'Hi', silent: false });
+    deliver('data:late');
+    await flush();
+    t.notifier.show(request('2', { icon: 'https://pps.whatsapp.net/a' }));
+    await flush();
+    expect(t.account.picture).toHaveBeenCalledOnce();
+    expect(t.natives[1]?.options.icon).toBe('data:late');
+  });
+
+  it('fetches each chat’s picture once, keeping the 50 most recent', async () => {
+    const t = setup();
+    for (let index = 0; index < 51; index += 1) {
+      t.notifier.show(
+        request(String(index), { icon: `https://pps.whatsapp.net/${String(index)}` }),
+      );
+      await flush();
+      t.advance(60_000);
+    }
+    t.notifier.show(request('again', { icon: 'https://pps.whatsapp.net/50' }));
+    t.notifier.show(request('first', { icon: 'https://pps.whatsapp.net/0' }));
+    await flush();
+    expect(t.account.picture).toHaveBeenCalledTimes(52);
+    expect(t.account.picture).toHaveBeenLastCalledWith('https://pps.whatsapp.net/0');
+    expect(t.natives.at(-2)?.options.icon).toBe('data:https://pps.whatsapp.net/50');
+  });
+
+  it('keeps a picture used again among the most recent', async () => {
+    const t = setup();
+    const show = async (id: string, picture: number) => {
+      t.notifier.show(request(id, { icon: `https://pps.whatsapp.net/${String(picture)}` }));
+      await flush();
+      t.advance(60_000);
+    };
+    for (let index = 0; index < 50; index += 1) {
+      await show(String(index), index);
+    }
+    await show('again', 0);
+    await show('new', 50);
+    await show('first', 0);
+    await show('second', 1);
+    expect(t.account.picture).toHaveBeenCalledTimes(52);
+    expect(t.account.picture).toHaveBeenLastCalledWith('https://pps.whatsapp.net/1');
+  });
+
+  it('never shows a notification the page closed while its picture was fetched', async () => {
+    const t = setup();
+    t.notifier.show(request('1', { icon: 'https://pps.whatsapp.net/a' }));
+    t.notifier.close('1');
+    await flush();
+    t.notifier.show(request('2', { icon: 'https://pps.whatsapp.net/b' }));
+    t.notifier.closeAll();
+    await flush();
+    expect(t.deps.create).not.toHaveBeenCalled();
+  });
+
+  it('never shows a waiting notification that one with its tag replaced', async () => {
+    const t = setup();
+    t.notifier.show(request('1', { icon: 'https://pps.whatsapp.net/a', tag: 'chat' }));
+    t.notifier.show(request('2', { icon: 'https://pps.whatsapp.net/b', tag: 'other' }));
+    t.notifier.show(request('3', { tag: 'chat' }));
+    await flush();
+    expect(t.natives.map((native) => native.options.title)).toEqual(['Alice', 'Alice']);
+    expect(t.natives.map((native) => native.options.icon)).toEqual([
+      undefined,
+      'data:https://pps.whatsapp.net/b',
+    ]);
+  });
+
+  it('keeps waiting notifications without a tag when another arrives', async () => {
+    const t = setup();
+    t.notifier.show(request('1', { icon: 'https://pps.whatsapp.net/a' }));
+    t.notifier.show(request('2'));
+    await flush();
+    expect(t.deps.create).toHaveBeenCalledTimes(2);
+  });
+});
+
+describe('notificationIcon', () => {
+  it('decodes the chat’s picture, or keeps YapYap’s own icon', () => {
+    const decode = (url: string) => `image of ${url}`;
+    expect(notificationIcon('data:a', 'own', decode)).toBe('image of data:a');
+    expect(notificationIcon(undefined, 'own', decode)).toBe('own');
   });
 });

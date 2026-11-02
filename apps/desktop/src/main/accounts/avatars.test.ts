@@ -186,3 +186,28 @@ describe('shrinkAvatar', () => {
     expect(shrinkAvatar({ isEmpty: () => true, resize })).toBeUndefined();
   });
 });
+
+describe('accountAvatars picture', () => {
+  it('fetches a picture the page names on the account’s session, under the photo’s rules', async () => {
+    const t = setup();
+    const page = t.page(undefined);
+    await expect(t.avatars.picture(page, PHOTO)).resolves.toBe('data:image/png;base64,3');
+    expect(page.fetch).toHaveBeenCalledWith(PHOTO);
+    expect(page.executeJavaScriptInIsolatedWorld).not.toHaveBeenCalled();
+  });
+
+  it('fetches nothing from other hosts, and never throws', async () => {
+    const t = setup();
+    const page = t.page(undefined);
+    await expect(t.avatars.picture(page, 'https://example.com/a.png')).resolves.toBeUndefined();
+    expect(page.fetch).not.toHaveBeenCalled();
+    page.fetch.mockRejectedValueOnce(new Error('offline'));
+    await expect(t.avatars.picture(page, PHOTO)).resolves.toBeUndefined();
+  });
+
+  it('keeps no picture over 2 MB', async () => {
+    const t = setup();
+    const page = t.page(undefined, new Uint8Array(2 * 1024 * 1024 + 1));
+    await expect(t.avatars.picture(page, PHOTO)).resolves.toBeUndefined();
+  });
+});

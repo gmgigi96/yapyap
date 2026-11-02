@@ -27,6 +27,11 @@ export interface AccountAvatars {
   readonly refresh: (id: string, page: AvatarPage) => Promise<void>;
   readonly avatarOf: (id: string) => string | undefined;
   readonly forget: (id: string) => void;
+  /**
+   * A picture the page names, such as a chat's in a notification, fetched
+   * under the same rules as the account's own photo; never throws.
+   */
+  readonly picture: (page: Pick<AvatarPage, 'session'>, url: string) => Promise<string | undefined>;
 }
 
 /** Until a photo is found, WhatsApp may still be loading; after, it rarely changes. */
@@ -55,17 +60,23 @@ export function isAvatarUrl(url: string, home: string): boolean {
   return media || isSameOrigin(url, home);
 }
 
-async function readAvatar(
-  page: AvatarPage,
-  deps: Pick<AvatarDependencies, 'home' | 'toDataUrl'>,
+type ImageDependencies = Pick<AvatarDependencies, 'home' | 'toDataUrl'>;
+
+async function fetchImage(
+  page: Pick<AvatarPage, 'session'>,
+  src: unknown,
+  deps: ImageDependencies,
 ): Promise<string | undefined> {
-  const src = await runInAdapterWorld(page, OWN_AVATAR);
   if (typeof src !== 'string' || !isAvatarUrl(src, deps.home)) {
     return undefined;
   }
   const response = await page.session.fetch(src);
   const bytes = new Uint8Array(await response.arrayBuffer());
   return response.ok && bytes.byteLength <= MAX_BYTES ? deps.toDataUrl(bytes) : undefined;
+}
+
+async function readAvatar(page: AvatarPage, deps: ImageDependencies): Promise<string | undefined> {
+  return fetchImage(page, await runInAdapterWorld(page, OWN_AVATAR), deps);
 }
 
 /** Reads again a minute after each miss, up to {@link RETRIES} misses in a row. */
@@ -128,6 +139,7 @@ export function accountAvatars<Timer>(deps: AvatarDependencies<Timer>): AccountA
       avatars.delete(id);
       due.delete(id);
     },
+    picture: (page, url) => fetchImage(page, url, deps).catch(() => undefined),
   };
 }
 

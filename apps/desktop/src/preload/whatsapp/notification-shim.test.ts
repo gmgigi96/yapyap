@@ -55,8 +55,26 @@ describe('installNotificationShim', () => {
     const second = new Notification('Bob');
     expect(first.id).not.toBe(second.id);
     expect(bridge.show.mock.calls).toEqual([
-      [{ id: first.id, title: 'Alice', body: 'Hi', tag: 'chat-1', silent: true }],
-      [{ id: second.id, title: 'Bob', body: undefined, tag: undefined, silent: undefined }],
+      [
+        {
+          id: first.id,
+          title: 'Alice',
+          body: 'Hi',
+          tag: 'chat-1',
+          silent: true,
+          icon: 'https://example.com/a.png',
+        },
+      ],
+      [
+        {
+          id: second.id,
+          title: 'Bob',
+          body: undefined,
+          tag: undefined,
+          silent: undefined,
+          icon: undefined,
+        },
+      ],
     ]);
   });
 

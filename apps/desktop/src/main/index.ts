@@ -1,4 +1,5 @@
 import { shrinkAvatar } from './accounts/avatars.ts';
+import { notificationIcon } from './notifications/notifier.ts';
 import {
   app,
   BrowserWindow,
@@ -485,7 +486,13 @@ startApp({
   accounts: loadAccounts(app.getPath('userData')),
   whatsAppPreload: join(import.meta.dirname, '..', 'preload', 'whatsapp.cjs'),
   notifications: {
-    create: (options) => new Notification({ ...options, icon: trayIcon }),
+    create: (options) =>
+      new Notification({
+        ...options,
+        icon: notificationIcon<string | Electron.NativeImage>(options.icon, trayIcon, (url) =>
+          nativeImage.createFromDataURL(url),
+        ),
+      }),
     isSupported: () => Notification.isSupported(),
   },
   ipc: ipcMain,
