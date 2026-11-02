@@ -361,6 +361,10 @@ title, escape })` (`src/renderer/shared/mount.tsx`), which titles the
   WhatsApp's own link wherever it is, while a name is found by scrolling
   the chat list. The tray stops it, the activity stays in memory, and
   `no-endpoint.test.ts` allows the one listener file.
+- Renovate (#578, ADR 0020): Renovate replaces Dependabot's version
+  updates and the pinned-versions script, with the same schedule, cooldown,
+  groups and auto-merge. Custom managers move `engines.node` with `.nvmrc`
+  and the Flatpak runtime with the BaseApp, and CI validates the config.
 - Install page button (#579): the download button carries its own styles,
   so it shows as a button on the install page too, not only on the home
   page.

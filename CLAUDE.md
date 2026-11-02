@@ -35,6 +35,7 @@ Use pnpm (version pinned in `package.json`) on Node.js 26 LTS.
 | Regenerate the message types      | `node scripts/src/bin/i18n-types.ts` (after changing `locales/en.json`)                             |
 | Check translation catalogs        | `node scripts/src/bin/check-catalogs.ts` (part of `pnpm lint`)                                      |
 | Check chrome CSS is logical       | `node scripts/src/bin/check-logical-css.ts` (part of `pnpm lint`; no physical left/right, ADR 0012) |
+| Validate the Renovate config      | Run the `docker run` command of the `renovate` job in `.github/workflows/ci.yml`                    |
 | License compatibility             | `pnpm check:licenses`                                                                               |
 | Vulnerability audit               | `pnpm audit --audit-level high`                                                                     |
 | Docs site (dev / build)           | `pnpm docs:dev` / `pnpm docs:build`                                                                 |
@@ -280,6 +281,10 @@ Update this table in the PR that adds a command.
   touches WhatsApp. The `agents` settings section is local like
   `assistant`, tokens live in `agent-tokens.json` as hashes, and their
   chat names in `secrets.json`.
+- Renovate (ADR 0020) updates every pinned version from
+  `.github/renovate.json`, on the automation App's token. A pin it cannot
+  find on its own, such as the Flatpak runtime or `engines.node`, needs a
+  custom manager there. Dependabot only raises security alerts and updates.
 - Packaged builds disable the Node inspector fuse, so Playwright's Electron
   launcher cannot drive them. The smoke test connects over CDP through the
   `DevToolsActivePort` file in the profile directory instead.

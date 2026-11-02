@@ -168,13 +168,15 @@ Issues that need one of these are labelled `needs-maintainer`.
 ### Automation app
 
 Pull requests opened with the workflow token never trigger workflows, so
-release-please and the pinned-versions job use a GitHub App instead. Its
+release-please and Renovate use a GitHub App instead. Its
 tokens expire after an hour, are limited to this repository, and its commits
 are signed by GitHub. To set it up:
 
 1. Create a private GitHub App owned by the maintainer, with webhooks off and
-   these repository permissions: Contents, Pull requests and Issues (read and
-   write). Nothing else.
+   these repository permissions: Contents, Pull requests, Issues, Workflows
+   and Commit statuses (read and write), and Checks (read). Nothing else.
+   Renovate needs Workflows to update action pins, and the statuses and
+   checks to follow its own PRs (ADR 0020).
 2. Install it on `vascoguita/yapyap` only.
 3. Generate a private key, store it, and delete the downloaded file:
    `gh secret set AUTOMATION_APP_PRIVATE_KEY --repo vascoguita/yapyap < key.pem`
