@@ -68,7 +68,6 @@ interface BarNode {
   readonly style: { order: string; position: string; zIndex: string };
   readonly dataset: Record<string, string | undefined>;
   setAttribute(name: string, value: string): void;
-  getAttribute(name: string): string | null;
   append(...nodes: BarNode[]): void;
   replaceChildren(...nodes: BarNode[]): void;
   addEventListener(type: string, listener: (event: BarEvent) => void): void;
