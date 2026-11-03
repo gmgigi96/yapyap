@@ -66,7 +66,8 @@ analysis must run in CI.
   false positive needs a comment that explains it. Narrow per-file
   exceptions live in `sonar-project.properties`, each with its reason:
   console output and `PATH` lookups in command-line scripts, the main
-  entry's promise chain (no top-level await), and two E2E rules the
+  entry's promise chain (no top-level await), the MCP server's loopback
+  allowlist (hardcoded IP), and two E2E rules the
   analyzer misreads for Playwright (assertions and conditional skips).
 - **Required check:** SonarQube Cloud's own `SonarCloud Code Analysis`
   check, which it posts on every analyzed pull request, forks included, is
