@@ -28,13 +28,31 @@ pull request, with `master` always green and releases fully automated.
   smoke-tests one format per system (AppImage x64, NSIS x64, DMG); the full
   format and architecture matrix runs when packaging inputs change (package
   manifests, lockfile, electron-builder and Flatpak configuration, packaging
-  and release scripts and workflows) and on every push to `master`. `scripts/src/ci/changes.ts` decides, with tests. Mutation testing
-  runs on pull requests only, against the tests that import the mutated
-  files. **"Require branches to be up to date" is off for now**, so a merge
-  no longer forces every other pull request to rerun; the `master` run after
-  each merge catches the rare conflict between two pull requests. Both the
-  full matrix on every pull request and the up-to-date rule return in M7
-  (#210).
+  and release scripts and workflows) and on every push to `master`. `scripts/src/ci/changes.ts` decides, with
+  tests. Mutation testing runs on pull requests only, against the tests that
+  import the mutated files. **"Require branches to be up to date" is off**,
+  so a merge does not force every other pull request to rerun; the `master`
+  run after each merge catches the rare conflict between two pull requests.
+- **Releases are the hard gate, `master` is guarded after the fact**
+  (amended 2026-11-04, #210). Both choices above began as a temporary
+  shortcut until M7 and are now the long-term design: on a personal account
+  GitHub offers no merge queue, and the up-to-date rule with the full matrix
+  on every pull request would rebase and rerun every open pull request,
+  Renovate's included, whenever anything merges. Instead:
+  - every push to `master` runs everything, including the full packaging and
+    smoke matrix, so a conflict between two pull requests shows within one
+    merge and is fixed forward or reverted;
+  - nothing reaches users without the full matrix: the release-please pull
+    request changes package manifests, so it runs it, and betas and
+    releases package and smoke-test every format before publishing, with a
+    beta before every stable release (#184);
+  - the merge script rebases a pull request that is behind `master` before
+    merging it.
+
+  Revisit this when the repository moves to an organization (use a merge
+  queue that runs the full matrix on `merge_group`, which CI already
+  listens to) or when several people merge (turn the up-to-date rule on).
+
 - **Branches**: `type/short-description`, where `type` is a Conventional
   Commits type (`feat`, `fix`, `docs`, `ci`, `build`, `chore`, `refactor`,
   `test`, `perf`).

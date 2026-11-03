@@ -65,7 +65,7 @@ the renderer changes; close and reopen a window to see your edit.
 5. Open a PR that links the issue (`Closes #N`) and includes test evidence.
    Update `docs/progress.md`, and `CLAUDE.md` if your change affects it.
 6. Rebase onto `master` and push with `--force-with-lease` only when the
-   PR conflicts: branches need not be up to date until M7 (#210).
+   PR conflicts: branches need not be up to date (ADR 0007).
 7. Merge with a merge commit (`gh pr merge --merge --delete-branch`). Squash
    and rebase merges are disabled so that branch commits keep their
    signatures.
@@ -133,7 +133,7 @@ These settings are applied through the GitHub API and must stay in place.
     checks (`CI result` for the CI workflow, plus CodeQL, dependency review,
     audit, PR title and docs build), signed commits, no force push, no
     deletion, conversation resolution required. Branches need not be up to
-    date until M7 (#210, ADR 0007).
+    date (ADR 0007).
   - `release tags`: `v*` tags cannot be deleted, moved or updated.
 
   After changing a ruleset file (for example when a check of a workflow
@@ -157,7 +157,7 @@ below 10 on purpose or for now (#404):
   signed commits and the required checks, and forbids force pushes and
   deletion. It does not require approvals, dismiss stale reviews or code
   owner review, for the reason above, and branches need not be up to date
-  until M7 (#210).
+  (ADR 0007).
 - **Signed-Releases:** releases attach their Sigstore bundle and in-toto
   provenance since v0.1.2-beta.3. The score rises as older releases leave
   the last five Scorecard looks at.
@@ -287,14 +287,6 @@ stable release (`publish.yml` is shared), except that betas skip the AUR.
 PR open on `master` and updates it from Conventional Commits. Merging that PR
 tags `vX.Y.Z`, updates `CHANGELOG.md` and creates the GitHub Release, which
 starts the release build. Never tag by hand.
-
-The release-please job runs only while the repository variable
-`RELEASES_ENABLED` is `true`, as it is now. Every update of the release PR
-runs the full check suite, which holds runners that feature PRs wait for, so
-setting it to `false` pauses the release PR during busy stretches. Setting it
-back to `true` (`gh variable set RELEASES_ENABLED --body true --repo
-vascoguita/yapyap`) makes the next push to `master` open the release PR again
-with every change since the last release.
 
 Release notes are generated from commit subjects, and only `feat`, `fix`,
 `perf` and `revert` commits appear in them. Each change appears once: the
