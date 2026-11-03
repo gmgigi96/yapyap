@@ -1,4 +1,4 @@
-import { CHROME_CHANNELS, type PickerOffer } from '../../shared/chrome-api.ts';
+import { CHROME_CHANNELS, type PickerOffer } from '../../shared/api/chrome-api.ts';
 import { argumentsOf, isBoolean, isString, noArguments } from '../ipc/arguments.ts';
 import type { ChromeCall, ChromeHandler } from '../ipc/chrome.ts';
 import type { CaptureChoice, CaptureSource } from '../permissions/session-guard.ts';

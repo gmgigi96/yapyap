@@ -1,6 +1,6 @@
 import type { ReadChat } from '../../adapter/active-chat.ts';
 import type { UnreadSummaryChat } from '../../adapter/unread-summary.ts';
-import type { AssistantBarState, BarButtonId } from '../../shared/assistant-bar-api.ts';
+import type { AssistantBarState, BarButtonId } from '../../shared/api/assistant-bar-api.ts';
 import { en } from '../../shared/messages/en.ts';
 import type { SettingsService } from '../settings/service.ts';
 import { problemWords, privateWords, setupWords, type Fix, type Words } from './bar-words.ts';

@@ -5,7 +5,7 @@ import type {
   AgentNarrowingStep,
   AgentTokenSpec,
   AgentTokenView,
-} from '../../shared/agents-api.ts';
+} from '../../shared/api/agents-api.ts';
 import { readChecked, type TextFile } from '../support/atomic-write.ts';
 import type { SecretStore } from '../secrets/secret-store.ts';
 import { parseInternationalNumber } from '../../shared/phone-number.ts';

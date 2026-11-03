@@ -2,7 +2,7 @@ import {
   CHROME_CHANNELS,
   type ProxyLoginAnswer,
   type ProxyLoginRequest,
-} from '../../shared/chrome-api.ts';
+} from '../../shared/api/chrome-api.ts';
 import { en } from '../../shared/messages/en.ts';
 import { noArguments } from '../ipc/arguments.ts';
 import type { ChromeCall, ChromeHandler } from '../ipc/chrome.ts';

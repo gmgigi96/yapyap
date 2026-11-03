@@ -1,6 +1,6 @@
 import type { MenuItemConstructorOptions } from 'electron';
 import { describe, expect, it, vi } from 'vitest';
-import type { AccountSummary } from '../../shared/chrome-api.ts';
+import type { AccountSummary } from '../../shared/api/chrome-api.ts';
 import { buildMenuTemplate } from './menu.ts';
 
 function actions(accounts: AccountSummary[] = []) {

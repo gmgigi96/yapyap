@@ -1,4 +1,4 @@
-import { ASSISTANT_BAR_BRIDGE } from '../shared/assistant-bar-api.ts';
+import { ASSISTANT_BAR_BRIDGE } from '../shared/api/assistant-bar-api.ts';
 import { LANDMARKS } from './page-state.ts';
 
 /** YapYap's own words on the bar, in the user's language. */

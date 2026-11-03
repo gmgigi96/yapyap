@@ -1,7 +1,7 @@
 import type { JSX } from 'preact';
 import { useCallback, useEffect, useState } from 'preact/hooks';
-import type { AgentsView, AgentTokenView } from '../../shared/agents-api.ts';
-import type { ChromeApi, SettingsSnapshot } from '../../shared/chrome-api.ts';
+import type { AgentsView, AgentTokenView } from '../../shared/api/agents-api.ts';
+import type { ChromeApi, SettingsSnapshot } from '../../shared/api/chrome-api.ts';
 import { en } from '../../shared/messages/en.ts';
 import { AgentTokenForm, chatLabel, CreatedToken, type Created } from './AgentTokenForm.tsx';
 import { fieldsOf, type Change } from './Field.tsx';

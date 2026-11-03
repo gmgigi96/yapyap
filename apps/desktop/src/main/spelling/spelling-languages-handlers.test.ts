@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { CHROME_CHANNELS } from '../../shared/chrome-api.ts';
+import { CHROME_CHANNELS } from '../../shared/api/chrome-api.ts';
 import { defaultSettings } from '../settings/decode.ts';
 import type { Settings } from '../settings/schema.ts';
 import { spellingHandlers } from './spelling-languages-handlers.ts';

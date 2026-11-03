@@ -7,7 +7,7 @@ import type {
   KeyedProvider,
   PrivateModelAction,
   SettingsSnapshot,
-} from '../../shared/chrome-api.ts';
+} from '../../shared/api/chrome-api.ts';
 import { localServerOf } from '../../shared/local-server.ts';
 import { en } from '../../shared/messages/en.ts';
 import { fieldsOf, type Change } from './Field.tsx';

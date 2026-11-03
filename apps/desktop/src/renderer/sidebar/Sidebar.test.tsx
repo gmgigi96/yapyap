@@ -2,7 +2,7 @@
 import { act, cleanup, fireEvent, render, screen } from '@testing-library/preact';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { fakeChromeApi } from '../../../test/chrome-api.ts';
-import type { SidebarState } from '../../shared/chrome-api.ts';
+import type { SidebarState } from '../../shared/api/chrome-api.ts';
 import { Sidebar } from './Sidebar.tsx';
 
 const STATE: SidebarState = {

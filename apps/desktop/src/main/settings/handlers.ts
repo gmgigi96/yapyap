@@ -1,5 +1,5 @@
 import { Pointer, Value } from 'typebox/value';
-import { CHROME_CHANNELS, type SettingsSnapshot } from '../../shared/chrome-api.ts';
+import { CHROME_CHANNELS, type SettingsSnapshot } from '../../shared/api/chrome-api.ts';
 import {
   SETTING_FIELDS,
   type SettingField,

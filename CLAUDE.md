@@ -173,7 +173,7 @@ Update this table in the PR that adds a command.
   each with its reason and issue. Remove an entry as soon as its issue lands.
 - App chrome pages are served from `app://chrome/` on the in-memory
   `yapyap-chrome` partition. Add an operation by extending `ChromeApi` in
-  `src/shared/chrome-api.ts`, the preload bridge, and a handler registered
+  `src/shared/api/chrome-api.ts`, the preload bridge, and a handler registered
   through `registerChromeHandlers`, which checks the sender and payload. Node's
   URL parser treats `app:` as opaque, so compare origins with `isSameOrigin`.
 - A setting appears in the settings window only once YapYap acts on it: add

@@ -1,5 +1,5 @@
 import type { MenuItemConstructorOptions } from 'electron';
-import type { AccountSummary } from '../../shared/chrome-api.ts';
+import type { AccountSummary } from '../../shared/api/chrome-api.ts';
 import { en } from '../../shared/messages/en.ts';
 import { bringToFront, type LinkWindow } from '../app/instances.ts';
 

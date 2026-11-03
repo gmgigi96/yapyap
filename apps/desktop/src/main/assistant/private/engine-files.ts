@@ -2,7 +2,7 @@ import { createReadStream } from 'node:fs';
 import { stat } from 'node:fs/promises';
 import { join } from 'node:path';
 import { Readable } from 'node:stream';
-import { ENGINE_ORIGIN } from '../../../shared/engine-api.ts';
+import { ENGINE_ORIGIN } from '../../../shared/api/engine-api.ts';
 import { isSameOrigin } from '../../navigation/link-policy.ts';
 
 /**

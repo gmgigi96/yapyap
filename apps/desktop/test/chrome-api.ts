@@ -1,5 +1,5 @@
 import { vi } from 'vitest';
-import type { ChromeApi } from '../src/shared/chrome-api.ts';
+import type { ChromeApi } from '../src/shared/api/chrome-api.ts';
 
 /** Fakes for some operations of some groups; every other operation is a bare `vi.fn()`. */
 type ChromeApiOverrides = { readonly [Group in keyof ChromeApi]?: Partial<ChromeApi[Group]> };

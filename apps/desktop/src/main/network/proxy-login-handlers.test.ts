@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
-import { CHROME_CHANNELS } from '../../shared/chrome-api.ts';
+import { CHROME_CHANNELS } from '../../shared/api/chrome-api.ts';
 import { createProxyLoginPrompt } from './proxy-login-handlers.ts';
 
 const REQUEST = { host: 'proxy.example.org', port: 3128, failed: false, canRemember: true };

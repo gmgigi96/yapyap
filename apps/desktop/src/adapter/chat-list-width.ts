@@ -2,7 +2,7 @@ import {
   CHAT_LIST_BRIDGE,
   MAX_CHAT_LIST_WIDTH,
   MIN_CHAT_LIST_WIDTH,
-} from '../shared/chat-list-api.ts';
+} from '../shared/api/chat-list-api.ts';
 import { LANDMARKS } from './page-state.ts';
 
 /** YapYap's own words on the divider, in the user's language. */

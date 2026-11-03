@@ -1,4 +1,4 @@
-import { CHROME_CHANNELS, type CustomCodeView } from '../../shared/chrome-api.ts';
+import { CHROME_CHANNELS, type CustomCodeView } from '../../shared/api/chrome-api.ts';
 import { ALL_ACCOUNTS, isSnippetText, type CustomCode } from '../../shared/custom-code.ts';
 import { en } from '../../shared/messages/en.ts';
 import { isCustomCode, type CustomCodeController } from './custom-code.ts';

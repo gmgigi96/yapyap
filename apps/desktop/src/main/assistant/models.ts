@@ -1,6 +1,6 @@
 import Anthropic from '@anthropic-ai/sdk';
 import OpenAI from 'openai';
-import type { KeyedProvider } from '../../shared/chrome-api.ts';
+import type { KeyedProvider } from '../../shared/api/chrome-api.ts';
 import { en } from '../../shared/messages/en.ts';
 import { kindOf } from './providers/errors.ts';
 import { REQUEST_TIMEOUT_MS, type ProviderErrorKind } from './providers/provider.ts';

@@ -11,7 +11,7 @@ import { defaultSettings } from '../settings/decode.ts';
 import type { Settings } from '../settings/schema.ts';
 import type { SidebarSource } from '../accounts/sidebar-handlers.ts';
 import type { ContextMenuItem, ContextMenuParams } from '../spelling/context-menu.ts';
-import type { ProxyLoginAnswer } from '../../shared/chrome-api.ts';
+import type { ProxyLoginAnswer } from '../../shared/api/chrome-api.ts';
 import { WHATSAPP_ORIGIN } from '../app/whatsapp-origin.ts';
 import type { WindowOptions } from '../window/windows.ts';
 import type { AssistantBar } from '../assistant/bar.ts';

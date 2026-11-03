@@ -1,4 +1,4 @@
-import type { ShareBridge } from '../../shared/share-api.ts';
+import type { ShareBridge } from '../../shared/api/share-api.ts';
 
 /** The parts of a media track and stream the stand-in uses; the preload has no DOM types. */
 interface Track {

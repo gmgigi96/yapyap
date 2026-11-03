@@ -1,6 +1,10 @@
-import type { AgentNarrowingStep, AgentsView, AgentTokenCreated } from '../../shared/agents-api.ts';
-import { AGENT_SCOPES } from '../../shared/agents-api.ts';
-import { CHROME_CHANNELS } from '../../shared/chrome-api.ts';
+import type {
+  AgentNarrowingStep,
+  AgentsView,
+  AgentTokenCreated,
+} from '../../shared/api/agents-api.ts';
+import { AGENT_SCOPES } from '../../shared/api/agents-api.ts';
+import { CHROME_CHANNELS } from '../../shared/api/chrome-api.ts';
 import { en } from '../../shared/messages/en.ts';
 import { isChatId } from '../assistant/chats.ts';
 import { argumentsOf, isString, noArguments } from '../ipc/arguments.ts';

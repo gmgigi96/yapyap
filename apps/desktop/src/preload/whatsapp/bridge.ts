@@ -1,7 +1,13 @@
-import { ASSISTANT_BAR_CHANNELS, type AssistantBarBridge } from '../../shared/assistant-bar-api.ts';
-import { CHAT_LIST_CHANNELS, type ChatListBridge } from '../../shared/chat-list-api.ts';
-import { NOTIFICATION_CHANNELS, type NotificationBridge } from '../../shared/notification-api.ts';
-import { SHARE_CHANNELS, type ShareBridge } from '../../shared/share-api.ts';
+import {
+  ASSISTANT_BAR_CHANNELS,
+  type AssistantBarBridge,
+} from '../../shared/api/assistant-bar-api.ts';
+import { CHAT_LIST_CHANNELS, type ChatListBridge } from '../../shared/api/chat-list-api.ts';
+import {
+  NOTIFICATION_CHANNELS,
+  type NotificationBridge,
+} from '../../shared/api/notification-api.ts';
+import { SHARE_CHANNELS, type ShareBridge } from '../../shared/api/share-api.ts';
 
 export interface PreloadIpc {
   send(channel: string, ...args: unknown[]): void;

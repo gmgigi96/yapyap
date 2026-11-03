@@ -1,4 +1,8 @@
-import { CHROME_CHANNELS, DOWNLOAD_ACTIONS, type DownloadAction } from '../../shared/chrome-api.ts';
+import {
+  CHROME_CHANNELS,
+  DOWNLOAD_ACTIONS,
+  type DownloadAction,
+} from '../../shared/api/chrome-api.ts';
 import { en } from '../../shared/messages/en.ts';
 import type { DownloadList } from './download-list.ts';
 import { argumentsOf, noArguments } from '../ipc/arguments.ts';

@@ -1,4 +1,4 @@
-import { CHROME_CHANNELS } from '../../shared/chrome-api.ts';
+import { CHROME_CHANNELS } from '../../shared/api/chrome-api.ts';
 import { en } from '../../shared/messages/en.ts';
 import { bugReportUrl } from './crash-report.ts';
 import { argumentsOf, noArguments } from '../ipc/arguments.ts';

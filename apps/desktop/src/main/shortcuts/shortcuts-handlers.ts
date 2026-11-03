@@ -2,7 +2,7 @@ import {
   CHROME_CHANNELS,
   type ShortcutChange,
   type ShortcutList,
-} from '../../shared/chrome-api.ts';
+} from '../../shared/api/chrome-api.ts';
 import { en } from '../../shared/messages/en.ts';
 import { conflictOf, isValidShortcut } from '../../shared/shortcut-keys.ts';
 import {

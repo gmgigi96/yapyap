@@ -1,5 +1,5 @@
 import { MAX_PROMPT } from '../../adapter/assistant-bar.ts';
-import { ASSISTANT_BAR_CHANNELS, BAR_BUTTON_IDS } from '../../shared/assistant-bar-api.ts';
+import { ASSISTANT_BAR_CHANNELS, BAR_BUTTON_IDS } from '../../shared/api/assistant-bar-api.ts';
 import { argumentsOf, noArguments, type PayloadCheck } from '../ipc/arguments.ts';
 import {
   registerWhatsAppListeners,

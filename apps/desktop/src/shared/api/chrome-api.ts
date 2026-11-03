@@ -4,9 +4,9 @@ import type {
   AgentTokenCreated,
   AgentTokenSpec,
 } from './agents-api.ts';
-import type { SettingValue } from './settings-fields.ts';
-import type { CustomCode } from './custom-code.ts';
-import type { ActiveShortcut } from './shortcuts.ts';
+import type { SettingValue } from '../settings-fields.ts';
+import type { CustomCode } from '../custom-code.ts';
+import type { ActiveShortcut } from '../shortcuts.ts';
 
 /** What the About window shows; built in main, rendered by the chrome renderer. */
 export interface AboutInfo {

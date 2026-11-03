@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
 import type { ReadChat } from '../../adapter/active-chat.ts';
-import type { AssistantBarState } from '../../shared/assistant-bar-api.ts';
+import type { AssistantBarState } from '../../shared/api/assistant-bar-api.ts';
 import { createAssistantBar, type BarDependencies } from './bar.ts';
 import { CATCH_UP_INSTRUCTIONS } from './catch-up.ts';
 import type { PrivateModelStatus } from './private/private-model.ts';

@@ -1,6 +1,6 @@
 import { Type } from 'typebox';
 import { Value } from 'typebox/value';
-import { MAX_CHAT_LIST_WIDTH, MIN_CHAT_LIST_WIDTH } from '../../shared/chat-list-api.ts';
+import { MAX_CHAT_LIST_WIDTH, MIN_CHAT_LIST_WIDTH } from '../../shared/api/chat-list-api.ts';
 import { readChecked, type TextFile } from '../support/atomic-write.ts';
 
 const UUID = '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$';

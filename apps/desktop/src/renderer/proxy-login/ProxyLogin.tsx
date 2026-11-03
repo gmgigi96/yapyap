@@ -1,6 +1,6 @@
 import type { JSX, TargetedInputEvent } from 'preact';
 import { useState } from 'preact/hooks';
-import type { ChromeApi, ProxyLoginRequest } from '../../shared/chrome-api.ts';
+import type { ChromeApi, ProxyLoginRequest } from '../../shared/api/chrome-api.ts';
 import { en } from '../../shared/messages/en.ts';
 import { useLoaded } from '../shared/hooks.ts';
 

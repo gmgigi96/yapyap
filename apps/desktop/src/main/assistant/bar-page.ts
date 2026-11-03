@@ -4,7 +4,7 @@ import {
   type BarPlacement,
 } from '../../adapter/assistant-bar.ts';
 import { runInAdapterWorld, type AdapterPage } from '../../adapter/world.ts';
-import type { AssistantBarState } from '../../shared/assistant-bar-api.ts';
+import type { AssistantBarState } from '../../shared/api/assistant-bar-api.ts';
 import { en } from '../../shared/messages/en.ts';
 
 /** Where the bar shows and sends its state, once the main window has accounts. */

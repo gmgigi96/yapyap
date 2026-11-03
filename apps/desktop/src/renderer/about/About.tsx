@@ -1,5 +1,5 @@
 import type { JSX } from 'preact';
-import type { AboutInfo, ChromeApi } from '../../shared/chrome-api.ts';
+import type { AboutInfo, ChromeApi } from '../../shared/api/chrome-api.ts';
 import { en } from '../../shared/messages/en.ts';
 import { useActionStatus, useLoaded } from '../shared/hooks.ts';
 

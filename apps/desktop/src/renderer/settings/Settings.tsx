@@ -1,6 +1,6 @@
 import type { JSX } from 'preact';
 import { useCallback, useEffect, useState } from 'preact/hooks';
-import type { ChromeApi, SettingsSnapshot, TransferResult } from '../../shared/chrome-api.ts';
+import type { ChromeApi, SettingsSnapshot, TransferResult } from '../../shared/api/chrome-api.ts';
 import { en } from '../../shared/messages/en.ts';
 import { SETTING_FIELDS, SETTINGS_SECTIONS } from '../../shared/settings-fields.ts';
 import { AgentsSection } from './Agents.tsx';

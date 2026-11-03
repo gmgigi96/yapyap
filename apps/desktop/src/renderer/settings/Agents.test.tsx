@@ -8,8 +8,8 @@ import {
   type AgentsView,
   type AgentTokenCreated,
   type AgentTokenView,
-} from '../../shared/agents-api.ts';
-import type { SettingsSnapshot } from '../../shared/chrome-api.ts';
+} from '../../shared/api/agents-api.ts';
+import type { SettingsSnapshot } from '../../shared/api/chrome-api.ts';
 import { AgentsSection } from './Agents.tsx';
 
 const ACCOUNT = '11111111-2222-4333-8444-555555555555';

@@ -5,7 +5,7 @@ import type {
   ChromeApi,
   FoundServer,
   KeyedProvider,
-} from '../../shared/chrome-api.ts';
+} from '../../shared/api/chrome-api.ts';
 import { en } from '../../shared/messages/en.ts';
 import { KeyField, useAssistantView } from '../settings/Assistant.tsx';
 import type { Change } from '../settings/Field.tsx';

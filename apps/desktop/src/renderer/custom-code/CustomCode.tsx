@@ -1,6 +1,6 @@
 import type { JSX } from 'preact';
 import { useCallback, useEffect, useRef, useState } from 'preact/hooks';
-import type { ChromeApi, CustomCodeView } from '../../shared/chrome-api.ts';
+import type { ChromeApi, CustomCodeView } from '../../shared/api/chrome-api.ts';
 import {
   ALL_ACCOUNTS,
   MAX_SNIPPET,

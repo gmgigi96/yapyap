@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
-import { DEFAULT_AGENT_LIMITS } from '../../shared/agents-api.ts';
+import { DEFAULT_AGENT_LIMITS } from '../../shared/api/agents-api.ts';
 import { fakeSettings } from '../../../test/fake-settings.ts';
 import type { Settings } from '../settings/schema.ts';
 import type { AgentRequest } from './handler.ts';

@@ -1,6 +1,6 @@
 import type { CallToolResult, McpServer } from '@modelcontextprotocol/server';
 import { z } from 'zod';
-import type { AgentScope } from '../../shared/agents-api.ts';
+import type { AgentScope } from '../../shared/api/agents-api.ts';
 import { searchChats } from './chat-search.ts';
 import { DAY_MS, MINUTE_MS, type Counter } from './limits.ts';
 import { ACCOUNT_ID_LENGTH, MAX_CHAT_NAME, MAX_PHONE } from './token-spec.ts';

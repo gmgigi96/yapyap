@@ -3,7 +3,7 @@ import { readFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import { clickMenu } from './chrome-helpers.ts';
 import { closeApp, expect, launchApp, test, whatsAppContents, whatsAppPage } from './fixtures.ts';
-import type { ChromeApi } from '../src/shared/chrome-api.ts';
+import type { ChromeApi } from '../src/shared/api/chrome-api.ts';
 
 /** Where the WhatsApp page's session keeps its data on disk. */
 const storagePath = async (app: ElectronApplication) =>

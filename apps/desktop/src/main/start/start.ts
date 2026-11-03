@@ -1,6 +1,6 @@
 import { unreadInTitle } from '../../adapter/page-state.ts';
 import { accountAvatars, type AccountAvatars } from '../accounts/avatars.ts';
-import type { AccountSummary } from '../../shared/chrome-api.ts';
+import type { AccountSummary } from '../../shared/api/chrome-api.ts';
 import type { AccountMenu, ChromeRuntime } from '../chrome/feature.ts';
 import { listenToAssistantBar } from '../assistant/assistant-bar-ipc.ts';
 import { suggestAsMessagesArrive } from '../assistant/auto-suggest.ts';
@@ -27,7 +27,7 @@ import { accountSignals, type AccountSignals } from '../accounts/account-signals
 import { partitionOf, type Account } from '../accounts/accounts.ts';
 import { contextMenuFor, followProxy, guardAccountSession } from './account-session.ts';
 import { runAccounts, type RunningAccounts } from '../accounts/running.ts';
-import { NOTIFICATION_CHANNELS } from '../../shared/notification-api.ts';
+import { NOTIFICATION_CHANNELS } from '../../shared/api/notification-api.ts';
 import { listenForNotifications } from '../notifications/notification-ipc.ts';
 import {
   accountNotifier,

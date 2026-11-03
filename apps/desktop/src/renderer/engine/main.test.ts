@@ -1,6 +1,6 @@
 /** @vitest-environment happy-dom */
 import { describe, expect, it, vi } from 'vitest';
-import type { EngineCommand, EngineEvent } from '../../shared/engine-api.ts';
+import type { EngineCommand, EngineEvent } from '../../shared/api/engine-api.ts';
 import type * as EngineModule from './engine.ts';
 
 const made = vi.hoisted(() => ({

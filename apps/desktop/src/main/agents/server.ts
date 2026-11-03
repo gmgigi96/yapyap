@@ -1,4 +1,4 @@
-import type { AgentActivity } from '../../shared/agents-api.ts';
+import type { AgentActivity } from '../../shared/api/agents-api.ts';
 import { en } from '../../shared/messages/en.ts';
 import type { SettingsService } from '../settings/service.ts';
 import { answerAgent, type AgentAnswer, type AgentRequest } from './handler.ts';

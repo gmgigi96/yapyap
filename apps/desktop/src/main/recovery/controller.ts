@@ -1,4 +1,4 @@
-import type { RecoveryProblem } from '../../shared/chrome-api.ts';
+import type { RecoveryProblem } from '../../shared/api/chrome-api.ts';
 import { CHROME_ORIGIN, CHROME_VIEW } from '../chrome/assets.ts';
 import type { ViewRegistry } from '../security/views.ts';
 import { describeFailure, type Failure } from './failure.ts';

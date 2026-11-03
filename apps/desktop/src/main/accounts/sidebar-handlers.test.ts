@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
-import type { SidebarAccount } from '../../shared/chrome-api.ts';
+import type { SidebarAccount } from '../../shared/api/chrome-api.ts';
 import { defaultSettings } from '../settings/decode.ts';
 import type { Settings } from '../settings/schema.ts';
 import type { ViewRegistry } from '../security/views.ts';

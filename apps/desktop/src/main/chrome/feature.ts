@@ -1,6 +1,6 @@
 import type { MenuItemConstructorOptions } from 'electron';
 import { describePageState } from '../../adapter/page-state.ts';
-import { CHROME_CHANNELS } from '../../shared/chrome-api.ts';
+import { CHROME_CHANNELS } from '../../shared/api/chrome-api.ts';
 import {
   buildAboutInfo,
   formatDiagnostics,

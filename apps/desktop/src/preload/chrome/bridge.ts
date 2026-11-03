@@ -18,8 +18,8 @@ import {
   type SidebarState,
   type SpellingLanguages,
   type TransferResult,
-} from '../../shared/chrome-api.ts';
-import type { AgentsView, AgentTokenCreated } from '../../shared/agents-api.ts';
+} from '../../shared/api/chrome-api.ts';
+import type { AgentsView, AgentTokenCreated } from '../../shared/api/agents-api.ts';
 
 type Invoke = (channel: string, ...args: unknown[]) => Promise<unknown>;
 /** Hears one of the events the main process sends. */

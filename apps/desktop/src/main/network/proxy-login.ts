@@ -1,4 +1,4 @@
-import type { ProxyLoginAnswer, ProxyLoginRequest } from '../../shared/chrome-api.ts';
+import type { ProxyLoginAnswer, ProxyLoginRequest } from '../../shared/api/chrome-api.ts';
 import type { SecretStore } from '../secrets/secret-store.ts';
 
 /** The part of Electron's `login` event `authInfo` that matters here. */

@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
-import { CHROME_CHANNELS } from '../../shared/chrome-api.ts';
+import { CHROME_CHANNELS } from '../../shared/api/chrome-api.ts';
 import { downloadsHandlers } from './downloads-handlers.ts';
 
 function setup() {

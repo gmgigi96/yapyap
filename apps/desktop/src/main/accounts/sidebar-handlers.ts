@@ -2,7 +2,7 @@ import {
   CHROME_CHANNELS,
   SIDEBAR_STATE_EVENT,
   type SidebarState,
-} from '../../shared/chrome-api.ts';
+} from '../../shared/api/chrome-api.ts';
 import type { SettingsService } from '../settings/service.ts';
 import type { ViewRegistry } from '../security/views.ts';
 import { CHROME_ORIGIN, CHROME_VIEW } from '../chrome/assets.ts';

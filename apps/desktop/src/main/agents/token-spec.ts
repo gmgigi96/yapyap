@@ -11,7 +11,7 @@ import {
   MAX_TOKEN_NAME,
   SENDING_TOKEN_DAYS,
   type AgentTokenSpec,
-} from '../../shared/agents-api.ts';
+} from '../../shared/api/agents-api.ts';
 
 /** An account's ID is a UUID. */
 export const ACCOUNT_ID_LENGTH = 36;

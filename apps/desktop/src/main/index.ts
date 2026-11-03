@@ -75,7 +75,7 @@ import {
 } from './dialogs/prompts.ts';
 import { startApp } from './start/start.ts';
 import { findLocalModels, loopbackRequest, modelServerPorts } from './assistant/local-servers.ts';
-import { ENGINE_CHANNELS } from '../shared/engine-api.ts';
+import { ENGINE_CHANNELS } from '../shared/api/engine-api.ts';
 import { assistantState } from './assistant/state.ts';
 import { allowedChats } from './assistant/chats.ts';
 import { assistantKeys } from './assistant/keys.ts';

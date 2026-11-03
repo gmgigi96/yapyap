@@ -14,8 +14,8 @@ import {
   type AgentsView,
   type AgentTokenExpiry,
   type AgentTokenSpec,
-} from '../../shared/agents-api.ts';
-import type { ChromeApi } from '../../shared/chrome-api.ts';
+} from '../../shared/api/agents-api.ts';
+import type { ChromeApi } from '../../shared/api/chrome-api.ts';
 import { en } from '../../shared/messages/en.ts';
 
 const text = en.agents;

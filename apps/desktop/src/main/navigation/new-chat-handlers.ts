@@ -1,4 +1,4 @@
-import { CHROME_CHANNELS } from '../../shared/chrome-api.ts';
+import { CHROME_CHANNELS } from '../../shared/api/chrome-api.ts';
 import { argumentsOf } from '../ipc/arguments.ts';
 import { parseInternationalNumber } from '../../shared/phone-number.ts';
 import type { ChromeHandler } from '../ipc/chrome.ts';

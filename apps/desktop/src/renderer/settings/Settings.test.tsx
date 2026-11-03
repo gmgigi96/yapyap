@@ -2,7 +2,7 @@
 import { cleanup, fireEvent, render, screen } from '@testing-library/preact';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { fakeChromeApi } from '../../../test/chrome-api.ts';
-import type { ChromeApi, SettingsSnapshot } from '../../shared/chrome-api.ts';
+import type { ChromeApi, SettingsSnapshot } from '../../shared/api/chrome-api.ts';
 import type { SettingValue } from '../../shared/settings-fields.ts';
 import { Field } from './Field.tsx';
 import { Settings } from './Settings.tsx';

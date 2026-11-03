@@ -6,7 +6,7 @@ import {
   type EngineEvent,
   type EngineFailure,
   type EngineTurn,
-} from '../../../shared/engine-api.ts';
+} from '../../../shared/api/engine-api.ts';
 import { isSameOrigin } from '../../navigation/link-policy.ts';
 import type { Completion } from '../providers/provider.ts';
 

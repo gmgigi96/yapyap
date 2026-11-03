@@ -1,5 +1,5 @@
 import type { JSX } from 'preact';
-import type { SettingsSnapshot } from '../../shared/chrome-api.ts';
+import type { SettingsSnapshot } from '../../shared/api/chrome-api.ts';
 import { en } from '../../shared/messages/en.ts';
 import {
   SETTING_FIELDS,

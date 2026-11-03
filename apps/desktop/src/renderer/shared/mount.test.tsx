@@ -1,7 +1,7 @@
 /** @vitest-environment happy-dom */
 import { cleanup } from '@testing-library/preact';
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import type { ChromeApi } from '../../shared/chrome-api.ts';
+import type { ChromeApi } from '../../shared/api/chrome-api.ts';
 import { closeOnEscape, mount } from './mount.tsx';
 
 function Page({ api }: { readonly api: ChromeApi }) {

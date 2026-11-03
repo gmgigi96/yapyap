@@ -1,9 +1,9 @@
 import { contextBridge, ipcRenderer } from 'electron';
 import { ADAPTER_WORLD_ID } from '../../adapter/world.ts';
-import { ASSISTANT_BAR_BRIDGE } from '../../shared/assistant-bar-api.ts';
-import { CHAT_LIST_BRIDGE } from '../../shared/chat-list-api.ts';
-import { NOTIFICATION_BRIDGE } from '../../shared/notification-api.ts';
-import { SHARE_BRIDGE } from '../../shared/share-api.ts';
+import { ASSISTANT_BAR_BRIDGE } from '../../shared/api/assistant-bar-api.ts';
+import { CHAT_LIST_BRIDGE } from '../../shared/api/chat-list-api.ts';
+import { NOTIFICATION_BRIDGE } from '../../shared/api/notification-api.ts';
+import { SHARE_BRIDGE } from '../../shared/api/share-api.ts';
 import {
   createAssistantBarBridge,
   createChatListBridge,

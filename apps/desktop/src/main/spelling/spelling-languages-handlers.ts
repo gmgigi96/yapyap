@@ -2,7 +2,7 @@ import {
   CHROME_CHANNELS,
   MAX_SPELLING_LANGUAGES,
   type SpellingLanguages,
-} from '../../shared/chrome-api.ts';
+} from '../../shared/api/chrome-api.ts';
 import type { Settings } from '../settings/schema.ts';
 import type { SettingsService } from '../settings/service.ts';
 import { spellingLanguagesOf } from './spelling.ts';

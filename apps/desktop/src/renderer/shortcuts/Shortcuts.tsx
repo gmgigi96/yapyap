@@ -1,6 +1,6 @@
 import type { JSX } from 'preact';
 import { useCallback, useEffect, useLayoutEffect, useState } from 'preact/hooks';
-import type { ChromeApi, GlobalShortcutState, ShortcutList } from '../../shared/chrome-api.ts';
+import type { ChromeApi, GlobalShortcutState, ShortcutList } from '../../shared/api/chrome-api.ts';
 import { en } from '../../shared/messages/en.ts';
 import { acceleratorFromKeys } from '../../shared/shortcut-keys.ts';
 import { keysOf, type ActiveShortcut } from '../../shared/shortcuts.ts';

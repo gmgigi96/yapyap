@@ -1,4 +1,4 @@
-import type { KeyedProvider } from '../../shared/chrome-api.ts';
+import type { KeyedProvider } from '../../shared/api/chrome-api.ts';
 import type { SecretStore } from '../secrets/secret-store.ts';
 
 /** The services the user brings a key for. */
