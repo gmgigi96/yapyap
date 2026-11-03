@@ -81,14 +81,10 @@ async function serve(
     return server;
   });
   const response = await handler.fetch(sdkRequest(request, port));
+  const type = response.headers.get('content-type');
   return {
     status: response.status,
-    headers: Object.fromEntries(
-      ['content-type'].flatMap((name) => {
-        const value = response.headers.get(name);
-        return value === null ? [] : [[name, value]];
-      }),
-    ),
+    headers: type === null ? {} : { 'content-type': type },
     body: await response.text(),
   };
 }
