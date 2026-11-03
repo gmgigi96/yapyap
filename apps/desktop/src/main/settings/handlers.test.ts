@@ -32,8 +32,6 @@ const CLOSE_TO_TRAY = 'general.closeToTray';
 const AUTOSTART = 'general.autostart';
 const BETA = 'general.betaUpdates';
 const DND = 'general.doNotDisturb';
-const PANEL = 'general.quickPanel';
-const PANEL_PLACE = 'general.quickPanelPlace';
 
 function setup(effects: Readonly<Record<string, SettingEffect>> = {}) {
   let settings: Settings = defaultSettings();
@@ -178,8 +176,6 @@ describe('settingsHandlers', () => {
         [START_MINIMIZED]: false,
         [BETA]: false,
         [DND]: false,
-        [PANEL]: 'off',
-        [PANEL_PLACE]: 'free',
         [CLOSE_TO_TRAY]: false,
       },
       restartPending: false,
@@ -228,16 +224,16 @@ describe('settingsHandlers', () => {
   it('shows a setting it cannot act on here, says why, and refuses to change it', () => {
     const service = { ...setup().service };
     const handlers = settingsHandlers(service, vi.fn(), 'linux', {}, [], {
-      [PANEL_PLACE]: 'On Wayland, your desktop decides where windows go.',
+      [CLOSE_TO_TRAY]: 'This desktop has no tray.',
     });
     const get = handlers.find(({ channel }) => channel === 'settings:get');
     const set = handlers.find(({ channel }) => channel === 'settings:set');
     expect(get?.handle({ sender: {} })).toMatchObject({
-      values: { [PANEL_PLACE]: 'free' },
-      unavailable: { [PANEL_PLACE]: 'On Wayland, your desktop decides where windows go.' },
+      values: { [CLOSE_TO_TRAY]: false },
+      unavailable: { [CLOSE_TO_TRAY]: 'This desktop has no tray.' },
     });
-    expect(set?.accepts([PANEL_PLACE, 'topLeft'])).toBe(false);
-    expect(set?.accepts([PANEL, 'always'])).toBe(true);
+    expect(set?.accepts([CLOSE_TO_TRAY, true])).toBe(false);
+    expect(set?.accepts([DND, true])).toBe(true);
   });
 
   it('saves a change and asks for a restart until the launch value is back', async () => {
@@ -278,8 +274,6 @@ describe('settingsHandlers', () => {
         [START_MINIMIZED]: false,
         [BETA]: false,
         [DND]: false,
-        [PANEL]: 'off',
-        [PANEL_PLACE]: 'free',
         [CLOSE_TO_TRAY]: false,
       },
       restartPending: true,

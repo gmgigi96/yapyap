@@ -78,7 +78,6 @@ export interface Messages {
     readonly restartNeeded: string;
     readonly restartNow: string;
     readonly restartNote: string;
-    readonly waylandPlacement: string;
     readonly saveFailed: string;
     readonly scale: (params: { readonly percent: string | number }) => string;
     readonly proxyPlaceholder: string;
@@ -148,26 +147,6 @@ export interface Messages {
         readonly autostart: { readonly label: string; readonly description: string };
         readonly betaUpdates: { readonly label: string; readonly description: string };
         readonly doNotDisturb: { readonly label: string; readonly description: string };
-        readonly quickPanel: {
-          readonly label: string;
-          readonly description: string;
-          readonly options: {
-            readonly off: string;
-            readonly always: string;
-            readonly whenHidden: string;
-          };
-        };
-        readonly quickPanelPlace: {
-          readonly label: string;
-          readonly description: string;
-          readonly options: {
-            readonly free: string;
-            readonly topLeft: string;
-            readonly topRight: string;
-            readonly bottomLeft: string;
-            readonly bottomRight: string;
-          };
-        };
         readonly closeToTray: { readonly label: string; readonly description: string };
       };
       readonly spelling: {
@@ -727,7 +706,6 @@ export interface Messages {
     readonly accounts: string;
     readonly shortcuts: string;
     readonly customCode: string;
-    readonly quickPanel: string;
     readonly downloads: string;
     readonly welcome: string;
     readonly report: string;

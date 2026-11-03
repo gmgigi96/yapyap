@@ -83,7 +83,6 @@
     "restartNeeded": "Restart YapYap to apply your changes.",
     "restartNow": "Restart Now",
     "restartNote": "Takes effect after a restart.",
-    "waylandPlacement": "On Wayland, your desktop decides where windows go.",
     "saveFailed": "Could not save that setting.",
     "scale": "{{percent}}%",
     "proxyPlaceholder": "socks5://127.0.0.1:1080",
@@ -183,26 +182,6 @@
         "doNotDisturb": {
           "label": "Do not disturb",
           "description": "Show no notifications at all, and play no sounds from accounts that are not on screen. Unread counts still update."
-        },
-        "quickPanel": {
-          "label": "Quick access panel",
-          "description": "A small window that stays on top of other apps, to switch accounts and turn Do not disturb on or off.",
-          "options": {
-            "off": "Off",
-            "always": "Always",
-            "whenHidden": "While YapYap’s window is hidden"
-          }
-        },
-        "quickPanelPlace": {
-          "label": "Quick access panel position",
-          "description": "Where the panel sits on your main screen.",
-          "options": {
-            "free": "Where I leave it",
-            "topLeft": "Top left",
-            "topRight": "Top right",
-            "bottomLeft": "Bottom left",
-            "bottomRight": "Bottom right"
-          }
         },
         "closeToTray": {
           "label": "Close to the tray",
@@ -807,7 +786,6 @@
     "accounts": "Accounts",
     "shortcuts": "Keyboard Shortcuts",
     "customCode": "Custom CSS and JavaScript",
-    "quickPanel": "YapYap",
     "downloads": "Downloads",
     "welcome": "Welcome",
     "report": "Report a Problem",

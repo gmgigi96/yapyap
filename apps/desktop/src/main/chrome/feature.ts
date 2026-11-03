@@ -17,14 +17,6 @@ import { folderChoiceHandlers } from '../settings/folder-choice.ts';
 import { shortcutHandlers } from './shortcut-settings.ts';
 import { CUSTOM_CODE_PAGE, customCodeHandlers } from './custom-code.ts';
 import type { CustomCodeController } from '../custom-code/custom-code.ts';
-import {
-  createQuickPanel,
-  QUICK_PANEL_PAGE,
-  type PanelOwner,
-  type PanelPlace,
-  type PanelWindow,
-  type QuickPanel,
-} from './quick-panel.ts';
 import { spellingHandlers, type SpellingSources } from './spelling-languages.ts';
 import { DOWNLOADS_PAGE, downloadsHandlers } from './downloads.ts';
 import type { DownloadList } from '../downloads/download-list.ts';
@@ -89,6 +81,7 @@ import {
   openPromptWindow,
   type ChromePage,
   type ChromeWindowDependencies,
+  type ChromeWindowPort,
 } from './window-opener.ts';
 import { en } from '../../shared/messages/en.ts';
 
@@ -221,7 +214,7 @@ export interface ChromeFeatureDependencies {
     handle(scheme: string, handler: (request: { readonly url: string }) => Promise<Response>): void;
   };
   readonly ipc: IpcMainPort;
-  readonly createWindow: (options: WindowOptions, renderer: RendererOptions) => PanelWindow;
+  readonly createWindow: (options: WindowOptions, renderer: RendererOptions) => ChromeWindowPort;
   readonly setMenu: (template: MenuItemConstructorOptions[]) => void;
   readonly writeClipboard: (text: string) => Promise<unknown>;
   /** Records a performance trace, if the user agrees, and saves it (#113). */
@@ -281,15 +274,6 @@ export interface ChromeFeatureDependencies {
   readonly captureSources: (kind: SourceKind) => Promise<readonly DesktopSource[]>;
   /** The window showing `contents`, so the picker can sit on top of it. */
   readonly windowOf: (contents: object) => WindowOptions['parent'] | null;
-  /** The screens' work areas, the main screen's first. */
-  readonly screens: () => readonly {
-    readonly x: number;
-    readonly y: number;
-    readonly width: number;
-    readonly height: number;
-  }[];
-  /** Where the user last left the quick-access panel. */
-  readonly quickPanelPlace: PanelPlace;
 }
 
 export type WhatsAppContents = MonitoredContents & RecoverableContents & CrashableContents;
@@ -315,8 +299,6 @@ interface ChromeRuntime {
   readonly openSpellingLanguages: () => void;
   /** Asks the user to sign in to a proxy, one proxy at a time (#76). */
   readonly askProxyLogin: ProxyLoginPrompt['ask'];
-  /** Shows the quick-access panel as the settings ask, beside `owner`; returns how to show it the accounts. */
-  readonly attachQuickPanel: (owner: PanelOwner) => (source: SidebarSource) => void;
   /** Docks the account sidebar; returns how to show it the accounts. */
   readonly attachSidebar: (
     create: (renderer: RendererOptions) => SidebarPort,
@@ -358,15 +340,11 @@ interface AccountsSlot {
 export interface ChromeFeature {
   /** Must run before the app is ready, when custom schemes can still be registered. */
   readonly beforeReady: () => void;
-  /**
-   * `graphics` describes the rendering mode startup settled on, for
-   * diagnostics; `wayland` says whether Chromium runs natively on Wayland.
-   */
+  /** `graphics` describes the rendering mode startup settled on, for diagnostics. */
   readonly afterReady: (
     views: ViewRegistry,
     warn: (message: string) => void,
     graphics: string,
-    wayland: boolean,
   ) => ChromeRuntime;
 }
 
@@ -572,7 +550,7 @@ function chromeWindows(
   renderer: RendererOptions,
   views: ViewRegistry,
   warn: (message: string) => void,
-): ChromeWindowDependencies<PanelWindow> {
+): ChromeWindowDependencies {
   return { createWindow: (options) => deps.createWindow(options, renderer), views, warn };
 }
 
@@ -716,8 +694,7 @@ function serveChromePages(deps: ChromeFeatureDependencies): void {
 }
 
 function allHandlers(
-  deps: Omit<ChromeFeatureDependencies, 'facts'> &
-    FactsSource & { readonly unavailableSettings: Readonly<Record<string, string>> },
+  deps: Omit<ChromeFeatureDependencies, 'facts'> & FactsSource,
   { recoveries, pages, picker, chats, accounts, sidebar }: ChromeSlots,
 ): ChromeHandler[] {
   return [
@@ -730,7 +707,6 @@ function allHandlers(
       deps.platform,
       deps.settingEffects,
       deps.hiddenSettings,
-      deps.unavailableSettings,
     ),
     ...settingsTransferHandlers(deps.settings, deps.settingsFiles),
     ...folderChoiceHandlers(deps.settings, deps.chooseFolder),
@@ -776,7 +752,7 @@ interface ChromeSlots {
 
 function chromeSlots(
   deps: ChromeFeatureDependencies,
-  windows: ChromeWindowDependencies<PanelWindow>,
+  windows: ChromeWindowDependencies,
 ): ChromeSlots {
   return {
     recoveries: new Map(),
@@ -794,7 +770,7 @@ function chromeSlots(
  */
 function assistantOf(
   deps: ChromeFeatureDependencies,
-  windows: ChromeWindowDependencies<PanelWindow>,
+  windows: ChromeWindowDependencies,
   accounts: AccountsSlot,
   openSettings: () => void,
 ): AssistantChrome {
@@ -825,31 +801,22 @@ function assistantOf(
   return chrome;
 }
 
-/** Windows that ask or stand by: proxy sign-in and the quick-access panel. */
+/** Windows that ask or stand by: the assistant's, Settings and proxy sign-in. */
 function standbyWindows(
   deps: ChromeFeatureDependencies,
-  windows: ChromeWindowDependencies<PanelWindow>,
-  wayland: boolean,
+  windows: ChromeWindowDependencies,
   accounts: AccountsSlot,
 ): {
   assistant: AssistantChrome;
   /** One Settings window, which the menu and the assistant's bar both open. */
   openSettings: () => void;
   proxyLogin: ProxyLoginPrompt;
-  quickPanel: QuickPanel;
 } {
   const settingsOpener = createChromeWindowSlot(windows, SETTINGS_PAGE).open;
   return {
     openSettings: settingsOpener,
     assistant: assistantOf(deps, windows, accounts, settingsOpener),
     proxyLogin: createProxyLoginPrompt(() => openPromptWindow(windows, PROXY_LOGIN_PAGE)),
-    quickPanel: createQuickPanel({
-      wayland,
-      open: () => openChromeWindow(windows, QUICK_PANEL_PAGE),
-      settings: deps.settings,
-      workAreas: deps.screens,
-      place: deps.quickPanelPlace,
-    }),
   };
 }
 
@@ -862,13 +829,8 @@ function standbyHandlers(
     ...shortcutHandlers(deps.settings, deps.platform, deps.isGlobalShortcutRegistered),
     ...standby.assistant.handlers,
     ...standby.proxyLogin.handlers,
-    ...standby.quickPanel.handlers,
   ];
 }
-
-/** Wayland decides where windows go, so the panel's position cannot be chosen there. */
-const unavailableOn = (wayland: boolean): Readonly<Record<string, string>> =>
-  wayland ? { 'general.quickPanelPlace': en.settings.waylandPlacement } : {};
 
 /** Sets up YapYap's own pages, their operations and the menu once the app is ready. */
 function startChrome(
@@ -877,18 +839,13 @@ function startChrome(
   views: ViewRegistry,
   warn: (message: string) => void,
   graphics: string,
-  wayland: boolean,
 ): ChromeRuntime {
   const withGraphics = { ...deps, facts: () => ({ ...deps.facts(), graphics }) };
   const windows = chromeWindows(deps, renderer, views, warn);
   const slots = chromeSlots(deps, windows);
   const { recoveries, pages, picker, chats, sidebar } = slots;
-  const standby = standbyWindows(deps, windows, wayland, slots.accounts);
-  const { proxyLogin, quickPanel } = standby;
-  const handlers = [
-    ...allHandlers({ ...withGraphics, unavailableSettings: unavailableOn(wayland) }, slots),
-    ...standbyHandlers(standby, deps),
-  ];
+  const standby = standbyWindows(deps, windows, slots.accounts);
+  const handlers = [...allHandlers(withGraphics, slots), ...standbyHandlers(standby, deps)];
   registerChromeHandlers(deps.ipc, views, handlers, warn);
   const openers = chromeOpeners(windows, standby);
   return {
@@ -902,8 +859,7 @@ function startChrome(
     openSettings: openers.openSettings,
     openWelcome: createChromeWindowSlot(windows, WELCOME_PAGE).open,
     openSpellingLanguages: createChromeWindowSlot(windows, SPELLING_LANGUAGES_PAGE).open,
-    askProxyLogin: proxyLogin.ask,
-    attachQuickPanel: quickPanel.attach,
+    askProxyLogin: standby.proxyLogin.ask,
     attachSidebar: (create) => attachSidebar(create(renderer), views, sidebar, warn),
     attachAssistantBar: standby.assistant.attachBar,
   };
@@ -923,9 +879,9 @@ export function createChromeFeature(deps: ChromeFeatureDependencies): ChromeFeat
         },
       ]);
     },
-    afterReady: (views, warn, graphics, wayland) => {
+    afterReady: (views, warn, graphics) => {
       serveChromePages(deps);
-      return startChrome(deps, renderer, views, warn, graphics, wayland);
+      return startChrome(deps, renderer, views, warn, graphics);
     },
   };
 }

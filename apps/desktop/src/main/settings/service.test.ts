@@ -31,8 +31,6 @@ describe('openSettings', () => {
       closeToTray: false,
       betaUpdates: false,
       doNotDisturb: false,
-      quickPanel: 'off',
-      quickPanelPlace: 'free',
     });
   });
 

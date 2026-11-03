@@ -736,18 +736,6 @@ body.sidebar .dnd {
   font-size: 0.85rem;
 }
 
-/* The panel floats on its own, so it has no edge to draw against WhatsApp. */
-body.quick-panel {
-  border-inline-end: none;
-}
-
-body.quick-panel .dnd-switch {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  font-size: 0.9rem;
-}
-
 body.sidebar .layout {
   align-self: center;
   padding: 6px;

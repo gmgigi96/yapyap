@@ -53,7 +53,6 @@ import { setUpTray, type TrayDependencies } from '../tray/tray.ts';
 import { followTrayIconSetting } from '../tray/tray-icon.ts';
 import { syncAutostartSetting } from '../autostart/autostart.ts';
 import { followSpellingSetting } from '../spelling/spelling.ts';
-import { panelOwner } from '../chrome/quick-panel.ts';
 import { sidebarSource } from '../accounts/sidebar-source.ts';
 import {
   beforeReady,
@@ -432,18 +431,16 @@ function accountIndicators<Window extends WindowPort>(
     warn: deps.warn,
   });
   const visibility = trackVisibility(window, () => {
-    // The tray's Show or Hide, and the panel that stands in for a hidden window.
+    // The tray's Show or Hide follows the window.
     refresh();
     keepQuiet(deps, running(), visibility);
   });
   const tray = accountsTray(wiring, running, visibility, { shares, privacy });
   const sidebar = chrome.attachSidebar((renderer) => deps.createSidebar(window, renderer));
-  const panel = chrome.attachQuickPanel(panelOwner(window, visibility));
   const refresh = (): void => {
     tray.refresh();
     const source = sidebarSource(deps.settings.current(), running(), signals(), shares, avatars());
     sidebar(source);
-    panel(source);
   };
   const setUnread = (total: number): void => {
     tray.setUnread(total);
@@ -779,7 +776,7 @@ export async function startApp<Window extends WindowPort>(
   followThemeSetting(deps.nativeTheme, deps.settings);
   syncAutostartSetting(deps.autostart, deps.settings, warn);
   const rendering = `${describeGraphics(graphics)}, display ${describeDisplayBackend(display)}`;
-  const chrome = deps.chrome.afterReady(views, warn, rendering, display.active === 'wayland');
+  const chrome = deps.chrome.afterReady(views, warn, rendering);
   signInToProxies(deps, chrome);
   picker.bind(chrome.pickCaptureSource);
   announceStartup(deps, graphics);
