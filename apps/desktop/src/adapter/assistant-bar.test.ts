@@ -155,6 +155,40 @@ describe('renderAssistantBar', () => {
     expect(t.stored().parts.input.getAttribute('type')).toBe('text');
   });
 
+  it('gives every part the class its styles use, and names the parts that need a name', () => {
+    const t = setup();
+    t.render();
+    const { parts } = t.stored();
+    const classes = Object.fromEntries(
+      Object.entries(parts).map(([part, node]) => [part, node.getAttribute('class')]),
+    );
+    expect(classes).toEqual({
+      bar: 'bar',
+      name: 'name',
+      choice: 'choice',
+      suggest: 'button primary',
+      summarize: 'button',
+      rewrite: 'button',
+      catchUp: 'button',
+      settings: 'button gear',
+      rewrites: 'row rewrites',
+      status: 'status',
+      buttons: 'buttons',
+      result: 'result',
+      list: 'suggestions',
+      input: 'input',
+    });
+    expect(t.shadow().querySelector('style')?.getAttribute('class')).toBe('style');
+    expect(t.shadow().querySelectorAll('.bar > .row:not(.line, .rewrites)')).toHaveLength(1);
+    expect(parts.status.parentElement?.getAttribute('class')).toBe('row line');
+    expect(parts.result.getAttribute('tabindex')).toBe('0');
+    expect(parts.input.getAttribute('aria-label')).toBe('Write a message');
+    const icon = t.shadow().querySelector('.send svg');
+    expect(icon?.namespaceURI).toBe('http://www.w3.org/2000/svg');
+    expect(icon?.getAttribute('viewBox')).toBe('0 0 16 16');
+    expect(icon?.getAttribute('aria-hidden')).toBe('true');
+  });
+
   it('takes the message box’s place in WhatsApp’s layout, above its wallpaper, render after render', () => {
     const t = setup();
     t.render();
