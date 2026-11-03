@@ -1,28 +1,26 @@
-name: Pinned versions
+name: Renovate
 
 on:
   schedule:
-    - cron: '17 6 * * 1'
+    - cron: '17 6 * * *'
   workflow_dispatch:
 
 permissions:
   contents: read
 
+concurrency:
+  group: renovate
+
 jobs:
-  check:
-    name: Check versions Dependabot cannot track
+  renovate:
+    name: Update pinned versions
     runs-on: ubuntu-latest
-    # Proposals go through the automation App's own token, so the workflow
+    timeout-minutes: 30
+    # Renovate works through the automation App's own token, so the workflow
     # token only reads.
     permissions:
       contents: read
     steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        with:
-          persist-credentials: false
-      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
-        with:
-          node-version-file: .nvmrc
       # A short-lived token from the YapYap automation GitHub App, so bot PRs
       # trigger CI (the workflow token's PRs never do; see CONTRIBUTING).
       - name: Mint the automation token
@@ -35,12 +33,24 @@ jobs:
           repositories: yapyap
           permission-contents: write
           permission-pull-requests: write
+          permission-issues: write
+          permission-workflows: write
+          permission-statuses: write
+          permission-checks: read
       - name: Say why nothing is proposed
         if: steps.app-token.outputs.token == ''
         run: echo "::notice::The automation App is not configured, so no updates are proposed (see CONTRIBUTING)."
-      - name: Check and propose updates
+      - name: Run Renovate
         if: steps.app-token.outputs.token != ''
+        uses: renovatebot/github-action@1c0cf989c02653fba0efe7ca5772338860ca71dc # v46.3.12
+        with:
+          token: ${{ steps.app-token.outputs.token }}
+          renovate-version: 44.206.2
         env:
-          AUTOMATION_TOKEN: ${{ steps.app-token.outputs.token }}
-          GITHUB_REPOSITORY: ${{ github.repository }}
-        run: node scripts/src/bin/check-pinned-versions.ts
+          RENOVATE_PLATFORM: github
+          RENOVATE_REPOSITORIES: ${{ github.repository }}
+          RENOVATE_ONBOARDING: 'false'
+          RENOVATE_REQUIRE_CONFIG: required
+          # Commits made through GitHub's API are signed by GitHub, as the
+          # master ruleset requires.
+          RENOVATE_PLATFORM_COMMIT: enabled

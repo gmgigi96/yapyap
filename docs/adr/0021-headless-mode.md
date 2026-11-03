@@ -1,4 +1,4 @@
-# 0020. Headless mode
+# 0021. Headless mode
 
 - Status: Accepted
 - Date: 2026-11-03

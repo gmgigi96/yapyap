@@ -361,10 +361,14 @@ title, escape })` (`src/renderer/shared/mount.tsx`), which titles the
   WhatsApp's own link wherever it is, while a name is found by scrolling
   the chat list. The tray stops it, the activity stays in memory, and
   `no-endpoint.test.ts` allows the one listener file.
+- Renovate (#578, ADR 0020): Renovate replaces Dependabot's version
+  updates and the pinned-versions script, with the same schedule, cooldown,
+  groups and auto-merge. Custom managers move `engines.node` with `.nvmrc`
+  and the Flatpak runtime with the BaseApp, and CI validates the config.
 - Install page button (#579): the download button carries its own styles,
   so it shows as a button on the install page too, not only on the home
   page.
-- Headless mode (#587, ADR 0020, C48 in ADR 0008): `--headless` runs with
+- Headless mode (#587, ADR 0021, C48 in ADR 0008): `--headless` runs with
   no window, tray, welcome, update check or crash review, and keeps the MCP
   server on for the run. On Linux with no display it needs
   `--ozone-platform=headless` on the command line, and adds `--disable-gpu`. The `login-code.ts` probe reads the logged-out page's QR code as

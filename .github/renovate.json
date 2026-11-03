@@ -1,0 +1,123 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "description": "Weekly updates for every pinned version (ADR 0019). The workflow runs daily, so open pull requests are rebased and merged in between.",
+  "timezone": "UTC",
+  "schedule": ["* * * * 1"],
+  "minimumReleaseAge": "3 days",
+  "semanticCommits": "enabled",
+  "rangeStrategy": "bump",
+  "labels": ["type: dependencies"],
+  "automergeStrategy": "merge-commit",
+  "packageRules": [
+    {
+      "matchManagers": ["npm"],
+      "semanticCommitType": "build"
+    },
+    {
+      "matchManagers": ["npm"],
+      "matchUpdateTypes": ["minor", "patch"],
+      "groupName": "npm minor and patch",
+      "automerge": true
+    },
+    {
+      "description": "Wrangler uploads packages.guita.org, apart from the workspace.",
+      "matchManagers": ["npm"],
+      "matchFileNames": ["packaging/repository/deploy/**"],
+      "semanticCommitType": "ci",
+      "groupName": "Wrangler"
+    },
+    {
+      "matchManagers": ["github-actions"],
+      "semanticCommitType": "ci"
+    },
+    {
+      "matchManagers": ["github-actions"],
+      "matchUpdateTypes": ["minor", "patch"],
+      "groupName": "actions minor and patch",
+      "automerge": true
+    },
+    {
+      "description": "Renovate itself, which the workflow runs and CI validates this file with.",
+      "matchPackageNames": ["ghcr.io/renovatebot/renovate", "renovatebot/renovate"],
+      "semanticCommitType": "ci",
+      "groupName": "Renovate"
+    },
+    {
+      "description": "The smoke jobs' distribution images, refreshed together.",
+      "matchManagers": ["github-actions"],
+      "matchDatasources": ["docker"],
+      "matchUpdateTypes": ["digest"],
+      "groupName": "container images"
+    },
+    {
+      "description": "Docker tags say nothing of stability, and Fedora's next number is a development release before it is stable.",
+      "matchManagers": ["github-actions"],
+      "matchDatasources": ["docker"],
+      "matchPackageNames": ["fedora"],
+      "matchUpdateTypes": ["major"],
+      "enabled": false
+    },
+    {
+      "description": "Overrides pin a transitive dependency for a reason, often its parent's range; a new major needs a person to check that reason.",
+      "matchDepTypes": ["pnpm-workspace.overrides"],
+      "matchUpdateTypes": ["major"],
+      "enabled": false
+    },
+    {
+      "description": "The engines field follows .nvmrc through the Node.js custom manager below.",
+      "matchManagers": ["npm"],
+      "matchDepTypes": ["engines"],
+      "matchPackageNames": ["node"],
+      "enabled": false
+    },
+    {
+      "matchDepNames": ["node"],
+      "matchManagers": ["nvm", "custom.regex"],
+      "semanticCommitType": "build",
+      "groupName": "Node.js LTS"
+    },
+    {
+      "description": "Flathub's branches carry no release dates, so there is nothing to wait for.",
+      "matchDatasources": ["custom.flatpak-baseapp"],
+      "semanticCommitType": "build",
+      "groupName": "Flatpak runtime and Electron BaseApp",
+      "minimumReleaseAge": null
+    }
+  ],
+  "customManagers": [
+    {
+      "customType": "regex",
+      "description": "The oldest Node.js the workspace accepts, kept equal to .nvmrc.",
+      "managerFilePatterns": ["/^package\\.json$/"],
+      "matchStrings": ["\"node\":\\s*\">=(?<currentValue>[^\"]+)\""],
+      "depNameTemplate": "node",
+      "datasourceTemplate": "node-version",
+      "versioningTemplate": "node"
+    },
+    {
+      "customType": "regex",
+      "description": "The Flatpak runtime and the Electron BaseApp move together, to the newest BaseApp branch.",
+      "managerFilePatterns": ["/^packaging/flatpak/org\\.guita\\.YapYap\\.yml$/"],
+      "matchStrings": ["(?<depName>runtime|base)-version: '(?<currentValue>\\d{2}\\.\\d{2})'"],
+      "datasourceTemplate": "custom.flatpak-baseapp",
+      "versioningTemplate": "regex:^(?<major>\\d{2})\\.(?<minor>\\d{2})$"
+    },
+    {
+      "customType": "regex",
+      "description": "The Renovate image CI validates this file with.",
+      "managerFilePatterns": ["/^\\.github/workflows/ci\\.yml$/"],
+      "matchStrings": ["ghcr\\.io/renovatebot/renovate:(?<currentValue>\\d+\\.\\d+\\.\\d+)"],
+      "depNameTemplate": "ghcr.io/renovatebot/renovate",
+      "datasourceTemplate": "docker"
+    }
+  ],
+  "customDatasources": {
+    "flatpak-baseapp": {
+      "defaultRegistryUrlTemplate": "https://api.github.com/repos/flathub/org.electronjs.Electron2.BaseApp/branches?per_page=100",
+      "format": "json",
+      "transformTemplates": [
+        "{\"releases\": [$[$contains(name, /^branch\\/\\d{2}\\.\\d{2}$/)].{\"version\": $substringAfter(name, \"branch/\")}]}"
+      ]
+    }
+  }
+}

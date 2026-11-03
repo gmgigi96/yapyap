@@ -97,7 +97,7 @@ async function check(account: PairingAccount, terminal: Terminal, said: Said): P
 
 /**
  * Shows each logged-out account's QR code in the terminal, so a phone can
- * link it with no screen (ADR 0020). The code goes to the terminal alone,
+ * link it with no screen (ADR 0021). The code goes to the terminal alone,
  * never to the log, and only when the output is a terminal.
  */
 export function showPairingCodes(deps: PairingDependencies): void {

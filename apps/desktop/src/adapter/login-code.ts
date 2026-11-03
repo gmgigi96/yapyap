@@ -23,7 +23,7 @@ const MAX_MODULES = 177;
 /**
  * The login QR code WhatsApp draws on the canvas inside `selector`, as rows
  * of `1` (dark) and `0` (light) modules, or null while there is none (ADR
- * 0020). Runs inside the page as source text, so it stays self-contained.
+ * 0021). Runs inside the page as source text, so it stays self-contained.
  * The top-left finder pattern, 7 modules wide, gives the module size, and
  * the top-right one where the code ends; each module is read at its middle.
  * It returns no pixels and no text, and the logged-out page holds no chats.

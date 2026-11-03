@@ -201,7 +201,7 @@ export interface StartDependencies<Window extends WindowPort> {
   readonly env: Readonly<Record<string, string | undefined>>;
   /** The command line, for `--safe-mode` and `--headless`. */
   readonly argv: readonly string[];
-  /** Where headless mode shows what the user must see, such as a login code (ADR 0020). */
+  /** Where headless mode shows what the user must see, such as a login code (ADR 0021). */
   readonly terminal: Terminal;
   readonly openExternal: (url: string) => Promise<unknown>;
   readonly isOnline: () => boolean;

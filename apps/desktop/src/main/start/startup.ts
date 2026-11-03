@@ -217,7 +217,7 @@ function refuseWithoutSandbox<Window extends WindowPort>(
 /**
  * Why YapYap must not start, as the work of saying so, or nothing when it may.
  * A headless start with no display to run on ends at once, saying how to
- * start it, before Chromium looks for one and crashes (ADR 0020).
+ * start it, before Chromium looks for one and crashes (ADR 0021).
  */
 export function refusal<Window extends WindowPort>(
   deps: StartDependencies<Window>,

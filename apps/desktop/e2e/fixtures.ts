@@ -340,7 +340,7 @@ export async function spawnApp(
 }
 
 /**
- * Starts the development build headless (ADR 0020), as from a script: with
+ * Starts the development build headless (ADR 0021), as from a script: with
  * no display to reach and its output piped, which is no terminal.
  */
 export async function spawnHeadless(
@@ -354,7 +354,7 @@ export async function spawnHeadless(
   delete env['WAYLAND_DISPLAY'];
   // Chromium's own errors reach standard error, for a test that fails to say why.
   env['ELECTRON_ENABLE_LOGGING'] = '1';
-  // Chromium reads its headless backend only from its own command line (ADR 0020).
+  // Chromium reads its headless backend only from its own command line (ADR 0021).
   const display = backend ? ['--ozone-platform=headless'] : [];
   return spawn(executable, [...display, MAIN, `--user-data-dir=${profile}`, '--headless'], {
     env,

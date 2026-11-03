@@ -706,7 +706,7 @@ function listenToNotifications<Window extends WindowPort>(
   return notifiers;
 }
 
-/** Shows each logged-out account's login code in the terminal (ADR 0020). */
+/** Shows each logged-out account's login code in the terminal (ADR 0021). */
 function pairInTerminal<Window extends WindowPort>(
   deps: StartDependencies<Window>,
   running: RunningAccounts<OpenedAccount>,

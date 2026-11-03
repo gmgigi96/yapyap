@@ -19,7 +19,7 @@ export interface AgentSources {
   readonly serve: (port: number, answer: Answer) => Promise<AgentListener>;
   readonly now: () => number;
   readonly version: string;
-  /** Listens whatever Settings › Agents says, as in headless mode (ADR 0020). */
+  /** Listens whatever Settings › Agents says, as in headless mode (ADR 0021). */
   readonly alwaysOn: boolean;
   /** Hears the address each time the server starts listening. */
   readonly onListening: (address: string) => void;
@@ -133,7 +133,7 @@ function listening(deps: AgentServerDependencies, answer: (port: number) => Answ
 
 /**
  * The MCP server for AI agents (ADR 0019): it listens on 127.0.0.1 only
- * while Settings › Agents has it on, or for a whole headless run (ADR 0020),
+ * while Settings › Agents has it on, or for a whole headless run (ADR 0021),
  * and stops the moment it is turned off. The system picks the port once,
  * and it is kept, so agents' configs stay valid.
  */

@@ -1,6 +1,6 @@
 import type { DisplayBackend } from '../display/backend.ts';
 
-/** Starts YapYap with no window on screen and, on Linux, no display at all (ADR 0020). */
+/** Starts YapYap with no window on screen and, on Linux, no display at all (ADR 0021). */
 const HEADLESS_FLAG = '--headless';
 
 interface SwitchLine {
