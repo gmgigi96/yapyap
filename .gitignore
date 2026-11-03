@@ -2,7 +2,6 @@
 node_modules/
 .env
 .env.*
-!.env.example
 *.log
 .eslintcache
 
@@ -27,7 +26,6 @@ reports/
 
 # Packaging and signing
 *.pem
-!**/test/**/fixtures/**/*.pem
 .flatpak-builder/
 flatpak-build/
 *.flatpak

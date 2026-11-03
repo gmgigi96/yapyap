@@ -1,6 +1,6 @@
 import { Value } from 'typebox/value';
 import { argumentsOf } from '../ipc/arguments.ts';
-import { CHROME_CHANNELS } from '../../shared/chrome-api.ts';
+import { CHROME_CHANNELS } from '../../shared/api/chrome-api.ts';
 import { SETTING_FIELDS } from '../../shared/settings-fields.ts';
 import type { ChromeHandler } from '../ipc/chrome.ts';
 import { withValue } from './handlers.ts';

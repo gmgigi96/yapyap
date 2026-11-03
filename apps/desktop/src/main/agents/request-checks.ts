@@ -10,12 +10,30 @@ export interface ArrivingRequest {
   readonly headers: Readonly<Record<string, string | readonly string[] | undefined>>;
 }
 
+const FORBIDDEN = 403;
+const NOT_FOUND = 404;
+const WRONG_METHOD = 405;
+export const TOO_LARGE = 413;
+const WRONG_TYPE = 415;
+
 /** Why a request is turned away, as an HTTP status. */
 export interface Refusal {
-  readonly status: 400 | 401 | 403 | 404 | 405 | 413 | 415 | 429;
+  readonly status:
+    | typeof FORBIDDEN
+    | typeof NOT_FOUND
+    | typeof WRONG_METHOD
+    | typeof TOO_LARGE
+    | typeof WRONG_TYPE;
 }
 
-const LOOPBACK = new Set(['127.0.0.1', '::ffff:127.0.0.1']);
+/** How a dual-stack socket writes an IPv4 peer's address. */
+const IPV4_MAPPED = '::ffff:';
+
+/** Whether the peer is this computer over IPv4, the only address YapYap listens on. */
+function isLoopback(address: string | undefined): boolean {
+  const ipv4 = address?.startsWith(IPV4_MAPPED) ? address.slice(IPV4_MAPPED.length) : address;
+  return ipv4 === '127.0.0.1';
+}
 
 const header = (request: ArrivingRequest, name: string): string | undefined => {
   const value = request.headers[name];
@@ -33,13 +51,13 @@ const mediaType = (value: string | undefined): string | undefined =>
  * `Origin`, which every browser page sends and agents do not.
  */
 export function refusalOf(request: ArrivingRequest, port: number): Refusal | undefined {
-  return fromThisComputer(request, port) ? shapeRefusal(request) : { status: 403 };
+  return fromThisComputer(request, port) ? shapeRefusal(request) : { status: FORBIDDEN };
 }
 
 function fromThisComputer(request: ArrivingRequest, port: number): boolean {
   const hosts = [`127.0.0.1:${String(port)}`, `localhost:${String(port)}`];
   return (
-    LOOPBACK.has(request.remoteAddress ?? '') &&
+    isLoopback(request.remoteAddress) &&
     hosts.includes(header(request, 'host') ?? '') &&
     !('origin' in request.headers)
   );
@@ -48,16 +66,16 @@ function fromThisComputer(request: ArrivingRequest, port: number): boolean {
 /** Whether the request is the one kind the server answers: a small JSON POST to `/mcp`. */
 function shapeRefusal(request: ArrivingRequest): Refusal | undefined {
   if (request.url !== '/mcp') {
-    return { status: 404 };
+    return { status: NOT_FOUND };
   }
   if (request.method !== 'POST') {
-    return { status: 405 };
+    return { status: WRONG_METHOD };
   }
   if (mediaType(header(request, 'content-type')) !== 'application/json') {
-    return { status: 415 };
+    return { status: WRONG_TYPE };
   }
   return Number(header(request, 'content-length') ?? 0) > MAX_BODY_BYTES
-    ? { status: 413 }
+    ? { status: TOO_LARGE }
     : undefined;
 }
 

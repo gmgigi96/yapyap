@@ -1,8 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
-import { DEFAULT_AGENT_LIMITS } from '../../shared/agents-api.ts';
-import { defaultSettings } from '../settings/decode.ts';
+import { DEFAULT_AGENT_LIMITS } from '../../shared/api/agents-api.ts';
+import { fakeSettings } from '../../../test/fake-settings.ts';
 import type { Settings } from '../settings/schema.ts';
-import type { SettingsService } from '../settings/service.ts';
 import type { AgentRequest } from './handler.ts';
 import { agentServer, MAX_ACTIVITY, type AgentServerDependencies } from './server.ts';
 import type { AgentToken } from './tokens.ts';
@@ -23,35 +22,13 @@ const TOKEN: AgentToken = {
   lastUsed: null,
 };
 
-function settingsOf(initial: Partial<Settings['agents']> = {}): SettingsService {
-  let settings: Settings = {
-    ...defaultSettings(),
-    agents: { enabled: false, port: 0, ...initial },
-  };
-  const listeners: ((settings: Settings) => void)[] = [];
-  return {
-    current: () => settings,
-    notice: undefined,
-    firstRun: false,
-    update: (change) => {
-      settings = change(settings);
-      for (const listener of listeners) {
-        listener(settings);
-      }
-    },
-    onChange: (listener) => {
-      listeners.push(listener);
-    },
-  };
-}
-
 const settle = () => new Promise((resolve) => setTimeout(resolve, 0));
 
 function setup(initial: Partial<Settings['agents']> = {}) {
   const answers: ((request: AgentRequest) => unknown)[] = [];
   const closed: number[] = [];
   const deps = {
-    settings: settingsOf(initial),
+    settings: fakeSettings({ agents: initial }),
     tokens: {
       create: vi.fn(),
       verify: vi.fn((given: string) => (given === PRESENTED ? TOKEN : undefined)),
@@ -106,7 +83,7 @@ describe('agentServer', () => {
 
   it('takes the free port the system gives the first time, keeps it, and stays there', async () => {
     const t = setup();
-    t.deps.settings.update((settings) => ({ ...settings, agents: { enabled: true, port: 0 } }));
+    t.deps.settings.change({ agents: { enabled: true, port: 0 } });
     await settle();
     expect(t.deps.settings.current().agents.port).toBe(57_345);
     expect(t.deps.serve).toHaveBeenCalledExactlyOnceWith(0, expect.any(Function));
@@ -134,20 +111,14 @@ describe('agentServer', () => {
   it('stops listening the moment it is turned off, and moves when the port changes', async () => {
     const t = setup({ enabled: true, port: 50_000 });
     await settle();
-    t.deps.settings.update((settings) => ({ ...settings, general: { ...settings.general } }));
+    t.deps.settings.change({ general: {} });
     await settle();
     expect(t.deps.serve).toHaveBeenCalledOnce();
-    t.deps.settings.update((settings) => ({
-      ...settings,
-      agents: { enabled: true, port: 50_001 },
-    }));
+    t.deps.settings.change({ agents: { enabled: true, port: 50_001 } });
     await settle();
     expect(t.closed).toEqual([50_000]);
     expect(t.server.address()).toBe('http://127.0.0.1:50001/mcp');
-    t.deps.settings.update((settings) => ({
-      ...settings,
-      agents: { enabled: false, port: 50_001 },
-    }));
+    t.deps.settings.change({ agents: { enabled: false, port: 50_001 } });
     await settle();
     expect(t.closed).toEqual([50_000, 50_001]);
     expect(t.server.address()).toBeNull();
@@ -156,10 +127,7 @@ describe('agentServer', () => {
   it('says when its port is taken, and clears that once it moves', async () => {
     const t = setup();
     t.deps.serve.mockRejectedValueOnce(new Error('EADDRINUSE'));
-    t.deps.settings.update((settings) => ({
-      ...settings,
-      agents: { enabled: true, port: 50_000 },
-    }));
+    t.deps.settings.change({ agents: { enabled: true, port: 50_000 } });
     await settle();
     expect(t.server.address()).toBeNull();
     expect(t.server.problem()).toBe(

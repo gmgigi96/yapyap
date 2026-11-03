@@ -1,12 +1,16 @@
-import type { AgentNarrowingStep, AgentsView, AgentTokenCreated } from '../../shared/agents-api.ts';
-import { AGENT_SCOPES } from '../../shared/agents-api.ts';
-import { CHROME_CHANNELS } from '../../shared/chrome-api.ts';
+import type {
+  AgentNarrowingStep,
+  AgentsView,
+  AgentTokenCreated,
+} from '../../shared/api/agents-api.ts';
+import { AGENT_SCOPES } from '../../shared/api/agents-api.ts';
+import { CHROME_CHANNELS } from '../../shared/api/chrome-api.ts';
 import { en } from '../../shared/messages/en.ts';
 import { isChatId } from '../assistant/chats.ts';
 import { argumentsOf, isString, noArguments } from '../ipc/arguments.ts';
 import type { ChromeHandler } from '../ipc/chrome.ts';
 import type { AgentServer } from './server.ts';
-import { checkSpec } from './token-spec.ts';
+import { ACCOUNT_ID_LENGTH, checkSpec } from './token-spec.ts';
 import { MAX_TOKENS, type AgentTokens } from './tokens.ts';
 import type { AgentAccounts } from './tool-steps.ts';
 
@@ -23,7 +27,8 @@ const MAX_COPY = 1024;
 const isTokenId = (value: unknown): boolean =>
   typeof value === 'string' && /^[0-9a-f]{16}$/.test(value);
 
-const isAccountId = (value: unknown): boolean => isString(value) && value.length <= 36;
+const isAccountId = (value: unknown): boolean =>
+  isString(value) && value.length <= ACCOUNT_ID_LENGTH;
 
 /** One step narrower, as Settings asks for it: a scope, an account or a chat less. */
 function isNarrowing(value: unknown): value is AgentNarrowingStep {
@@ -47,12 +52,12 @@ async function viewOf(deps: AgentsSettingsDependencies): Promise<AgentsView> {
   return {
     address: deps.server.address(),
     problem: deps.server.problem(),
-    tokens,
     activity: deps.server.activity().map((entry) => ({
       ...entry,
       token: tokenNames.get(entry.token) ?? en.agents.revokedToken,
       account: accountNames.get(entry.account) ?? entry.account,
     })),
+    tokens,
     accounts,
   };
 }

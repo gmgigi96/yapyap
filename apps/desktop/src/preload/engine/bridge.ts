@@ -1,4 +1,8 @@
-import { ENGINE_CHANNELS, type EngineBridge, type EngineCommand } from '../../shared/engine-api.ts';
+import {
+  ENGINE_CHANNELS,
+  type EngineBridge,
+  type EngineCommand,
+} from '../../shared/api/engine-api.ts';
 
 /** The parts of `ipcRenderer` the bridge uses. */
 export interface EngineIpc {

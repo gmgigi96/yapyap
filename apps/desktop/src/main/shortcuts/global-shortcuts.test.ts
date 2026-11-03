@@ -1,33 +1,14 @@
 import { describe, expect, it, vi } from 'vitest';
-import { defaultSettings } from '../settings/decode.ts';
-import type { Settings } from '../settings/schema.ts';
+import { fakeSettings } from '../../../test/fake-settings.ts';
 import { followGlobalShortcuts, toggleWindow } from './global-shortcuts.ts';
 
 function setup(keys = '') {
-  const base = defaultSettings();
-  let settings: Settings = {
-    ...base,
-    shortcuts: { ...base.shortcuts, global: { toggleWindow: keys } },
-  };
-  let listener: ((settings: Settings) => void) | undefined;
+  const settings = fakeSettings({ shortcuts: { global: { toggleWindow: keys } } });
   const port = { register: vi.fn(() => true), unregister: vi.fn(), unregisterAll: vi.fn() };
   const toggle = vi.fn();
-  followGlobalShortcuts(
-    port,
-    {
-      current: () => settings,
-      onChange: (next) => {
-        listener = next;
-      },
-    },
-    { toggleWindow: toggle },
-  );
+  followGlobalShortcuts(port, settings, { toggleWindow: toggle });
   const change = (next: string) => {
-    settings = {
-      ...settings,
-      shortcuts: { ...settings.shortcuts, global: { toggleWindow: next } },
-    };
-    listener?.(settings);
+    settings.change({ shortcuts: { global: { toggleWindow: next } } });
   };
   return { port, toggle, change };
 }

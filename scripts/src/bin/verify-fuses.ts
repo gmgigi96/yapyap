@@ -8,7 +8,7 @@ const failures = wires.flatMap((wire, index) =>
     (mismatch) => `${String(executables[index])}: ${mismatch}`,
   ),
 );
-console.log(
+console.info(
   failures.join('\n') || `Fuses hardened in ${String(executables.length)} executable(s).`,
 );
 process.exitCode = Number(failures.length > 0 || executables.length === 0);

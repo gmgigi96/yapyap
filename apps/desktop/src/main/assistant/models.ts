@@ -1,5 +1,6 @@
 import Anthropic from '@anthropic-ai/sdk';
 import OpenAI from 'openai';
+import type { KeyedProvider } from '../../shared/api/chrome-api.ts';
 import { en } from '../../shared/messages/en.ts';
 import { kindOf } from './providers/errors.ts';
 import { REQUEST_TIMEOUT_MS, type ProviderErrorKind } from './providers/provider.ts';
@@ -154,7 +155,7 @@ export async function modelsOf(
  * '' when it answers, else the kind of failure, such as `auth`.
  */
 export async function keyProblem(
-  provider: 'anthropic' | 'openai',
+  provider: KeyedProvider,
   key: string,
   fetch: typeof globalThis.fetch,
 ): Promise<ProviderErrorKind | ''> {

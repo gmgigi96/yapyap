@@ -1,6 +1,7 @@
 import { writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { badge, countDownloads, fromGitHub, latestDownloads } from '../release/downloads.ts';
+import { githubHeaders, RELEASES_API } from '../release/releases.ts';
 
 // Usage: downloads.ts <site directory>
 // Writes downloads.json, which the website shows, downloads-badge.json,
@@ -11,15 +12,9 @@ const [site] = process.argv.slice(2).map(String);
 const releases = [];
 const answers: unknown[] = [];
 for (let page = 1; ; page += 1) {
-  const response = await fetch(
-    `https://api.github.com/repos/vascoguita/yapyap/releases?per_page=100&page=${String(page)}`,
-    {
-      headers: {
-        accept: 'application/vnd.github+json',
-        authorization: `Bearer ${process.env['GITHUB_TOKEN'] ?? ''}`,
-      },
-    },
-  );
+  const response = await fetch(`${RELEASES_API}&page=${String(page)}`, {
+    headers: githubHeaders(process.env['GITHUB_TOKEN'] ?? ''),
+  });
   if (!response.ok) {
     throw new Error(`GitHub answered ${String(response.status)}.`);
   }

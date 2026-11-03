@@ -1,6 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
-import { defaultSettings } from '../settings/decode.ts';
-import type { Settings } from '../settings/schema.ts';
+import { fakeSettings } from '../../../test/fake-settings.ts';
 import { manageMainWindow, restoreWindowState, type ManagedWindow } from './main-window.ts';
 
 const SCREEN = { x: 0, y: 0, width: 1920, height: 1040 };
@@ -15,7 +14,6 @@ function setup(
   const shown: (() => void)[] = [];
   const windowListeners = new Map<string, (event: { preventDefault(): void }) => void>();
   const appListeners = new Map<string, () => void>();
-  const settingsListeners: ((settings: Settings) => void)[] = [];
   const window = {
     getNormalBounds: vi.fn(() => BOUNDS),
     isMaximized: vi.fn(() => true),
@@ -33,20 +31,14 @@ function setup(
       shown.push(listener);
     }),
   } satisfies ManagedWindow;
-  const settings = defaultSettings();
+  const settings = fakeSettings({
+    appearance: { autoHideMenuBar },
+    general: { closeToTray, startMinimized },
+  });
   const deps = {
     store: { read: vi.fn(() => ''), write: vi.fn() },
     platform,
-    settings: {
-      current: () => ({
-        ...settings,
-        appearance: { ...settings.appearance, autoHideMenuBar },
-        general: { ...settings.general, closeToTray, startMinimized },
-      }),
-      onChange: (listener: (settings: Settings) => void) => {
-        settingsListeners.push(listener);
-      },
-    },
+    settings,
     app: {
       on: vi.fn((event: string, listener: () => void) => {
         appListeners.set(event, listener);
@@ -60,9 +52,7 @@ function setup(
     return preventDefault;
   };
   const changeSettings = (hide: boolean) => {
-    for (const listener of settingsListeners) {
-      listener({ ...settings, appearance: { ...settings.appearance, autoHideMenuBar: hide } });
-    }
+    settings.change({ appearance: { autoHideMenuBar: hide } });
   };
   const show = () => {
     for (const listener of shown) {

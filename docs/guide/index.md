@@ -40,6 +40,14 @@ your own key. It reads a chat only once you allow it there, and never sends
 a message on its own. The [AI assistant guide](/guide/ai-assistant) covers
 setting it up and every choice.
 
+## AI agents
+
+AI agents such as Claude Code can connect to YapYap over MCP, once you turn
+on **Let AI agents connect** in Settings → Agents. Each agent needs a token
+you create, which says which accounts and chats it may use, and whether it
+may only read, write drafts or also send. See
+[AI agents (MCP)](/guide/ai-agents).
+
 ## Settings
 
 Open **File → Settings…** (on macOS, **YapYap → Settings…**), or press
@@ -325,8 +333,8 @@ cannot use, blocks every connection rather than letting WhatsApp go around
 it. With a manual proxy, calls also go only through it, which keeps your
 address hidden but can make them slower or stop them from connecting.
 
-When a proxy asks for a username and password, a **Proxy Sign-In** window
-names it and asks for them. Tick **Remember on this computer** to have YapYap
+When a proxy asks for a username and password, a **Sign In to the Proxy**
+window names it and asks for them. Tick **Remember on this computer** to have YapYap
 keep them, encrypted by your system's keychain, for next time; on a Linux
 desktop without a keychain YapYap cannot keep them safely, so it asks each
 time. If the proxy refuses saved details, YapYap asks again. After you cancel,

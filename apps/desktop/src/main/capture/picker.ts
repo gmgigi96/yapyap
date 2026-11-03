@@ -1,5 +1,5 @@
-import { CHROME_CHANNELS, type PickerOffer } from '../../shared/chrome-api.ts';
-import { noArguments } from '../ipc/arguments.ts';
+import { CHROME_CHANNELS, type PickerOffer } from '../../shared/api/chrome-api.ts';
+import { argumentsOf, isBoolean, isString, noArguments } from '../ipc/arguments.ts';
 import type { ChromeCall, ChromeHandler } from '../ipc/chrome.ts';
 import type { CaptureChoice, CaptureSource } from '../permissions/session-guard.ts';
 
@@ -71,9 +71,6 @@ export interface SourcePicker {
   readonly handlers: readonly ChromeHandler[];
 }
 
-const choiceArguments = (args: readonly unknown[]): boolean =>
-  args.length === 2 && typeof args[0] === 'string' && typeof args[1] === 'boolean';
-
 function toOffer(pick: ActivePick, offerAudio: boolean): PickerOffer {
   return {
     sources: pick.sources.map(({ id, name, thumbnail }) => ({
@@ -104,7 +101,11 @@ function pickerHandlers(
       accepts: noArguments,
       handle: (call) => toOffer(owned(call), offerAudio),
     },
-    { channel: CHROME_CHANNELS.pickerChoose, accepts: choiceArguments, handle: choose },
+    {
+      channel: CHROME_CHANNELS.pickerChoose,
+      accepts: argumentsOf(isString, isBoolean),
+      handle: choose,
+    },
     {
       channel: CHROME_CHANNELS.pickerCancel,
       accepts: noArguments,

@@ -1,5 +1,5 @@
-import type { ChromeApi } from '../shared/chrome-api.ts';
-import type { EngineBridge } from '../shared/engine-api.ts';
+import type { ChromeApi } from '../shared/api/chrome-api.ts';
+import type { EngineBridge } from '../shared/api/engine-api.ts';
 
 declare global {
   /** Exposed by the chrome preload; the only way chrome pages reach the main process. */

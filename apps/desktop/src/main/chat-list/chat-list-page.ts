@@ -36,15 +36,6 @@ function contentOf(width: number | undefined): ListContent {
   return { width: width ?? null, labels: { label: text.label, hint: text.hint } };
 }
 
-/** A page that went away, or one between loads, is simply sized at the next render. */
-async function renderIn(page: AdapterPage, content: ListContent): Promise<void> {
-  try {
-    await runInAdapterWorld(page, chatListWidthRender(content));
-  } catch {
-    // Nothing to do: the next render tries again.
-  }
-}
-
 /**
  * Each account's chat list width, inside its WhatsApp page (#79). It sizes
  * the active account's list whenever the account on screen changes, and
@@ -56,7 +47,10 @@ export function inPageChatList(port: ChatListPort): InPageChatList {
   const render = (): void => {
     if (active !== undefined) {
       const { account, page } = active();
-      void renderIn(page, contentOf(port.widths.get(account)));
+      // A page that went away, or one between loads, is sized at the next render.
+      runInAdapterWorld(page, chatListWidthRender(contentOf(port.widths.get(account)))).catch(
+        () => undefined,
+      );
     }
   };
   port.every(() => {

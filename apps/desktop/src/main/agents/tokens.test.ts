@@ -1,6 +1,6 @@
 import { createHash } from 'node:crypto';
 import { describe, expect, it, vi } from 'vitest';
-import { DEFAULT_AGENT_LIMITS, type AgentTokenSpec } from '../../shared/agents-api.ts';
+import { DEFAULT_AGENT_LIMITS, type AgentTokenSpec } from '../../shared/api/agents-api.ts';
 import { chatId } from '../assistant/chats.ts';
 import { agentTokens, MAX_TOKENS, reaches, reachesPhone } from './tokens.ts';
 

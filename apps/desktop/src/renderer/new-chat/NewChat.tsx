@@ -1,6 +1,6 @@
 import type { JSX } from 'preact';
 import { useCallback, useState } from 'preact/hooks';
-import type { ChromeApi } from '../../shared/chrome-api.ts';
+import type { ChromeApi } from '../../shared/api/chrome-api.ts';
 import { en } from '../../shared/messages/en.ts';
 import { parseInternationalNumber } from '../../shared/phone-number.ts';
 

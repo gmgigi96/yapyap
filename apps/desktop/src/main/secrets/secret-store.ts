@@ -1,5 +1,4 @@
-import { readFileSync } from 'node:fs';
-import { writeTextAtomically } from '../atomic-write.ts';
+import { readIfPresent, textFileAt } from '../support/atomic-write.ts';
 
 /** Electron's `safeStorage`, as far as YapYap uses it. */
 export interface EncryptionPort {
@@ -35,18 +34,8 @@ const OWNER_ONLY = 0o600;
 
 /** The secrets file at `path`, readable and writable by the user alone. */
 export function secretFileAt(path: string): SecretFile {
-  return {
-    read: () => {
-      try {
-        return readFileSync(path, 'utf8');
-      } catch {
-        return undefined;
-      }
-    },
-    write: (text) => {
-      writeTextAtomically(path, text, OWNER_ONLY);
-    },
-  };
+  const file = textFileAt(path, OWNER_ONLY);
+  return { read: () => readIfPresent(file), write: file.write };
 }
 
 /**

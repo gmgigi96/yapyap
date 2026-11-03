@@ -1,5 +1,5 @@
 import { Type, type Static, type TString } from 'typebox';
-import { MAX_SPELLING_LANGUAGES } from '../../shared/chrome-api.ts';
+import { MAX_SPELLING_LANGUAGES } from '../../shared/api/chrome-api.ts';
 import { MAX_PROXY_ADDRESS, PROXY_ADDRESS } from '../../shared/proxy-address.ts';
 import { SHORTCUT_IDS, type ShortcutId } from '../../shared/shortcuts.ts';
 import { LOCAL_SERVER } from '../../shared/local-server.ts';

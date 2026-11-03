@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
-import { defaultSettings } from '../settings/decode.ts';
+import { fakeSettings } from '../../../test/fake-settings.ts';
 import type { Settings } from '../settings/schema.ts';
 import { createPrivacyScreen, IDLE_SECONDS } from './privacy-screen.ts';
 
@@ -15,22 +15,15 @@ function page() {
 }
 
 function setup(privacy: Partial<Settings['privacy']> = {}) {
-  const base = defaultSettings();
+  const settings = fakeSettings({ privacy });
   const state = {
-    settings: { ...base, privacy: { ...base.privacy, ...privacy } },
     focused: true,
     idle: 0,
     pages: [page()],
   };
-  let settingsChanged: ((settings: Settings) => void) | undefined;
   let tick: (() => void) | undefined;
   const deps = {
-    settings: {
-      current: () => state.settings,
-      onChange: (listener: (settings: Settings) => void) => {
-        settingsChanged = listener;
-      },
-    },
+    settings,
     pages: () => state.pages,
     focused: () => state.focused,
     idleSeconds: () => state.idle,
@@ -46,8 +39,7 @@ function setup(privacy: Partial<Settings['privacy']> = {}) {
     screen,
     tick: () => tick?.(),
     changeSettings: (next: Partial<Settings['privacy']>) => {
-      state.settings = { ...state.settings, privacy: { ...state.settings.privacy, ...next } };
-      settingsChanged?.(state.settings);
+      settings.change({ privacy: next });
     },
   };
 }

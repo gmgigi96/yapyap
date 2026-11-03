@@ -2,7 +2,7 @@
 import { cleanup, fireEvent, render, screen } from '@testing-library/preact';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { fakeChromeApi } from '../../../test/chrome-api.ts';
-import type { ProxyLoginRequest } from '../../shared/chrome-api.ts';
+import type { ProxyLoginRequest } from '../../shared/api/chrome-api.ts';
 import { ProxyLogin } from './ProxyLogin.tsx';
 
 function api(request: Partial<ProxyLoginRequest> = {}) {

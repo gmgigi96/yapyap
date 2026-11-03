@@ -1,8 +1,8 @@
 import { unreadInTitle } from '../../adapter/page-state.ts';
 import { accountAvatars, type AccountAvatars } from '../accounts/avatars.ts';
-import type { AccountSummary } from '../../shared/chrome-api.ts';
-import type { AccountMenu } from '../chrome/feature.ts';
-import { listenToAssistantBar } from '../assistant/bar-ipc.ts';
+import type { AccountSummary } from '../../shared/api/chrome-api.ts';
+import type { AccountMenu, ChromeRuntime } from '../chrome/feature.ts';
+import { listenToAssistantBar } from '../assistant/assistant-bar-ipc.ts';
 import { suggestAsMessagesArrive } from '../assistant/auto-suggest.ts';
 import { inPageAssistantBar } from '../assistant/bar-page.ts';
 import { listenToChatList } from '../chat-list/chat-list-ipc.ts';
@@ -27,7 +27,7 @@ import { accountSignals, type AccountSignals } from '../accounts/account-signals
 import { partitionOf, type Account } from '../accounts/accounts.ts';
 import { contextMenuFor, followProxy, guardAccountSession } from './account-session.ts';
 import { runAccounts, type RunningAccounts } from '../accounts/running.ts';
-import { NOTIFICATION_CHANNELS } from '../../shared/notification-api.ts';
+import { NOTIFICATION_CHANNELS } from '../../shared/api/notification-api.ts';
 import { listenForNotifications } from '../notifications/notification-ipc.ts';
 import {
   accountNotifier,
@@ -44,9 +44,15 @@ import {
 } from '../notifications/reply.ts';
 import { readOpenChat, readUnreadChats } from '../assistant/chat-reading.ts';
 import { agentPageOf } from '../agents/agent-page.ts';
-import { bringToFront, claimSingleInstance, type Instances, type LinkPage } from '../instances.ts';
+import {
+  bringToFront,
+  claimSingleInstance,
+  type Instances,
+  type LinkPage,
+} from '../app/instances.ts';
 import { chatLinkInArguments } from '../navigation/deep-link.ts';
-import { quitOnShutdown } from '../shutdown.ts';
+import { quitOnShutdown } from '../app/shutdown.ts';
+import { pause } from '../support/pause.ts';
 import { showWhenPageReady } from '../window/show-when-ready.ts';
 import { focusPageWithWindow } from '../window/focus-page.ts';
 import { unreadBadge } from '../badge/unread-badge.ts';
@@ -73,6 +79,7 @@ import type {
   OpenedAccount,
   OpeningWiring,
   PickInApp,
+  SessionSecurity,
   StartDependencies,
   WindowPort,
 } from './types.ts';
@@ -123,11 +130,7 @@ function notifierAccount<Window extends WindowPort>(
     onClick: open,
     onReply: (id, text) => {
       open(id);
-      const wait = (ms: number) =>
-        new Promise<void>((resolve) => {
-          setTimeout(resolve, ms);
-        });
-      void draftReply(contents, text, { wait, warn: deps.warn });
+      void draftReply(contents, text, { wait: pause, warn: deps.warn });
     },
     picture: (url) => avatars.picture(contents, url),
   };
@@ -152,10 +155,7 @@ function notifyFor<Window extends WindowPort>(
       },
       inlineReply: supportsInlineReply(deps.platform),
       now: Date.now,
-      wait: (ms) =>
-        new Promise<void>((resolve) => {
-          setTimeout(resolve, ms);
-        }),
+      wait: pause,
       warn: deps.warn,
     },
     notifierAccount(wiring, account, contents),
@@ -326,21 +326,16 @@ function windowSignals<Window extends WindowPort>(
   });
 }
 
-/**
- * The tray: the running accounts, the unread count of all of them, and
- * whether the window is out of sight. Returns how to refresh it and how to
- * give it a new unread count.
- */
-/** What the tray menu does. */
 /** What the tray and the menu show besides the accounts: shares and the privacy screen. */
 interface Screens {
   readonly shares: ScreenShares;
   readonly privacy: PrivacyScreen;
 }
 
+/** What the tray menu does. */
 function trayActions<Window extends WindowPort>(
   deps: StartDependencies<Window>,
-  chrome: AccountWiring<Window>['chrome'],
+  chrome: ChromeRuntime,
   running: () => RunningAccounts<OpenedAccount>,
   { shares, privacy }: Screens,
 ): TrayDependencies {
@@ -368,6 +363,11 @@ function trayActions<Window extends WindowPort>(
   };
 }
 
+/**
+ * The tray: the running accounts, the unread count of all of them, and
+ * whether the window is out of sight. Returns how to refresh it and how to
+ * give it a new unread count.
+ */
 function accountsTray<Window extends WindowPort>(
   { deps, chrome, window }: OpeningWiring<Window>,
   running: () => RunningAccounts<OpenedAccount>,
@@ -598,7 +598,7 @@ function attachAssistantBar<Window extends WindowPort>(
 function attachChatList<Window extends WindowPort>(
   deps: StartDependencies<Window>,
   window: Window,
-  security: Parameters<typeof secureSession>[1],
+  security: SessionSecurity,
   origin: string,
 ): InPageChatList {
   listenToChatList(deps.ipc, deps.chatListWidths, {
@@ -636,7 +636,7 @@ function reconnectWhenOnline<Window extends WindowPort>(
 /** The window-wide parts: chat links, focus, and showing the window. */
 function wireMainWindow<Window extends WindowPort>(
   deps: StartDependencies<Window>,
-  chrome: ReturnType<StartDependencies<Window>['chrome']['afterReady']>,
+  chrome: ChromeRuntime,
   window: Window,
   running: RunningAccounts<OpenedAccount>,
   origin: string,
@@ -702,8 +702,8 @@ function listenToNotifications<Window extends WindowPort>(
 /** Opens the main window with every account, and waits for their first loads. */
 async function openWindow<Window extends WindowPort>(
   deps: StartDependencies<Window>,
-  chrome: ReturnType<StartDependencies<Window>['chrome']['afterReady']>,
-  security: Parameters<typeof secureSession>[1],
+  chrome: ChromeRuntime,
+  security: SessionSecurity,
   instances: Instances,
   origin: string,
   proxy: ProxyController,
@@ -739,7 +739,7 @@ async function openWindow<Window extends WindowPort>(
  */
 function welcomeOnFirstRun<Window extends WindowPort>(
   deps: StartDependencies<Window>,
-  chrome: ReturnType<StartDependencies<Window>['chrome']['afterReady']>,
+  chrome: ChromeRuntime,
 ): void {
   if (!deps.settings.firstRun) {
     return;

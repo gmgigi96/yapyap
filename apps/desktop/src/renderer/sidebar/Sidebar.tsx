@@ -1,6 +1,6 @@
 import type { JSX } from 'preact';
 import { useCallback, useEffect, useState } from 'preact/hooks';
-import type { ChromeApi, SidebarAccount, SidebarState } from '../../shared/chrome-api.ts';
+import type { ChromeApi, SidebarAccount, SidebarState } from '../../shared/api/chrome-api.ts';
 import { en } from '../../shared/messages/en.ts';
 
 const text = en.sidebar;

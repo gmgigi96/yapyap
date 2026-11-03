@@ -1,22 +1,21 @@
 import { createHash, timingSafeEqual } from 'node:crypto';
 import { Type, type Static } from 'typebox';
-import { Value } from 'typebox/value';
 import type {
   AgentChatEntry,
   AgentNarrowingStep,
   AgentTokenSpec,
   AgentTokenView,
-} from '../../shared/agents-api.ts';
-import type { TextFile } from '../atomic-write.ts';
+} from '../../shared/api/agents-api.ts';
+import { readChecked, type TextFile } from '../support/atomic-write.ts';
 import type { SecretStore } from '../secrets/secret-store.ts';
 import { parseInternationalNumber } from '../../shared/phone-number.ts';
 import { chatId } from '../assistant/chats.ts';
-import { LimitsSchema, ScopeSchema } from './token-spec.ts';
+import { DAY_MS } from './limits.ts';
+import { ACCOUNT_ID_LENGTH, LimitsSchema, ScopeSchema } from './token-spec.ts';
 
 const FORMAT_VERSION = 1;
 /** The most tokens YapYap keeps; each is a way in, so there are few. */
 export const MAX_TOKENS = 20;
-const DAY_MS = 86_400_000;
 
 const Hex = (length: number) => Type.String({ pattern: `^[0-9a-f]{${String(length)}}$` });
 
@@ -27,7 +26,10 @@ const TokenSchema = Type.Object(
     hash: Hex(64),
     name: Type.String({ minLength: 1, maxLength: 64 }),
     scopes: Type.Array(ScopeSchema, { minItems: 1, uniqueItems: true }),
-    accounts: Type.Array(Type.String({ maxLength: 36 }), { minItems: 1, uniqueItems: true }),
+    accounts: Type.Array(Type.String({ maxLength: ACCOUNT_ID_LENGTH }), {
+      minItems: 1,
+      uniqueItems: true,
+    }),
     // Chats by fingerprint (C42 in ADR 0008): the entry's, its name's and its
     // number's. The names and numbers are kept encrypted in the secrets.
     chats: Type.Union([
@@ -143,15 +145,6 @@ const nameKey = (token: string, chat: string): string => `${NAMES}${token}/${cha
 
 type Kept = Static<typeof TokenSchema>;
 
-function readTokens(file: TextFile): Kept[] {
-  try {
-    const value: unknown = JSON.parse(file.read());
-    return Value.Check(FileSchema, value) ? value.tokens : [];
-  } catch {
-    return [];
-  }
-}
-
 /** Whether the presented secret is the token's, compared in constant time. */
 function matches(token: Kept, secret: string): boolean {
   return timingSafeEqual(Buffer.from(token.hash, 'hex'), Buffer.from(hashOf(secret), 'hex'));
@@ -223,7 +216,7 @@ interface Store {
 
 function storeOf({ file, names, warn }: TokenSources): Store {
   const store: Store = {
-    tokens: readTokens(file),
+    tokens: readChecked(file, FileSchema)?.tokens ?? [],
     save: () => {
       try {
         file.write(`${JSON.stringify({ version: FORMAT_VERSION, tokens: store.tokens })}\n`);

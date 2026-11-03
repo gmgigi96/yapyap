@@ -1,5 +1,5 @@
 import { Pointer, Value } from 'typebox/value';
-import { CHROME_CHANNELS, type SettingsSnapshot } from '../../shared/chrome-api.ts';
+import { CHROME_CHANNELS, type SettingsSnapshot } from '../../shared/api/chrome-api.ts';
 import {
   SETTING_FIELDS,
   type SettingField,
@@ -43,7 +43,6 @@ function snapshotOf(
   fields: readonly SettingField[],
   launched: Settings,
   problems: Readonly<Record<string, string>>,
-  unavailable: Readonly<Record<string, string>>,
 ): SettingsSnapshot {
   const current = service.current();
   const values: Record<string, SettingValue> = {};
@@ -53,7 +52,6 @@ function snapshotOf(
   return {
     values,
     problems,
-    unavailable,
     restartPending: fields.some(
       ({ id, restart: needsRestart }) =>
         needsRestart && readValue(current, id) !== readValue(launched, id),
@@ -92,8 +90,7 @@ async function saveUnlessRefused(
  * The settings window's operations. A change is accepted only for a listed
  * field and only when the whole result still matches the schema. `hidden`
  * lists fields this build ignores, such as beta updates where the system
- * updates YapYap. `unavailable` fields show, but cannot change here, such
- * as window positions on Wayland.
+ * updates YapYap.
  */
 export function settingsHandlers(
   service: SettingsService,
@@ -101,13 +98,12 @@ export function settingsHandlers(
   platform: string,
   effects: Readonly<Record<string, SettingEffect>> = {},
   hidden: readonly string[] = [],
-  unavailable: Readonly<Record<string, string>> = {},
 ): ChromeHandler[] {
   const fields = fieldsFor(platform, hidden);
   const launched = service.current();
   const problems = new Map<string, string>();
   const snapshot = (): SettingsSnapshot =>
-    snapshotOf(service, fields, launched, Object.fromEntries(problems), unavailable);
+    snapshotOf(service, fields, launched, Object.fromEntries(problems));
   const change = ([id, value]: readonly unknown[]): unknown =>
     withValue(service.current(), String(id), value);
   return [
@@ -116,7 +112,6 @@ export function settingsHandlers(
       channel: CHROME_CHANNELS.settingsSet,
       accepts: (args) =>
         args.length === 2 &&
-        !(String(args[0]) in unavailable) &&
         fields.some(
           (field) => field.id === args[0] && (field.folder === undefined || args[1] === ''),
         ) &&

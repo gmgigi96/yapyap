@@ -30,7 +30,8 @@ export interface Bus {
   readonly close: () => void;
 }
 
-const BUS = {
+/** The bus itself, which answers `Hello` and `AddMatch`. */
+export const BUS = {
   destination: 'org.freedesktop.DBus',
   path: '/org/freedesktop/DBus',
   interface: 'org.freedesktop.DBus',

@@ -1,5 +1,5 @@
 import { render, type ComponentType } from 'preact';
-import type { ChromeApi } from '../../shared/chrome-api.ts';
+import type { ChromeApi } from '../../shared/api/chrome-api.ts';
 
 /** A dialog-like window closes on Escape, as closing it by hand would. */
 export function closeOnEscape(event: KeyboardEvent): void {

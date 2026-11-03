@@ -6,8 +6,9 @@ import {
   type EngineEvent,
   type EngineFailure,
   type EngineTurn,
-} from '../../../shared/engine-api.ts';
+} from '../../../shared/api/engine-api.ts';
 import { isSameOrigin } from '../../navigation/link-policy.ts';
+import type { Completion } from '../providers/provider.ts';
 
 /** The hidden engine window, as the host drives it. */
 export interface EngineWindow {
@@ -38,19 +39,13 @@ export class EngineFailed extends Error {
   }
 }
 
-/** What the model wrote, and whether it stopped at its length limit. */
-interface EngineReply {
-  readonly text: string;
-  readonly truncated: boolean;
-}
-
 export interface EngineHost {
   /** Runs the conversation on the private model, loading it first if need be. */
   readonly complete: (
     turns: readonly EngineTurn[],
     onText: (text: string) => void,
     signal?: AbortSignal,
-  ) => Promise<EngineReply>;
+  ) => Promise<Completion>;
   /** Closes the engine window, freeing its memory, as when the model changes or goes. */
   readonly close: () => void;
   /** An event from a page, believed only from the engine window on its own origin. */
@@ -90,7 +85,7 @@ const Event = Type.Union([
 /** A command waiting for its answer. */
 interface Waiting {
   readonly onText: (text: string) => void;
-  readonly settle: (outcome: EngineReply | EngineFailed) => void;
+  readonly settle: (outcome: Completion | EngineFailed) => void;
   text: string;
 }
 
@@ -120,10 +115,10 @@ function ask(
   session: Session,
   command: (id: number) => EngineCommand,
   onText: (text: string) => void = () => undefined,
-): { readonly id: number; readonly answer: Promise<EngineReply> } {
+): { readonly id: number; readonly answer: Promise<Completion> } {
   state.next += 1;
   const id = state.next;
-  const answer = new Promise<EngineReply>((resolve, reject) => {
+  const answer = new Promise<Completion>((resolve, reject) => {
     state.waiting.set(id, {
       onText,
       text: '',
@@ -202,7 +197,7 @@ async function complete(
   state: HostState,
   deps: EngineHostDependencies,
   [turns, onText, signal]: Parameters<EngineHost['complete']>,
-): Promise<EngineReply> {
+): Promise<Completion> {
   state.cancelIdle?.();
   const session = sessionOf(state, deps);
   try {

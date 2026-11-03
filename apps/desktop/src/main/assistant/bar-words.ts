@@ -17,6 +17,7 @@ export interface Words {
 const {
   bar,
   status,
+  problems,
   settings: { private: words },
 } = en.assistant;
 
@@ -89,15 +90,15 @@ export function setupWords(setup: Setup, model: PrivateModelStatus): Words {
 }
 
 const PROBLEMS: Readonly<Record<ProviderErrorKind, (provider: string) => string>> = {
-  auth: (provider) => en.assistant.problems.auth({ provider }),
-  'rate-limited': (provider) => en.assistant.problems.rateLimited({ provider }),
-  network: (provider) => en.assistant.problems.network({ provider }),
-  timeout: (provider) => en.assistant.problems.timeout({ provider }),
-  refused: () => en.assistant.problems.refused,
-  'bad-request': (provider) => en.assistant.problems.badRequest({ provider }),
-  cancelled: () => en.assistant.problems.cancelled,
-  'out-of-memory': () => en.assistant.problems.outOfMemory,
-  failed: () => en.assistant.problems.failed,
+  auth: (provider) => problems.auth({ provider }),
+  'rate-limited': (provider) => problems.rateLimited({ provider }),
+  network: (provider) => problems.network({ provider }),
+  timeout: (provider) => problems.timeout({ provider }),
+  refused: () => problems.refused,
+  'bad-request': (provider) => problems.badRequest({ provider }),
+  cancelled: () => problems.cancelled,
+  'out-of-memory': () => problems.outOfMemory,
+  failed: () => problems.failed,
 };
 
 /** What the bar says when a request failed, with a fix where one click can mend it. */

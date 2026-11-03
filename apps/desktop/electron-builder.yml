@@ -4,9 +4,12 @@ copyright: Copyright © Vasco Guita
 directories:
   output: release
   buildResources: build
+# electron-vite bundles every dependency into out/, so node_modules would
+# only add sources nothing loads.
 files:
   - out/**
   - package.json
+  - '!**/node_modules/**'
 asar: true
 artifactName: ${productName}-${version}-${os}-${arch}.${ext}
 protocols:
@@ -48,7 +51,7 @@ linux:
       GenericName: Messaging client
       Keywords: whatsapp;chat;messaging;
       StartupWMClass: org.guita.YapYap
-      MimeType: x-scheme-handler/whatsapp;x-scheme-handler/yapyap;
+      MimeType: x-scheme-handler/whatsapp;
       Actions: SafeMode;
     # Reachable from the launcher when graphics problems stop YapYap from starting.
     desktopActions:

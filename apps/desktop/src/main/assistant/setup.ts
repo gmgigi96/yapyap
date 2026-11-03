@@ -1,6 +1,7 @@
 import { isLocalServer } from '../../shared/local-server.ts';
+import type { KeyedProvider } from '../../shared/api/chrome-api.ts';
 import type { Settings } from '../settings/schema.ts';
-import type { KeyedProvider } from './keys.ts';
+import { KEYED_PROVIDERS } from './keys.ts';
 import { autoModel, NO_KEY, type modelsOf, type ModelOption, type ProviderId } from './models.ts';
 import { anthropicProvider } from './providers/anthropic.ts';
 import { openAIProvider } from './providers/openai.ts';
@@ -56,7 +57,7 @@ export function chosenProvider(inputs: SetupInputs): ProviderId | undefined {
   if (isLocalServer(localServer)) {
     return 'local';
   }
-  return (['anthropic', 'openai'] as const).find((keyed) => inputs.keys[keyed] !== undefined);
+  return KEYED_PROVIDERS.find((keyed) => inputs.keys[keyed] !== undefined);
 }
 
 /** What the provider still needs before it can be asked anything, its list of models included. */
@@ -134,7 +135,6 @@ export function providerFor(
     case 'openai':
       return openAIProvider({ apiKey, model, fetch });
     case 'local':
-      // Servers on this computer mostly take any key or none; the SDK still needs one to send.
       return openAIProvider({ model, fetch, apiKey: NO_KEY, baseURL: setup.endpoint });
     default:
       return privateProvider(engine);

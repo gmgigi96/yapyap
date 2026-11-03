@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
-import type { EngineCommand } from '../../shared/engine-api.ts';
+import type { EngineCommand } from '../../shared/api/engine-api.ts';
 import { createEngineBridge } from './bridge.ts';
 
 describe('createEngineBridge', () => {

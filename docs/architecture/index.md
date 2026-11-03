@@ -8,7 +8,7 @@ checked channels.
 
 | Zone         | Runs                                                                 | Trust                         |
 | ------------ | -------------------------------------------------------------------- | ----------------------------- |
-| Main process | App logic, settings, IPC validation, AI assistant                    | Trusted                       |
+| Main process | App logic, settings, IPC validation, AI assistant, MCP server        | Trusted                       |
 | App chrome   | YapYap's own UI, served from a custom `app://` protocol              | Trusted code, untrusted input |
 | WhatsApp     | One sandboxed renderer per account, with its own persistent session  | Untrusted (remote)            |
 | Engine       | A hidden, sandboxed renderer for the private model, while it is used | Trusted code, no network      |
@@ -31,7 +31,7 @@ checked channels.
 <rect class="box trusted" x="140" y="130" width="480" height="80" rx="8"/>
 <text class="title" x="380" y="158" text-anchor="middle">Main process (Node.js): trusted</text>
 <text x="380" y="179" text-anchor="middle">settings · accounts · IPC checks · permissions · network filters</text>
-<text x="380" y="197" text-anchor="middle">AI assistant · secrets · updates</text>
+<text x="380" y="197" text-anchor="middle">AI assistant · MCP server · secrets · updates</text>
 <rect class="box untrusted" x="20" y="290" width="220" height="130" rx="8"/>
 <text class="title" x="130" y="314" text-anchor="middle">WhatsApp accounts</text>
 <text x="130" y="336" text-anchor="middle">one view per account</text>
@@ -91,6 +91,10 @@ checked channels.
   settings, secrets (through the system keychain), notifications, the tray,
   permissions and updates. It denies every permission by default
   ([ADR 0001](/adr/0001-process-model-and-security-boundaries)).
+- **The MCP server** for AI agents is part of the main process and off by
+  default. Once turned on, it listens on `127.0.0.1` alone, and checks
+  every call against the token the agent presents: its scopes, accounts
+  and chats ([ADR 0019](/adr/0019-mcp-server)).
 
 The [security review](/architecture/security-review) checks this design
 against Electron's security checklist.
@@ -153,3 +157,5 @@ Each design choice is recorded in an
 | The in-chat assistant bar                              | [0013](/adr/0013-in-chat-assistant-bar)                 |
 | The AI assistant as part of YapYap                     | [0017](/adr/0017-assistant-is-part-of-yapyap)           |
 | No extensions, marketplace or call recording           | [0018](/adr/0018-no-extensions)                         |
+| The MCP server for AI agents                           | [0019](/adr/0019-mcp-server)                            |
+| Keeping pinned versions current with Renovate          | [0020](/adr/0020-renovate)                              |

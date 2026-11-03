@@ -11,8 +11,8 @@ and [All formats](#all-formats) lists everything else.
 
 ## Linux repositories {#linux-repositories}
 
-On Debian, Ubuntu, Fedora and Arch Linux, add YapYap's repository once and your package
-manager installs and updates YapYap like any other app. The repositories at
+On Debian, Ubuntu, Fedora and Arch Linux, add YapYap's repository once and
+your package manager installs and updates YapYap like any other app. The repositories at
 `packages.guita.org` are signed with YapYap's key, and the packages
 themselves download from YapYap's GitHub releases.
 
@@ -55,8 +55,8 @@ Arch Linux, the repository requires signatures on its database and every
 package, even where pacman's defaults would accept an unsigned database.
 
 **Betas.** To get betas as well as releases, use `yapyap-beta.sources`,
-`yapyap-beta.repo` or `yapyap-beta.pacman.conf` instead. You move to each release once it is newer than
-your beta. To go back to releases only, swap the file back; your package
+`yapyap-beta.repo` or `yapyap-beta.pacman.conf` instead. You move to each
+release once it is newer than your beta. To go back to releases only, swap the file back; your package
 manager offers the next release when it comes out.
 
 Both channels keep their five latest versions, so you can install an older
@@ -162,8 +162,7 @@ gh attestation verify YapYap-<version>-linux-x86_64.AppImage --repo vascoguita/y
 ## Beta versions {#betas}
 
 Every release is first published as a beta, so testers can catch problems
-before everyone gets the update. Betas are
-pre-releases on the
+before everyone gets the update. Betas are pre-releases on the
 [releases page](https://github.com/vascoguita/yapyap/releases), tagged like
 `v0.2.0-beta.1`, and are built, tested and signed like releases.
 
@@ -172,8 +171,10 @@ pre-releases on the
   beta as it does releases. Turning it off never goes back to an older
   version: you keep the beta until the next release.
 - **Flatpak, DEB, RPM and Arch Linux:** these get updates from your system,
-  so the setting isn't there. Download the beta's package from its
-  pre-release and install it by hand; the next release replaces it.
+  so the setting isn't there. Use the beta repository (see
+  [Linux repositories](#linux-repositories)), or download the beta's
+  package from its pre-release and install it by hand; the next release
+  replaces it.
 
 Found a problem? [Open an issue](https://github.com/vascoguita/yapyap/issues/new/choose)
 and paste **Help → Copy Diagnostics**, which names the beta you run.

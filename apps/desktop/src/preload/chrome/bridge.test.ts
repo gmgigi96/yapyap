@@ -13,6 +13,7 @@ describe('createChromeBridge', () => {
       'settings:set': snapshot,
       'chat:open-number': true,
       'assistant:save-key': true,
+      'agents:narrow': true,
     };
     const invoke = vi.fn<(channel: string, ...args: unknown[]) => Promise<unknown>>((channel) =>
       Promise.resolve(answers[channel] ?? 'ignored'),
@@ -54,7 +55,7 @@ describe('createChromeBridge', () => {
     expect(await api.agents.view()).toBe('ignored');
     expect(await api.agents.create(spec)).toBe('ignored');
     await api.agents.revoke('0123456789abcdef');
-    expect(await api.agents.narrow('0123456789abcdef', { scope: 'chat:open' })).toBe('ignored');
+    expect(await api.agents.narrow('0123456789abcdef', { scope: 'chat:open' })).toBe(true);
     await api.agents.newPort();
     expect(await api.agents.openChat('a')).toBe('ignored');
     await api.agents.copy('yapyap_mcp_x');

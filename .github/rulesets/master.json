@@ -55,6 +55,10 @@
           },
           {
             "context": "CI result"
+          },
+          {
+            "context": "SonarCloud Code Analysis",
+            "integration_id": 12526
           }
         ]
       }

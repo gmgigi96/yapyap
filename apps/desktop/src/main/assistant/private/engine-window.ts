@@ -1,4 +1,8 @@
-import { ENGINE_CHANNELS, ENGINE_ORIGIN, type EngineCommand } from '../../../shared/engine-api.ts';
+import {
+  ENGINE_CHANNELS,
+  ENGINE_ORIGIN,
+  type EngineCommand,
+} from '../../../shared/api/engine-api.ts';
 import type { ChromeWindowPort } from '../../chrome/window-opener.ts';
 import { PRODUCT_NAME } from '../../identity/product.ts';
 import type { ViewRegistry } from '../../security/views.ts';

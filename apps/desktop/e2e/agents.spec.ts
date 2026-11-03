@@ -162,7 +162,9 @@ test('turns away browser pages and wrong tokens, and stops listening when turned
     { origin: 'https://example.com' },
   );
   expect(fromPage.status).toBe(403);
-  const wrong = await callTool(address, `${token.slice(0, -1)}0`, 'list_accounts');
+  // The secret is random hex, so its last digit may already be 0.
+  const other = token.endsWith('0') ? '1' : '0';
+  const wrong = await callTool(address, `${token.slice(0, -1)}${other}`, 'list_accounts');
   expect(wrong.status).toBe(401);
 
   await settings

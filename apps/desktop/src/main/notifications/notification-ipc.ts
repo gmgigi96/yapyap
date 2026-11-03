@@ -1,4 +1,4 @@
-import { NOTIFICATION_CHANNELS } from '../../shared/notification-api.ts';
+import { NOTIFICATION_CHANNELS } from '../../shared/api/notification-api.ts';
 import { argumentsOf, isString } from '../ipc/arguments.ts';
 import {
   registerWhatsAppListeners,

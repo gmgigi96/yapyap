@@ -31,6 +31,8 @@ describe('refusalOf', () => {
 
   it.each([
     ['another computer', { remoteAddress: '192.0.2.7' }],
+    ['another computer, IPv4-mapped', { remoteAddress: '::ffff:192.0.2.7' }],
+    ['loopback written after another prefix', { remoteAddress: '::fffe:127.0.0.1' }],
     ['a closed socket', { remoteAddress: undefined }],
     ['IPv6 loopback, which YapYap never listens on', { remoteAddress: '::1' }],
   ])('refuses %s', (_case, overrides) => {

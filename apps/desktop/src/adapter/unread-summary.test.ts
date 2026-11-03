@@ -2,7 +2,7 @@
 import { runInNewContext } from 'node:vm';
 import { describe, expect, it } from 'vitest';
 import { LANDMARKS } from './page-state.ts';
-import { parseUnreadSummary, readUnreadSummary, unreadSummaryReader } from './unread-summary.ts';
+import { parseUnreadSummary, readUnreadSummary, UNREAD_SUMMARY } from './unread-summary.ts';
 
 const PLACES = {
   chat: LANDMARKS.chatRow,
@@ -89,21 +89,20 @@ describe('readUnreadSummary', () => {
   });
 });
 
-describe('unreadSummaryReader', () => {
+describe('UNREAD_SUMMARY', () => {
   // Mutation testing instruments the function with helpers from outside it,
   // so only uninstrumented source can run on its own.
-  it.skipIf(unreadSummaryReader().includes('stryMutAct'))('runs as standalone source text', () => {
+  it.skipIf(UNREAD_SUMMARY.includes('stryMutAct'))('runs as standalone source text', () => {
     const doc = page(`${row(0, 'Ana', 'Dinner tonight?', '2')}${row(1, 'Team', 'Thanks!')}`);
-    const result = runInNewContext(unreadSummaryReader(), { document: doc }) as unknown;
+    const result = runInNewContext(UNREAD_SUMMARY, { document: doc }) as unknown;
     expect(parseUnreadSummary(result)).toEqual([
       { name: 'Ana', unread: 2, messages: [{ outgoing: false, text: 'Dinner tonight?' }] },
     ]);
   });
 
   it('reads the list’s landmarks, at most 20 chats', () => {
-    const code = unreadSummaryReader();
-    expect(code).toContain(JSON.stringify(LANDMARKS.chatRow));
-    expect(code).toContain('"chats":20');
+    expect(UNREAD_SUMMARY).toContain(JSON.stringify(LANDMARKS.chatRow));
+    expect(UNREAD_SUMMARY).toContain('"chats":20');
   });
 });
 

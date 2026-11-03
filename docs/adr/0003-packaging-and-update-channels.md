@@ -84,6 +84,10 @@ build ad hoc. Copy Diagnostics shows the policy and channel.
   manual **Beta release** workflow
   (`beta.yml`), which shares packaging, smoke tests and publishing
   (`publish.yml`) with stable releases.
+- **What a package holds** (amended 2026-11-03): only `out/`. electron-vite
+  bundles the main process's dependencies like the renderer's, so no
+  `node_modules` ship; the app archive went from 61 MB to 14 MB. Each
+  bundle's `licenses.md` keeps the bundled packages' license notices.
 - Every release asset is listed in `SHA256SUMS`, covered by a build provenance
   attestation (`actions/attest-build-provenance`), and accompanied by a
   CycloneDX SBOM.

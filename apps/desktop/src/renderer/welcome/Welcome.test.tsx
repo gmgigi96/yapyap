@@ -2,7 +2,7 @@
 import { cleanup, fireEvent, render, screen } from '@testing-library/preact';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { fakeChromeApi } from '../../../test/chrome-api.ts';
-import type { ChromeApi, SettingsSnapshot } from '../../shared/chrome-api.ts';
+import type { ChromeApi, SettingsSnapshot } from '../../shared/api/chrome-api.ts';
 import { Welcome } from './Welcome.tsx';
 
 const SNAPSHOT: SettingsSnapshot = {
@@ -14,7 +14,6 @@ const SNAPSHOT: SettingsSnapshot = {
   },
   restartPending: false,
   problems: {},
-  unavailable: {},
 };
 
 function setup(get: () => Promise<SettingsSnapshot> = () => Promise.resolve(SNAPSHOT)) {

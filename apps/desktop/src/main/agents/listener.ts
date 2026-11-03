@@ -1,7 +1,7 @@
-import { createServer, type IncomingMessage, type ServerResponse } from 'node:http';
+import { createServer, type IncomingMessage, type Server, type ServerResponse } from 'node:http';
 import type { AddressInfo } from 'node:net';
 import type { AgentAnswer, AgentRequest } from './handler.ts';
-import { MAX_BODY_BYTES, refusalOf, type ArrivingRequest } from './request-checks.ts';
+import { MAX_BODY_BYTES, refusalOf, TOO_LARGE, type ArrivingRequest } from './request-checks.ts';
 
 /** The only address YapYap listens on: this computer, never the network (ADR 0019). */
 export const AGENT_HOST = '127.0.0.1';
@@ -53,10 +53,20 @@ async function handle(
   }
   const body = await bodyOf(request);
   if (body === undefined) {
-    reply(response, { status: 413, headers: { connection: 'close' }, body: '' });
+    reply(response, { status: TOO_LARGE, headers: { connection: 'close' }, body: '' });
     return;
   }
   reply(response, await answer({ ...arriving(request), body }));
+}
+
+/** Closes the server, cutting the connections agents keep open. */
+function closing(server: Server): Promise<void> {
+  return new Promise((closed) => {
+    server.closeAllConnections();
+    server.close(() => {
+      closed();
+    });
+  });
 }
 
 /**
@@ -79,16 +89,10 @@ export function listenForAgents(
   server.headersTimeout = REQUEST_MS;
   return new Promise((resolve, reject) => {
     server.once('error', reject);
-    server.listen({ host: AGENT_HOST, port, exclusive: true }, () => {
+    server.listen({ host: AGENT_HOST, exclusive: true, port }, () => {
       resolve({
         port: (server.address() as AddressInfo).port,
-        close: () =>
-          new Promise((closed) => {
-            server.closeAllConnections();
-            server.close(() => {
-              closed();
-            });
-          }),
+        close: () => closing(server),
       });
     });
   });

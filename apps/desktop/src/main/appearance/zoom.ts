@@ -1,5 +1,5 @@
 import type { Settings } from '../settings/schema.ts';
-import type { SettingsService } from '../settings/service.ts';
+import { followSettings, type SettingsService } from '../settings/service.ts';
 
 export type ZoomStep = 'in' | 'out' | 'reset';
 
@@ -44,8 +44,7 @@ export function followZoomSetting(
   const apply = (current: Settings): void => {
     contents.setZoomFactor(current.appearance.zoom);
   };
-  apply(settings.current());
-  settings.onChange(apply);
+  followSettings(settings, apply);
   contents.on('did-finish-load', () => {
     apply(settings.current());
   });

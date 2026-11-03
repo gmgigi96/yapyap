@@ -1,5 +1,5 @@
 import { Wllama, WllamaAbortError, type ChatCompletionMessage } from '@wllama/wllama/esm/index.js';
-import type { EngineFailure, EngineTurn } from '../../shared/engine-api.ts';
+import type { EngineFailure, EngineTurn } from '../../shared/api/engine-api.ts';
 
 /** What the engine wrote, and whether it stopped at its length limit. */
 interface EngineReply {

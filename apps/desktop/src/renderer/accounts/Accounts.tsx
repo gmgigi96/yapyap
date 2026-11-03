@@ -5,7 +5,7 @@ import type {
   AccountList,
   AccountSummary,
   ChromeApi,
-} from '../../shared/chrome-api.ts';
+} from '../../shared/api/chrome-api.ts';
 import { en } from '../../shared/messages/en.ts';
 import { isProxyAddress } from '../../shared/proxy-address.ts';
 import { DiscardPrompt } from '../shared/discard.tsx';

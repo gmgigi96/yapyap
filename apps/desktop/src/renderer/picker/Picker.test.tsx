@@ -2,7 +2,7 @@
 import { cleanup, fireEvent, render, screen } from '@testing-library/preact';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { fakeChromeApi } from '../../../test/chrome-api.ts';
-import type { PickerOffer } from '../../shared/chrome-api.ts';
+import type { PickerOffer } from '../../shared/api/chrome-api.ts';
 import { cancelOnEscape, Picker } from './Picker.tsx';
 
 const OFFER: PickerOffer = {

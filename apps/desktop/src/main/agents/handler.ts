@@ -32,6 +32,9 @@ export interface AgentHandlerDependencies {
 /** Headers the SDK reads; nothing else of the request reaches it. */
 const PASSED_HEADERS = ['content-type', 'accept', 'mcp-protocol-version'];
 
+const UNAUTHORIZED = 401;
+const TOO_MANY = 429;
+
 const bare = (status: number, headers: Record<string, string> = {}): AgentAnswer => ({
   status,
   headers,
@@ -48,8 +51,8 @@ function sdkRequest(request: AgentRequest, port: number): Request {
   }
   return new Request(`http://127.0.0.1:${String(port)}/mcp`, {
     method: 'POST',
-    headers,
     body: request.body,
+    headers,
   });
 }
 
@@ -78,14 +81,10 @@ async function serve(
     return server;
   });
   const response = await handler.fetch(sdkRequest(request, port));
+  const type = response.headers.get('content-type');
   return {
     status: response.status,
-    headers: Object.fromEntries(
-      ['content-type'].flatMap((name) => {
-        const value = response.headers.get(name);
-        return value === null ? [] : [[name, value]];
-      }),
-    ),
+    headers: type === null ? {} : { 'content-type': type },
     body: await response.text(),
   };
 }
@@ -106,15 +105,15 @@ export async function answerAgent(
     return bare(refusal.status);
   }
   if (deps.lock.locked()) {
-    return bare(429);
+    return bare(TOO_MANY);
   }
   const token = deps.tokens.verify(bearerOf(request) ?? '');
   if (token === undefined) {
     deps.lock.failed();
-    return bare(401, { 'www-authenticate': 'Bearer' });
+    return bare(UNAUTHORIZED, { 'www-authenticate': 'Bearer' });
   }
   if (!deps.counter.take(`${token.id}:calls`, token.limits.callsPerMinute, MINUTE_MS)) {
-    return bare(429);
+    return bare(TOO_MANY);
   }
   return serve(request, port, token, deps);
 }

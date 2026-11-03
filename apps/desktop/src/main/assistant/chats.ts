@@ -2,7 +2,7 @@ import { createHash } from 'node:crypto';
 import { Type } from 'typebox';
 import { Value } from 'typebox/value';
 import type { SecretStore } from '../secrets/secret-store.ts';
-import type { TextFile } from '../atomic-write.ts';
+import { readChecked, type TextFile } from '../support/atomic-write.ts';
 
 const UUID = '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$';
 const FORMAT_VERSION = 1;
@@ -52,49 +52,29 @@ export interface AllowedChats {
 }
 
 function readChats(file: TextFile): Map<string, string[]> {
-  try {
-    const value: unknown = JSON.parse(file.read());
-    return Value.Check(ChatsSchema, value)
-      ? new Map(Object.entries(value.accounts).map(([account, ids]) => [account, [...ids]]))
-      : new Map<string, string[]>();
-  } catch {
-    return new Map<string, string[]>();
-  }
+  const accounts = readChecked(file, ChatsSchema)?.accounts ?? {};
+  return new Map(Object.entries(accounts).map(([account, ids]) => [account, [...ids]]));
 }
 
 /** Where a chat's encrypted name is kept among YapYap's secrets. */
 const NAMES = 'assistant/chat/';
 const nameKey = (account: string, id: string): string => `${NAMES}${account}/${id}`;
 
-/** The chats in memory, and how to save them. */
-interface Kept {
-  readonly chats: Map<string, string[]>;
-  readonly save: () => void;
-  readonly names: Pick<SecretStore, 'get' | 'set' | 'forgetAll'>;
-}
+type Names = Pick<SecretStore, 'get' | 'set' | 'forgetAll'>;
 
-function keptIn(file: TextFile, warn: (message: string) => void): Omit<Kept, 'names'> {
-  const chats = readChats(file);
-  return {
-    chats,
-    save: () => {
-      const text = JSON.stringify({ version: FORMAT_VERSION, accounts: Object.fromEntries(chats) });
-      try {
-        file.write(`${text}\n`);
-      } catch {
-        warn('Could not save the chats the assistant may read.');
-      }
-    },
+/** Writes the chats to `file`, keeping them for this run when it cannot. */
+const saver =
+  (file: TextFile, chats: Map<string, string[]>, warn: (message: string) => void) => (): void => {
+    const text = JSON.stringify({ version: FORMAT_VERSION, accounts: Object.fromEntries(chats) });
+    try {
+      file.write(`${text}\n`);
+    } catch {
+      warn('Could not save the chats the assistant may read.');
+    }
   };
-}
-
-function add({ chats }: Kept, account: string, ids: readonly string[]): void {
-  const kept = (chats.get(account) ?? []).filter((id) => !ids.includes(id));
-  chats.set(account, [...kept, ...ids].slice(-MAX_ALLOWED));
-}
 
 /** Each account's chats, with the names the keychain kept for them. */
-const listOf = ({ chats, names }: Kept): Promise<AllowedInAccount[]> =>
+const listOf = (chats: Map<string, string[]>, names: Names): Promise<AllowedInAccount[]> =>
   Promise.all(
     [...chats].map(async ([account, ids]) => ({
       account,
@@ -115,25 +95,24 @@ const listOf = ({ chats, names }: Kept): Promise<AllowedInAccount[]> =>
  */
 export function allowedChats(
   file: TextFile,
-  names: Pick<SecretStore, 'get' | 'set' | 'forgetAll'>,
+  names: Names,
   warn: (message: string) => void,
 ): AllowedChats {
-  const kept: Kept = { ...keptIn(file, warn), names };
-  const { chats, save } = kept;
+  const chats = readChats(file);
+  const save = saver(file, chats, warn);
+  const without = (account: string, id: string): string[] =>
+    (chats.get(account) ?? []).filter((entry) => entry !== id);
   return {
     isAllowed: (account, name) => chats.get(account)?.includes(chatId(name)) === true,
     allow: async (account, name) => {
       const id = chatId(name);
-      add(kept, account, [id]);
+      chats.set(account, [...without(account, id), id].slice(-MAX_ALLOWED));
       save();
       // Where the system cannot keep it safely, the name is not kept at all.
       await names.set(nameKey(account, id), name).catch(() => false);
     },
     forget: (account, id) => {
-      chats.set(
-        account,
-        (chats.get(account) ?? []).filter((entry) => entry !== id),
-      );
+      chats.set(account, without(account, id));
       save();
       void names.set(nameKey(account, id), undefined);
     },
@@ -142,6 +121,6 @@ export function allowedChats(
       save();
       names.forgetAll(`${NAMES}${account}/`);
     },
-    list: () => listOf(kept),
+    list: () => listOf(chats, names),
   };
 }

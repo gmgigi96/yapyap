@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
-import { DEFAULT_AGENT_LIMITS, type AgentTokenView } from '../../shared/agents-api.ts';
+import { DEFAULT_AGENT_LIMITS, type AgentTokenView } from '../../shared/api/agents-api.ts';
 import { chatId } from '../assistant/chats.ts';
 import type { ChromeHandler } from '../ipc/chrome.ts';
 import { agentsHandlers, type AgentsSettingsDependencies } from './settings-handlers.ts';

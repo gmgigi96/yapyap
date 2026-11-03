@@ -1,7 +1,7 @@
 import { randomUUID } from 'node:crypto';
 import { existsSync, readdirSync, readFileSync, rmSync } from 'node:fs';
 import { join } from 'node:path';
-import { writeTextAtomically } from '../atomic-write.ts';
+import { writeTextAtomically } from '../support/atomic-write.ts';
 import {
   accountIdsInPartitions,
   parseAccounts,

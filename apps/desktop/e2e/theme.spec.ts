@@ -1,25 +1,12 @@
-import type { ElectronApplication, Page } from '@playwright/test';
+import type { Page } from '@playwright/test';
+import { openFromMenu } from './chrome-helpers.ts';
 import { expect, test, whatsAppPage } from './fixtures.ts';
-
-async function openChrome(app: ElectronApplication, label: string, page: string): Promise<Page> {
-  await whatsAppPage(app);
-  const opened = app.waitForEvent('window');
-  await app.evaluate(({ Menu }, wanted) => {
-    Menu.getApplicationMenu()
-      ?.items.flatMap((menu) => menu.submenu?.items ?? [])
-      .find((entry) => entry.label === wanted)
-      ?.click();
-  }, label);
-  const window = await opened;
-  await window.waitForURL(`app://chrome/${page}`);
-  return window;
-}
 
 const prefersDark = (page: Page) =>
   page.evaluate(() => matchMedia('(prefers-color-scheme: dark)').matches);
 
 test('switches YapYap and WhatsApp between themes live', async ({ app, window }) => {
-  const settings = await openChrome(app, 'Settings…', 'settings.html');
+  const settings = await openFromMenu(app, 'Settings…', 'settings.html');
   await settings.getByRole('radio', { name: 'Dark', exact: true }).check();
   await expect.poll(() => prefersDark(window)).toBe(true);
   await expect.poll(() => prefersDark(settings)).toBe(true);
@@ -29,7 +16,7 @@ test('switches YapYap and WhatsApp between themes live', async ({ app, window })
 });
 
 test('turns transitions off for people who prefer reduced motion', async ({ app }) => {
-  const settings = await openChrome(app, 'Settings…', 'settings.html');
+  const settings = await openFromMenu(app, 'Settings…', 'settings.html');
   const duration = () =>
     settings
       .locator('button, .notice')
@@ -48,17 +35,17 @@ for (const theme of ['light', 'dark'] as const) {
     await app.evaluate(({ nativeTheme }, source) => {
       nativeTheme.themeSource = source;
     }, theme);
-    const about = await openChrome(app, 'About YapYap', 'about.html');
+    const about = await openFromMenu(app, 'About YapYap', 'about.html');
     await expect(about.getByRole('heading', { name: 'YapYap' })).toBeVisible();
     // Versions change with every dependency update; the layout is what matters.
     // Soft, so one run reports every changed screenshot, not just the first.
     await expect
       .soft(about)
       .toHaveScreenshot(`about-${theme}.png`, { mask: [about.locator('dl')] });
-    const settings = await openChrome(app, 'Settings…', 'settings.html');
+    const settings = await openFromMenu(app, 'Settings…', 'settings.html');
     await expect(settings.getByRole('group', { name: 'Theme' })).toBeVisible();
     await expect.soft(settings).toHaveScreenshot(`settings-${theme}.png`);
-    const accounts = await openChrome(app, 'Manage Accounts…', 'accounts.html');
+    const accounts = await openFromMenu(app, 'Manage Accounts…', 'accounts.html');
     await expect(accounts.getByLabel('Name')).toHaveValue('WhatsApp');
     await expect.soft(accounts).toHaveScreenshot(`accounts-${theme}.png`);
   });

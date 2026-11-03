@@ -1,17 +1,20 @@
 import type { ElectronApplication, Page } from '@playwright/test';
 import { expect, test } from '@playwright/test';
-import { mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
-import { tmpdir } from 'node:os';
-import { join } from 'node:path';
-import { startFakeWhatsApp } from '../fake-whatsapp-server.ts';
-import { launchApp, whatsAppPage } from '../fixtures.ts';
-import { median } from './measure.ts';
+import { writeFile } from 'node:fs/promises';
+import { chromePage, clickMenu } from '../chrome-helpers.ts';
+import { whatsAppPage } from '../fixtures.ts';
+import {
+  budgetHere,
+  cpuPercentSince,
+  median,
+  memoryMb,
+  onFreshProfile,
+  settle,
+} from './measure.ts';
 
 const RUNS = 3;
 /** Rounds of use per launch: enough for a leak per round to add up past the noise. */
 const ROUNDS = 15;
-/** Long enough for start-up work to finish and memory to settle. */
-const SETTLE_MS = 10_000;
 
 interface Budget {
   readonly activityGrowthMb: number;
@@ -25,15 +28,6 @@ interface ActivitySample {
   readonly activityMainCpuPercent: number;
 }
 
-const settle = () => new Promise((resolve) => setTimeout(resolve, SETTLE_MS));
-
-const memoryMb = async (app: ElectronApplication): Promise<number> =>
-  Math.round(
-    (await app.evaluate(({ app: electronApp }) =>
-      electronApp.getAppMetrics().reduce((sum, metric) => sum + metric.memory.workingSetSize, 0),
-    )) / 1024,
-  );
-
 /** CPU seconds the main process has used, cumulative for the reason `accounts.spec.ts` gives. */
 const mainCpuSeconds = (app: ElectronApplication): Promise<number> =>
   app.evaluate(
@@ -41,23 +35,6 @@ const mainCpuSeconds = (app: ElectronApplication): Promise<number> =>
       electronApp.getAppMetrics().find((entry) => entry.type === 'Browser')?.cpu
         .cumulativeCPUUsage ?? 0,
   );
-
-const clickMenu = (app: ElectronApplication, label: string): Promise<void> =>
-  app.evaluate(({ Menu }, wanted) => {
-    Menu.getApplicationMenu()
-      ?.items.flatMap((menu) => menu.submenu?.items ?? [])
-      .find((entry) => entry.label === wanted)
-      ?.click();
-  }, label);
-
-const pageAt = async (app: ElectronApplication, suffix: string): Promise<Page> => {
-  await expect.poll(() => app.windows().some((page) => page.url().endsWith(suffix))).toBe(true);
-  const page = app.windows().find((candidate) => candidate.url().endsWith(suffix));
-  if (page === undefined) {
-    throw new Error(`No page at ${suffix}.`);
-  }
-  return page;
-};
 
 /**
  * One round of everyday use: show each account in turn, let each one
@@ -73,7 +50,7 @@ async function round(app: ElectronApplication, sidebar: Page): Promise<void> {
   }
   // By URL: a page the second account opens late could otherwise pass for the new window.
   await clickMenu(app, 'Settings…');
-  const settings = await pageAt(app, '/settings.html');
+  const settings = await chromePage(app, '/settings.html');
   await settings.getByRole('heading', { name: 'Settings' }).waitFor();
   await settings.close();
   await expect
@@ -82,14 +59,11 @@ async function round(app: ElectronApplication, sidebar: Page): Promise<void> {
 }
 
 /** One launch with two accounts: memory before and after the rounds, and the main process's CPU. */
-async function measureActivity(): Promise<ActivitySample> {
-  const fake = await startFakeWhatsApp();
-  const profile = await mkdtemp(join(tmpdir(), 'yapyap-bench-'));
-  const app = await launchApp(fake.origin, profile);
-  try {
+function measureActivity(): Promise<ActivitySample> {
+  return onFreshProfile(async (app) => {
     await (await whatsAppPage(app)).getByTestId('fake-whatsapp').waitFor({ state: 'visible' });
     await clickMenu(app, 'Add Account');
-    const sidebar = await pageAt(app, '/sidebar.html');
+    const sidebar = await chromePage(app, '/sidebar.html');
     // The fake page wires its buttons once loaded; a first round does that for both accounts.
     await round(app, sidebar);
     await settle();
@@ -99,29 +73,18 @@ async function measureActivity(): Promise<ActivitySample> {
     for (let done = 0; done < ROUNDS; done += 1) {
       await round(app, sidebar);
     }
-    const used = (await mainCpuSeconds(app)) - cpuBefore;
-    const percent = (used / ((performance.now() - started) / 1000)) * 100;
+    const activityMainCpuPercent = cpuPercentSince(
+      (await mainCpuSeconds(app)) - cpuBefore,
+      started,
+    );
     await settle();
-    return {
-      activityGrowthMb: (await memoryMb(app)) - before,
-      activityMainCpuPercent: Math.round(percent * 10) / 10,
-    };
-  } finally {
-    await app.close();
-    await fake.close();
-    await rm(profile, { recursive: true, force: true });
-  }
+    return { activityGrowthMb: (await memoryMb(app)) - before, activityMainCpuPercent };
+  });
 }
 
 test('stays within the memory growth and main-process CPU budgets in use', async ({}, testInfo) => {
   test.setTimeout((RUNS + 1) * 120_000);
-  const budgets = JSON.parse(
-    await readFile(join(import.meta.dirname, 'budgets.json'), 'utf8'),
-  ) as Record<string, Budget | undefined>;
-  const budget = budgets[process.platform];
-  if (budget === undefined) {
-    throw new Error(`No budget for ${process.platform}`);
-  }
+  const budget = await budgetHere<Budget>();
   const samples: ActivitySample[] = [];
   for (let run = 0; run < RUNS; run += 1) {
     samples.push(await measureActivity());

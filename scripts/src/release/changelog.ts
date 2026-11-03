@@ -1,3 +1,5 @@
+import { githubHeaders } from './releases.ts';
+
 const ENTRY = /^\* (.+?) (\(\[.*)$/;
 const PULL_REQUEST = /\(\[#\d+\]\(https:\/\/github\.com\/[\w.-]+\/[\w.-]+\/issues\/\d+\)\)/;
 const CLOSES = /, closes (.+)$/;
@@ -76,7 +78,7 @@ export function githubApi(
     graphql: async (query, variables) => {
       const response = await fetcher('https://api.github.com/graphql', {
         method: 'POST',
-        headers: { accept: 'application/vnd.github+json', authorization: `Bearer ${token}` },
+        headers: githubHeaders(token),
         body: JSON.stringify({ query, variables }),
       });
       const answer = (await response.json()) as { data?: unknown; errors?: unknown[] };

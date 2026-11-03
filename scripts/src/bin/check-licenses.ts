@@ -5,5 +5,5 @@ const report: unknown = JSON.parse(
   execFileSync('pnpm', ['licenses', 'list', '--json'], { encoding: 'utf8' }),
 );
 const violations = findViolations(report);
-console.log(formatReport(violations));
+console.info(formatReport(violations));
 process.exitCode = Number(violations.length > 0);

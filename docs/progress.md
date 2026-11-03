@@ -244,7 +244,7 @@ title, escape })` (`src/renderer/shared/mount.tsx`), which titles the
   preload hears its events through one typed `listen`.
 
 - State files (#527): every small state file is a `TextFile` from
-  `textFileAt` (`main/atomic-write.ts`), written atomically; the extension
+  `textFileAt` (`main/support/atomic-write.ts`), written atomically; the extension
   records use `writeTextAtomicallyAsync`.
 
 - UI wording (#528): buttons in YapYap's windows use title case, like its
@@ -368,3 +368,16 @@ title, escape })` (`src/renderer/shared/mount.tsx`), which titles the
 - Install page button (#579): the download button carries its own styles,
   so it shows as a button on the install page too, not only on the home
   page.
+- SonarQube Cloud on forks (#591, ADR 0010): a run without the token, as
+  for pull requests from forks, fails instead of passing, and the ruleset
+  requires SonarQube Cloud's own check. A fork's branch is pushed here to
+  be analyzed (CONTRIBUTING).
+- Codebase cleanup (#592): the same jobs are done the same way across
+  files, with shared helpers for environment variables, small JSON stores,
+  pauses and following a setting, and one fake settings service for tests.
+  Dead code and leftovers of the removed extensions and quick access panel
+  are gone, the MCP server's SonarQube Cloud issues are fixed, and mutation
+  testing covers the moved security and window modules again. Each feature
+  keeps its window handlers in its own folder, `src/main/` holds only
+  `index.ts` beside its folders, the process contracts sit in
+  `src/shared/api/`, and `AGENTS.md` links to `CLAUDE.md`.

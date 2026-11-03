@@ -95,12 +95,17 @@ export const later = (ms: number, run: () => void): (() => void) => {
   };
 };
 
+/** Where the bar's view goes once the accounts are open. */
+interface ViewSlot {
+  current?: AssistantBarView;
+}
+
 /** The bar, which shows itself through the view it is given once the accounts are open. */
 function barOf(
   deps: AssistantChromeDependencies,
   core: AssistantCore,
   models: PrivateModels,
-  view: { current?: AssistantBarView },
+  view: ViewSlot,
 ): AssistantBar {
   return createAssistantBar({
     ...deps.sources,
@@ -123,7 +128,7 @@ function barOf(
 function menuActions(
   deps: AssistantChromeDependencies,
   bar: AssistantBar,
-  view: { current?: AssistantBarView },
+  view: ViewSlot,
 ): AssistantChrome['actions'] {
   const run = (action: () => Promise<void>) => async (): Promise<void> => {
     if (!deps.settings.current().assistant.enabled) {
@@ -172,7 +177,7 @@ export function createAssistantChrome(deps: AssistantChromeDependencies): Assist
     engine,
     list: keptModels(),
   });
-  const view: { current?: AssistantBarView } = {};
+  const view: ViewSlot = {};
   const bar = barOf(deps, core, models, view);
   const { refresh, modelChanged } = followers(deps, bar);
   settings.onChange(refresh);

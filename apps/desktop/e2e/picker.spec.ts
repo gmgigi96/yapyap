@@ -1,5 +1,5 @@
 import type { ElectronApplication, Page } from '@playwright/test';
-import { expect, test } from './fixtures.ts';
+import { expect, quitApp, test } from './fixtures.ts';
 
 test.skip(process.platform === 'darwin', 'macOS uses its own system picker');
 
@@ -78,12 +78,5 @@ test('denies the request when the user closes the picker with Escape', async ({ 
 
 test('quits cleanly while the picker is open', async ({ app, window }) => {
   await requestShare(app, window);
-  const exited = new Promise((resolve) => app.process().once('exit', resolve));
-  // Quits after answering, so the call returns before the app goes away.
-  await app.evaluate(({ app: electronApp }) => {
-    setTimeout(() => {
-      electronApp.quit();
-    });
-  });
-  await exited;
+  await quitApp(app);
 });

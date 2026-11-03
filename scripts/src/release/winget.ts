@@ -3,6 +3,7 @@ import {
   channelsOf,
   checkSchema,
   download,
+  packageName,
   releaseNotesUrl,
   type DistributionRelease,
 } from './distribution.ts';
@@ -86,7 +87,7 @@ function defaultLocale(channel: Channel, release: DistributionRelease): Manifest
     PublisherSupportUrl: 'https://github.com/vascoguita/yapyap/issues',
     PrivacyUrl: 'https://yapyap.guita.org/privacy',
     Author: ABOUT.author,
-    PackageName: beta ? `${ABOUT.name} Beta` : ABOUT.name,
+    PackageName: packageName(channel),
     PackageUrl: ABOUT.homepage,
     License: ABOUT.license,
     LicenseUrl: 'https://github.com/vascoguita/yapyap/blob/master/LICENSE',

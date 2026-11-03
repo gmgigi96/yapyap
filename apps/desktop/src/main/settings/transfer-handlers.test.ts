@@ -1,22 +1,12 @@
 import { describe, expect, it, vi } from 'vitest';
 import type { ChromeHandler } from '../ipc/chrome.ts';
+import { fakeSettings } from '../../../test/fake-settings.ts';
 import { defaultSettings } from './decode.ts';
-import type { Settings } from './schema.ts';
-import type { SettingsService } from './service.ts';
 import { settingsTransferHandlers, type SettingsFiles } from './transfer-handlers.ts';
 import { exportSettings, SETTINGS_EXPORT_FORMAT } from './transfer.ts';
 
 function setup() {
-  let settings = defaultSettings();
-  const service: SettingsService = {
-    current: () => settings,
-    notice: undefined,
-    firstRun: false,
-    update: vi.fn((change: (current: Settings) => Settings) => {
-      settings = change(settings);
-    }),
-    onChange: vi.fn(),
-  };
+  const service = fakeSettings();
   const files = {
     chooseExport: vi.fn<SettingsFiles['chooseExport']>(() => Promise.resolve('/home/me/out.json')),
     chooseImport: vi.fn<SettingsFiles['chooseImport']>(() => Promise.resolve('/home/me/in.json')),
@@ -37,7 +27,7 @@ function setup() {
     service,
     files,
     owner,
-    settings: () => settings,
+    settings: service.current,
     exporting: find('settings:export'),
     importing: find('settings:import'),
     run: (handler: ChromeHandler) => handler.handle({ sender: owner }),

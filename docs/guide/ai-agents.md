@@ -10,7 +10,7 @@ computer: nothing on the network can connect to it.
 
 ## Turn it on
 
-1. Open **Settings › Agents**.
+1. Open **Settings → Agents**.
 2. Turn on **Let AI agents connect**. YapYap shows the address agents
    connect to, such as `http://127.0.0.1:51234/mcp`. It keeps the same
    port from then on. If another program uses it, choose **Pick Another
@@ -36,7 +36,7 @@ number (`+44 7700 900123`), or both, then choose **Add**. **Use the Open
 Chat** fills in the name of the chat open in YapYap.
 
 Give a number when you can: with it, the agent opens the chat wherever it
-is in WhatsApp, archived included, through the same link as **New Chat**.
+is in WhatsApp, archived included, through the same link as **New Chat with Number…**.
 It reloads WhatsApp, so it takes a few seconds. With a name too, the agent
 can find the chat when you ask it about that person, such as "send Vasco
 a message".
@@ -88,7 +88,7 @@ By default YapYap notifies you each time an agent sends.
 
 ## Stay in control
 
-- **Recent activity** in Settings › Agents lists what agents did since
+- **Recent activity** in Settings → Agents lists what agents did since
   YapYap started: when, which token, which tool, in which account, and how
   it went. It never keeps what they read or wrote.
 - Take a scope, account or chat away from a token with its **×**, or

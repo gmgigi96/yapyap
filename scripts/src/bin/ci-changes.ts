@@ -11,4 +11,4 @@ const changed =
 const { code, packaging } = changeScope(changed.split('\n'));
 const outputs = `code=${String(code)}\npackaging=${packaging}\n`;
 appendFileSync(process.env['GITHUB_OUTPUT'] ?? '/dev/stdout', outputs);
-console.log(outputs.trim());
+console.info(outputs.trim());

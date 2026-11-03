@@ -8,6 +8,8 @@ export const ACCOUNT_COLORS = ['green', 'blue', 'purple', 'orange', 'red', 'teal
 
 /** The longest account name, which still fits the menu and the sidebar. */
 export const MAX_ACCOUNT_NAME = 40;
+/** The most accounts `accounts.json` holds. */
+export const MAX_ACCOUNTS = 32;
 
 const UUID = '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$';
 const PARTITION_PREFIX = 'account-';
@@ -17,16 +19,9 @@ const AccountSchema = Type.Object(
   {
     id: Type.String({ pattern: UUID }),
     name: Type.String({ minLength: 1, maxLength: MAX_ACCOUNT_NAME }),
-    color: Type.Union([
-      Type.Literal('green'),
-      Type.Literal('blue'),
-      Type.Literal('purple'),
-      Type.Literal('orange'),
-      Type.Literal('red'),
-      Type.Literal('teal'),
-    ]),
+    color: Type.Enum(ACCOUNT_COLORS),
     enabled: Type.Boolean(),
-    // Optional, so files written before muting existed stay valid (#61).
+    // Absent until the user first mutes or unmutes the account (#61).
     muted: Type.Optional(Type.Boolean()),
     // The account's own proxy; absent or empty uses Settings → Network (#76).
     proxy: Type.Optional(Type.String({ maxLength: MAX_PROXY_ADDRESS, pattern: PROXY_ADDRESS })),
@@ -37,18 +32,18 @@ const AccountSchema = Type.Object(
 const AccountsSchema = Type.Object(
   {
     version: Type.Literal(FORMAT_VERSION),
-    accounts: Type.Array(AccountSchema, { minItems: 1, maxItems: 32 }),
+    accounts: Type.Array(AccountSchema, { minItems: 1, maxItems: MAX_ACCOUNTS }),
     active: Type.String({ pattern: UUID }),
   },
   { additionalProperties: false },
 );
 
 export type Account = Static<typeof AccountSchema>;
+export type Accounts = Static<typeof AccountsSchema>;
 
 export function isAccountColor(value: unknown): value is Account['color'] {
   return (ACCOUNT_COLORS as readonly unknown[]).includes(value);
 }
-export type Accounts = Static<typeof AccountsSchema>;
 
 /**
  * Each account's own persistent session (ADR 0001): cookies, storage,
@@ -73,11 +68,12 @@ export function colorFor(position: number): Account['color'] {
 }
 
 /** The first account is just WhatsApp; later ones are numbered, so they tell apart. */
-export function defaultName(position: number): string {
+function defaultName(position: number): string {
   return position === 1 ? en.accounts.defaultName : en.accounts.numberedName({ position });
 }
 
-function newAccount(id: string, position: number): Account {
+/** A new account at `position`, with its default name and color. */
+export function newAccount(id: string, position: number): Account {
   return { id, name: defaultName(position), color: colorFor(position), enabled: true };
 }
 

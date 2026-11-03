@@ -1,4 +1,4 @@
-import type { ProxyLoginAnswer, ProxyLoginRequest } from '../../shared/chrome-api.ts';
+import type { ProxyLoginAnswer, ProxyLoginRequest } from '../../shared/api/chrome-api.ts';
 import type { SecretStore } from '../secrets/secret-store.ts';
 
 /** The part of Electron's `login` event `authInfo` that matters here. */
@@ -10,12 +10,10 @@ export interface AuthInfo {
 
 export type LoginCallback = (username?: string, password?: string) => void;
 
-type ProxyCredentials = ProxyLoginAnswer;
-
 export interface ProxyLoginDependencies {
   readonly secrets: Pick<SecretStore, 'canKeep' | 'get' | 'set'>;
   /** Asks the user; undefined when they cancel. */
-  readonly ask: (request: ProxyLoginRequest) => Promise<ProxyCredentials | undefined>;
+  readonly ask: (request: ProxyLoginRequest) => Promise<ProxyLoginAnswer | undefined>;
   readonly now: () => number;
 }
 
@@ -30,11 +28,11 @@ const secretName = (info: AuthInfo): string => `proxy:${info.host}:${String(info
 async function saved(
   secrets: Pick<SecretStore, 'get'>,
   name: string,
-): Promise<ProxyCredentials | undefined> {
+): Promise<ProxyLoginAnswer | undefined> {
   try {
     const parsed = JSON.parse(
       (await secrets.get(name)) ?? 'null',
-    ) as Partial<ProxyCredentials> | null;
+    ) as Partial<ProxyLoginAnswer> | null;
     return typeof parsed?.username === 'string' && typeof parsed.password === 'string'
       ? { username: parsed.username, password: parsed.password, remember: true }
       : undefined;

@@ -47,13 +47,6 @@ export class RequestRefused extends TypeError {
   }
 }
 
-function addressOf(input: string | URL | Request): string {
-  if (input instanceof Request) {
-    return input.url;
-  }
-  return input instanceof URL ? input.href : input;
-}
-
 /**
  * The assistant's `fetch`: refuses what {@link assistantMayReach} does not
  * allow before anything is sent, and sends no cookies and keeps no cache.
@@ -64,11 +57,11 @@ export function confinedFetch(
   allowed: (address: string) => boolean,
 ): typeof globalThis.fetch {
   return (input, init) => {
-    if (!allowed(addressOf(input))) {
-      return Promise.reject(new RequestRefused());
-    }
     // Electron's `fetch` takes no URL object.
     const target = input instanceof URL ? input.href : input;
+    if (!allowed(target instanceof Request ? target.url : target)) {
+      return Promise.reject(new RequestRefused());
+    }
     return fetch(target, { ...init, credentials: 'omit', cache: 'no-store' });
   };
 }

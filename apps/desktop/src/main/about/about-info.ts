@@ -1,4 +1,4 @@
-import type { AboutInfo } from '../../shared/chrome-api.ts';
+import type { AboutInfo } from '../../shared/api/chrome-api.ts';
 import { PRODUCT_NAME } from '../identity/product.ts';
 
 export interface RuntimeFacts {

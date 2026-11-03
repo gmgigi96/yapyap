@@ -1,7 +1,7 @@
 import type { JSX } from 'preact';
-import { useEffect, useState } from 'preact/hooks';
-import type { AboutInfo, ChromeApi } from '../../shared/chrome-api.ts';
+import type { AboutInfo, ChromeApi } from '../../shared/api/chrome-api.ts';
 import { en } from '../../shared/messages/en.ts';
+import { useActionStatus, useLoaded } from '../shared/hooks.ts';
 
 const text = en.about;
 
@@ -14,9 +14,6 @@ export const LINKS = [
 ] as const;
 
 export const SUPPORTER = { name: 'Ensita', href: 'https://www.ensita.org/' } as const;
-
-type Load =
-  { readonly state: 'loading' | 'failed' } | { readonly state: 'ready'; readonly info: AboutInfo };
 
 function Details({ info }: { readonly info: AboutInfo }): JSX.Element {
   const rows: readonly (readonly [string, string])[] = [
@@ -54,49 +51,24 @@ function Links(): JSX.Element {
   );
 }
 
-function useAboutInfo(api: ChromeApi): Load {
-  const [load, setLoad] = useState<Load>({ state: 'loading' });
-  useEffect(() => {
-    api.about.info().then(
-      (info) => {
-        setLoad({ state: 'ready', info });
-      },
-      () => {
-        setLoad({ state: 'failed' });
-      },
-    );
-  }, [api]);
-  return load;
-}
-
-function useCopy(api: ChromeApi): readonly [string, () => void] {
-  const [status, setStatus] = useState('');
-  const copy = (): void => {
-    api.about.copyTechnicalDetails().then(
-      () => {
-        setStatus(text.copied);
-      },
-      () => {
-        setStatus(text.copyFailed);
-      },
-    );
-  };
-  return [status, copy];
-}
-
 export function About({ api }: { readonly api: ChromeApi }): JSX.Element {
-  const load = useAboutInfo(api);
-  const [copyStatus, copy] = useCopy(api);
+  const info = useLoaded(api.about.info);
+  const [copyStatus, run] = useActionStatus(text.copyFailed);
   return (
     <main>
       <img src="./icon.svg" alt="" width={96} height={96} />
       <h1>{text.title}</h1>
-      {load.state === 'ready' ? (
-        <Details info={load.info} />
+      {info == null ? (
+        <p>{info === undefined ? en.common.loading : text.unavailable}</p>
       ) : (
-        <p>{load.state === 'loading' ? en.common.loading : text.unavailable}</p>
+        <Details info={info} />
       )}
-      <button type="button" onClick={copy}>
+      <button
+        type="button"
+        onClick={() => {
+          run(api.about.copyTechnicalDetails, text.copied);
+        }}
+      >
         {text.copyDetails}
       </button>
       <output>{copyStatus}</output>

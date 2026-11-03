@@ -2,7 +2,7 @@ import { activeChatReader, parseActiveChat, type ReadChat } from '../../adapter/
 import { runInAdapterWorld, type AdapterPage } from '../../adapter/world.ts';
 import {
   parseUnreadSummary,
-  unreadSummaryReader,
+  UNREAD_SUMMARY,
   type UnreadSummaryChat,
 } from '../../adapter/unread-summary.ts';
 
@@ -27,7 +27,7 @@ export async function readOpenChat(page: AdapterPage, messages: number): Promise
  * it is chat content, so it is never logged.
  */
 export async function readUnreadChats(page: AdapterPage): Promise<readonly UnreadSummaryChat[]> {
-  const found = await runInAdapterWorld(page, unreadSummaryReader());
+  const found = await runInAdapterWorld(page, UNREAD_SUMMARY);
   const chats = parseUnreadSummary(found);
   if (chats === undefined) {
     throw new Error('The unread chats could not be read.');

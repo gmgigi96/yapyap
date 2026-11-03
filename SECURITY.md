@@ -16,7 +16,7 @@ Other formats are updated through their package manager.
 
 Please include:
 
-- the affected version and package format (Flatpak, AppImage, DEB, RPM, AUR,
+- the affected version and package format (Flatpak, AppImage, DEB, RPM, Arch Linux,
   Windows installer or portable, macOS)
 - steps to reproduce, or a proof of concept
 - the impact as you understand it

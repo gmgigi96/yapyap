@@ -1,8 +1,8 @@
 import { describe, expect, it, vi } from 'vitest';
 import { SETTING_FIELDS } from '../../shared/settings-fields.ts';
+import { fakeSettings } from '../../../test/fake-settings.ts';
 import { defaultSettings } from './decode.ts';
 import { settingsHandlers, type SettingEffect } from './handlers.ts';
-import type { Settings } from './schema.ts';
 
 const HARDWARE = 'reliability.hardwareAcceleration';
 const VIDEO = 'reliability.hardwareVideoDecoding';
@@ -34,16 +34,7 @@ const BETA = 'general.betaUpdates';
 const DND = 'general.doNotDisturb';
 
 function setup(effects: Readonly<Record<string, SettingEffect>> = {}) {
-  let settings: Settings = defaultSettings();
-  const service = {
-    current: () => settings,
-    notice: undefined,
-    firstRun: false,
-    update: vi.fn((change: (current: Settings) => Settings) => {
-      settings = change(settings);
-    }),
-    onChange: vi.fn(),
-  };
+  const service = fakeSettings();
   const restart = vi.fn();
   const handlers = new Map(
     settingsHandlers(service, restart, 'linux', effects).map((handler) => [
@@ -59,7 +50,7 @@ function setup(effects: Readonly<Record<string, SettingEffect>> = {}) {
     return found;
   };
   const call = { sender: {} };
-  return { service, restart, handler, call, settings: () => settings };
+  return { service, restart, handler, call, settings: service.current };
 }
 
 describe('settingsHandlers', () => {
@@ -115,13 +106,7 @@ describe('settingsHandlers', () => {
   });
 
   it('lists a setting only on the platforms where it does something', () => {
-    const service = {
-      current: defaultSettings,
-      notice: undefined,
-      firstRun: false,
-      update: vi.fn(),
-      onChange: vi.fn(),
-    };
+    const service = fakeSettings();
     const get = (platform: string) => {
       const handler = settingsHandlers(service, vi.fn(), platform).find(
         ({ channel }) => channel === 'settings:get',
@@ -181,7 +166,6 @@ describe('settingsHandlers', () => {
       },
       restartPending: false,
       problems: {},
-      unavailable: {},
     });
   });
 
@@ -199,42 +183,17 @@ describe('settingsHandlers', () => {
     expect(await set.handle(t.call, AUTOSTART, true)).toMatchObject({
       values: { [AUTOSTART]: true },
       problems: {},
-      unavailable: {},
     });
   });
 
   it('leaves out and refuses the settings this build ignores', () => {
-    let settings: Settings = defaultSettings();
-    const service = {
-      current: () => settings,
-      notice: undefined,
-      firstRun: false,
-      update: vi.fn((change: (current: Settings) => Settings) => {
-        settings = change(settings);
-      }),
-      onChange: vi.fn(),
-    };
+    const service = fakeSettings();
     const [get, set] = settingsHandlers(service, vi.fn(), 'linux', {}, [BETA]);
     expect(get?.handle({ sender: {} })).toHaveProperty(
       'values',
       expect.not.objectContaining({ [BETA]: false }),
     );
     expect(set?.accepts([BETA, true])).toBe(false);
-  });
-
-  it('shows a setting it cannot act on here, says why, and refuses to change it', () => {
-    const service = { ...setup().service };
-    const handlers = settingsHandlers(service, vi.fn(), 'linux', {}, [], {
-      [CLOSE_TO_TRAY]: 'This desktop has no tray.',
-    });
-    const get = handlers.find(({ channel }) => channel === 'settings:get');
-    const set = handlers.find(({ channel }) => channel === 'settings:set');
-    expect(get?.handle({ sender: {} })).toMatchObject({
-      values: { [CLOSE_TO_TRAY]: false },
-      unavailable: { [CLOSE_TO_TRAY]: 'This desktop has no tray.' },
-    });
-    expect(set?.accepts([CLOSE_TO_TRAY, true])).toBe(false);
-    expect(set?.accepts([DND, true])).toBe(true);
   });
 
   it('saves a change and asks for a restart until the launch value is back', async () => {
@@ -280,7 +239,6 @@ describe('settingsHandlers', () => {
       },
       restartPending: true,
       problems: {},
-      unavailable: {},
     });
     expect(t.settings().reliability.hardwareAcceleration).toBe(false);
     expect(t.settings().reliability.memoryWatchdogMb).toBe(2048);
