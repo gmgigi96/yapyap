@@ -381,3 +381,6 @@ title, escape })` (`src/renderer/shared/mount.tsx`), which titles the
   keeps its window handlers in its own folder, `src/main/` holds only
   `index.ts` beside its folders, the process contracts sit in
   `src/shared/api/`, and `AGENTS.md` links to `CLAUDE.md`.
+- Dev chrome pages (#588): `pnpm dev` watch-builds the renderer into
+  `out/renderer`, which `app://chrome/` serves, and starts Electron only
+  after the first build, so the dev app never shows stale chrome pages.
