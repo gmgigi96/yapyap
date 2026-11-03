@@ -1,6 +1,7 @@
 import { createServer } from 'node:http';
 import type { AddressInfo } from 'node:net';
 import type { ElectronApplication, Page } from '@playwright/test';
+import { ADAPTER_WORLD_ID } from '../src/adapter/world.ts';
 import { chromePage, clickMenu } from './chrome-helpers.ts';
 import { expect, whatsAppContents } from './fixtures.ts';
 
@@ -65,8 +66,9 @@ function readBarResult(): string | null {
 /** Runs `read` in the adapter's isolated world of WhatsApp's page, where the bar lives. */
 const inBarWorld = async (app: ElectronApplication, read: () => unknown): Promise<unknown> =>
   (await whatsAppContents(app)).evaluate(
-    (page, code): Promise<unknown> => page.executeJavaScriptInIsolatedWorld(1000, [{ code }]),
-    `(${read.toString()})()`,
+    (page, { code, world }): Promise<unknown> =>
+      page.executeJavaScriptInIsolatedWorld(world, [{ code }]),
+    { code: `(${read.toString()})()`, world: ADAPTER_WORLD_ID },
   );
 
 /** The assistant bar's longer text, such as a summary or what is sent, or null while it shows none. */
