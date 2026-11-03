@@ -56,6 +56,7 @@ import type { AuthInfo, LoginCallback } from '../network/proxy-login.ts';
 import type { SecretStore } from '../secrets/secret-store.ts';
 import type { CodePage, CustomCodeController } from '../custom-code/custom-code.ts';
 import type { TextFile } from '../atomic-write.ts';
+import type { Environment } from '../environment.ts';
 
 export interface AppPort {
   disableHardwareAcceleration(): void;
@@ -195,7 +196,7 @@ export interface StartDependencies<Window extends WindowPort> {
    */
   readonly capture: (pickInApp: PickInApp, wayland: boolean) => DisplayCapturePort;
   readonly chrome: ChromeFeature;
-  readonly env: Readonly<Record<string, string | undefined>>;
+  readonly env: Environment;
   /** The command line, for `--safe-mode`. */
   readonly argv: readonly string[];
   readonly openExternal: (url: string) => Promise<unknown>;

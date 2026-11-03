@@ -2,6 +2,7 @@ import { Type } from 'typebox';
 import { Value } from 'typebox/value';
 import { cappedFetcher, type Fetcher, type StreamedResponse } from './capped-fetch.ts';
 import { MAX_MODELS } from './models.ts';
+import type { Environment } from '../environment.ts';
 
 const OLLAMA_PORT = 11_434;
 /** Alpaca runs an Ollama of its own, one port up, so both can run. */
@@ -123,10 +124,7 @@ const TEST_PORTS = 'YAPYAP_TEST_MODEL_PORTS';
  * servers on ports of their own, listed in `YAPYAP_TEST_MODEL_PORTS`;
  * a packaged build ignores it, so no installed YapYap looks anywhere else.
  */
-export function modelServerPorts(
-  env: Readonly<Record<string, string | undefined>>,
-  packaged: boolean,
-): readonly number[] {
+export function modelServerPorts(env: Environment, packaged: boolean): readonly number[] {
   const given = env[TEST_PORTS];
   if (packaged || given === undefined) {
     return MODEL_SERVER_PORTS;

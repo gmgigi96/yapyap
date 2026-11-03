@@ -1,3 +1,5 @@
+import type { Environment } from '../../environment.ts';
+
 /**
  * A model the assistant can run on this computer (#457): a GGUF file pinned
  * by its exact address, size and SHA-256, so a changed or tampered file is
@@ -97,10 +99,7 @@ const TEST_MODEL = 'YAPYAP_TEST_BUILT_IN_MODEL';
  * as JSON in `YAPYAP_TEST_BUILT_IN_MODEL`. A packaged build ignores it, so
  * no installed YapYap can be pointed at another file.
  */
-export function catalogOf(
-  env: Readonly<Record<string, string | undefined>>,
-  packaged: boolean,
-): Catalog {
+export function catalogOf(env: Environment, packaged: boolean): Catalog {
   const given = env[TEST_MODEL];
   if (packaged || given === undefined) {
     return CATALOG;

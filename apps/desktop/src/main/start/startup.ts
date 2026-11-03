@@ -16,6 +16,7 @@ import { createProxyLogin } from '../network/proxy-login.ts';
 import { useCameraPortal } from '../permissions/camera-portal.ts';
 import type { ChromeRuntime } from '../chrome/feature.ts';
 import type { StartDependencies, WindowPort } from './types.ts';
+import type { Environment } from '../environment.ts';
 
 /** Starts without hardware acceleration, for when graphics problems stop YapYap from starting. */
 const SAFE_MODE_FLAG = '--safe-mode';
@@ -132,10 +133,7 @@ export function announceStartup(
   }
 }
 
-export function whatsAppOrigin(
-  env: Readonly<Record<string, string | undefined>>,
-  warn: (message: string) => void,
-): string {
+export function whatsAppOrigin(env: Environment, warn: (message: string) => void): string {
   const { origin, rejectedOverride } = resolveWhatsAppOrigin(env['YAPYAP_TEST_WHATSAPP_ORIGIN']);
   if (rejectedOverride) {
     warn('Ignoring YAPYAP_TEST_WHATSAPP_ORIGIN: only loopback http origins are allowed.');
