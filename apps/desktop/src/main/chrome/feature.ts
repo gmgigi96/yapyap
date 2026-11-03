@@ -58,6 +58,9 @@ import {
   type AssistantSources,
 } from '../assistant/assistant-chrome.ts';
 import { serveEngineFiles } from '../assistant/private/engine-files.ts';
+import { agentServer, type AgentSources } from '../agents/server.ts';
+import { agentsHandlers } from '../agents/settings-handlers.ts';
+import type { AgentAccounts, AgentPage } from '../agents/tool-steps.ts';
 import { engineWindowOpener } from '../assistant/private/engine-window.ts';
 import { setDoNotDisturb } from '../notifications/quiet.ts';
 import { settingsHandlers, type SettingEffect } from '../settings/handlers.ts';
@@ -271,6 +274,8 @@ export interface ChromeFeatureDependencies {
       ): void;
     };
   };
+  /** The MCP server for AI agents (ADR 0019). */
+  readonly agents: AgentSources;
   readonly captureSources: (kind: SourceKind) => Promise<readonly DesktopSource[]>;
   /** The window showing `contents`, so the picker can sit on top of it. */
   readonly windowOf: (contents: object) => WindowOptions['parent'] | null;
@@ -323,6 +328,8 @@ export interface AccountMenu extends AccountManager {
   readonly readDraft: () => Promise<string | null>;
   /** Presses Enter in the active account's message box, for the assistant bar's Send (ADR 0013). */
   readonly pressEnter: () => Promise<boolean>;
+  /** An account's WhatsApp as AI agents reach it (ADR 0019); undefined while it is off. */
+  readonly agentPage: (id: string) => AgentPage | undefined;
   readonly switchTo: (id: string) => void;
   readonly add: () => void;
   readonly privacyScreen: boolean;
@@ -801,6 +808,40 @@ function assistantOf(
   return chrome;
 }
 
+/** The accounts as AI agents reach them, once they are open. */
+function agentAccounts(accounts: AccountsSlot): AgentAccounts | undefined {
+  const menu = accounts.current;
+  return (
+    menu && {
+      list: () => menu.entries.map(({ id, name }) => ({ id, name })),
+      page: menu.agentPage,
+    }
+  );
+}
+
+/** The MCP server for AI agents and Settings › Agents' operations (ADR 0019). */
+function agentsOf(
+  deps: ChromeFeatureDependencies,
+  accounts: AccountsSlot,
+  warn: (message: string) => void,
+): ChromeHandler[] {
+  const { agents } = deps;
+  const reach = (): AgentAccounts | undefined => agentAccounts(accounts);
+  const server = agentServer({
+    ...agents,
+    settings: deps.settings,
+    accounts: reach,
+    notify: deps.notify,
+    warn,
+  });
+  return agentsHandlers({
+    server,
+    tokens: agents.tokens,
+    accounts: reach,
+    writeClipboard: deps.writeClipboard,
+  });
+}
+
 /** Windows that ask or stand by: the assistant's, Settings and proxy sign-in. */
 function standbyWindows(
   deps: ChromeFeatureDependencies,
@@ -845,7 +886,11 @@ function startChrome(
   const slots = chromeSlots(deps, windows);
   const { recoveries, pages, picker, chats, sidebar } = slots;
   const standby = standbyWindows(deps, windows, slots.accounts);
-  const handlers = [...allHandlers(withGraphics, slots), ...standbyHandlers(standby, deps)];
+  const handlers = [
+    ...allHandlers(withGraphics, slots),
+    ...standbyHandlers(standby, deps),
+    ...agentsOf(deps, slots.accounts, warn),
+  ];
   registerChromeHandlers(deps.ipc, views, handlers, warn);
   const openers = chromeOpeners(windows, standby);
   return {

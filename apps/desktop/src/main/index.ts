@@ -24,7 +24,7 @@ import {
   type WebContents,
 } from 'electron';
 import { spawnSync } from 'node:child_process';
-import { randomUUID } from 'node:crypto';
+import { randomBytes, randomUUID } from 'node:crypto';
 import {
   existsSync,
   lstatSync,
@@ -84,6 +84,8 @@ import { ENGINE_PARTITION } from './assistant/private/engine-window.ts';
 import { engineListener } from './assistant/private/engine-host.ts';
 import { assistantMayReach, confinedFetch, guardedAssistantSession } from './assistant/net.ts';
 import { translationLanguages } from './assistant/rewrites.ts';
+import { agentTokens } from './agents/tokens.ts';
+import { listenForAgents } from './agents/listener.ts';
 import { trayImage } from './tray/tray-icon.ts';
 import {
   createAccountHost,
@@ -103,6 +105,8 @@ const CHAT_LIST_STATE = join(app.getPath('userData'), 'chat-list.json');
 // The assistant's state and allowed chats are no preferences, so they live apart from settings (ADR 0017).
 const ASSISTANT_STATE = join(app.getPath('userData'), 'assistant.json');
 const ASSISTANT_CHATS = join(app.getPath('userData'), 'assistant-chats.json');
+// The agents' tokens are state, kept apart from settings and never exported (ADR 0019).
+const AGENT_TOKENS = join(app.getPath('userData'), 'agent-tokens.json');
 
 // Holds the tray for the app's lifetime; a collected Tray disappears from the panel.
 let tray: Tray | undefined;
@@ -309,6 +313,18 @@ const chrome = createChromeFeature({
   windowOf: (contents) => BrowserWindow.fromWebContents(contents as WebContents),
   downloads: downloadList,
   isGlobalShortcutRegistered: (accelerator) => globalShortcut.isRegistered(accelerator),
+  agents: {
+    tokens: agentTokens({
+      file: textFileAt(AGENT_TOKENS, OWNER_ONLY),
+      names: secrets,
+      randomHex: (bytes) => randomBytes(bytes).toString('hex'),
+      now: Date.now,
+      warn,
+    }),
+    serve: (port, answer) => listenForAgents(port, answer, warn),
+    now: Date.now,
+    version: app.getVersion(),
+  },
 });
 
 // No top-level await: test harnesses hold back the `ready` event until the

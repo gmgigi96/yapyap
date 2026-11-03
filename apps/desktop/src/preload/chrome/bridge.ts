@@ -19,6 +19,7 @@ import {
   type SpellingLanguages,
   type TransferResult,
 } from '../../shared/chrome-api.ts';
+import type { AgentsView, AgentTokenCreated } from '../../shared/agents-api.ts';
 
 type Invoke = (channel: string, ...args: unknown[]) => Promise<unknown>;
 /** Hears one of the events the main process sends. */
@@ -43,6 +44,25 @@ function assistantBridge(invoke: Invoke): ChromeApi['assistant'] {
     },
     forgetChat: async (account, id) => {
       await invoke(CHROME_CHANNELS.assistantForgetChat, account, id);
+    },
+  };
+}
+
+function agentsBridge(invoke: Invoke): ChromeApi['agents'] {
+  return {
+    view: () => invoke(CHROME_CHANNELS.agentsView) as Promise<AgentsView>,
+    create: (spec) => invoke(CHROME_CHANNELS.agentsCreate, spec) as Promise<AgentTokenCreated>,
+    revoke: async (id) => {
+      await invoke(CHROME_CHANNELS.agentsRevoke, id);
+    },
+    narrow: (id, step) => invoke(CHROME_CHANNELS.agentsNarrow, id, step) as Promise<boolean>,
+    newPort: async () => {
+      await invoke(CHROME_CHANNELS.agentsNewPort);
+    },
+    openChat: (account) =>
+      invoke(CHROME_CHANNELS.agentsOpenChat, account) as Promise<string | null>,
+    copy: async (text) => {
+      await invoke(CHROME_CHANNELS.agentsCopy, text);
     },
   };
 }
@@ -203,6 +223,7 @@ export function createChromeBridge(invoke: Invoke, listen: Listen): ChromeApi {
     recovery: recoveryBridge(invoke),
     settings: settingsBridge(invoke),
     assistant: assistantBridge(invoke),
+    agents: agentsBridge(invoke),
     chat: {
       openNumber: (number) => invoke(CHROME_CHANNELS.chatOpenNumber, number) as Promise<boolean>,
     },

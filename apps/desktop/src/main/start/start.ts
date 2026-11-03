@@ -43,6 +43,7 @@ import {
   supportsInlineReply,
 } from '../notifications/reply.ts';
 import { readOpenChat, readUnreadChats } from '../assistant/chat-reading.ts';
+import { agentPageOf } from '../agents/agent-page.ts';
 import { bringToFront, claimSingleInstance, type Instances, type LinkPage } from '../instances.ts';
 import { chatLinkInArguments } from '../navigation/deep-link.ts';
 import { quitOnShutdown } from '../shutdown.ts';
@@ -270,6 +271,7 @@ function accountMenu(
   running: RunningAccounts<OpenedAccount>,
   warn: (message: string) => void,
   privacy: PrivacyScreen,
+  origin: string,
 ): AccountMenu {
   return {
     privacyScreen: privacy.covered(),
@@ -282,6 +284,10 @@ function accountMenu(
     replaceDraft: (text) => replaceDraft(running.active().page.contents, text),
     readDraft: () => readDraft(running.active().page.contents),
     pressEnter: () => pressEnter(running.active().page.contents),
+    agentPage: (id) => {
+      const page = pageOf(running, id);
+      return page && agentPageOf(page.contents, origin);
+    },
     switchTo: running.switchTo,
     add: running.add,
     update: running.update,
@@ -350,6 +356,12 @@ function trayActions<Window extends WindowPort>(
     },
     stopSharing: shares.stop,
     togglePrivacyScreen: privacy.toggle,
+    stopAgents: () => {
+      deps.settings.update((settings) => ({
+        ...settings,
+        agents: { ...settings.agents, enabled: false },
+      }));
+    },
     quit: () => {
       deps.app.quit();
     },
@@ -374,6 +386,7 @@ function accountsTray<Window extends WindowPort>(
       doNotDisturb: deps.settings.current().general.doNotDisturb,
       sharing: [...screens.shares.sharing()],
       privacyScreen: screens.privacy.covered(),
+      agents: deps.settings.current().agents.enabled,
     });
   };
   return {
@@ -496,7 +509,7 @@ function openAccounts<Window extends WindowPort>(
 ): RunningAccounts<OpenedAccount> {
   const { deps, chrome, window } = wiring;
   const menuChanged = (): void => {
-    chrome.setAccountMenu(accountMenu(running, deps.warn, indicators.privacy));
+    chrome.setAccountMenu(accountMenu(running, deps.warn, indicators.privacy, wiring.origin));
   };
   const indicators: AccountIndicators = accountIndicators(
     wiring,

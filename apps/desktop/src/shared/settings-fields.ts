@@ -6,6 +6,7 @@ export type SettingValue = boolean | string | number;
 /** A settings file section, in the order the settings window lists them. */
 export const SETTINGS_SECTIONS = [
   { id: 'assistant', title: en.settings.sections.assistant },
+  { id: 'agents', title: en.settings.sections.agents },
   { id: 'general', title: en.settings.sections.general },
   { id: 'spelling', title: en.settings.sections.spelling },
   { id: 'appearance', title: en.settings.sections.appearance },
@@ -96,6 +97,7 @@ export const SETTING_FIELDS: readonly SettingField[] = [
     restart: false,
     text: { placeholder: en.assistant.settings.local.addressPlaceholder },
   },
+  { ...described('agents', 'enabled'), restart: false },
   { ...described('general', 'autostart'), restart: false },
   { ...described('general', 'startMinimized'), restart: false },
   { ...described('general', 'betaUpdates'), restart: false },

@@ -3,19 +3,23 @@ import { useCallback, useEffect, useState } from 'preact/hooks';
 import type { ChromeApi, SettingsSnapshot, TransferResult } from '../../shared/chrome-api.ts';
 import { en } from '../../shared/messages/en.ts';
 import { SETTING_FIELDS, SETTINGS_SECTIONS } from '../../shared/settings-fields.ts';
+import { AgentsSection } from './Agents.tsx';
 import { AssistantSection } from './Assistant.tsx';
 import { Field, type Change } from './Field.tsx';
 
 const text = en.settings;
 
+/** Sections with their own component, shown when their switch is. */
+const OWN_SECTIONS: ReadonlySet<string> = new Set(['assistant', 'agents']);
+
 /** The sections this platform shows, in order, with the heading each one has. */
 function shownSections(
   snapshot: SettingsSnapshot,
 ): { readonly id: string; readonly title: string }[] {
-  // As the page renders them: the assistant's own section, then those with a field here.
+  // As the page renders them: the assistant's and the agents' own sections, then those with a field here.
   const shown = SETTINGS_SECTIONS.filter(({ id }) =>
-    id === 'assistant'
-      ? 'assistant.enabled' in snapshot.values
+    OWN_SECTIONS.has(id)
+      ? `${id}.enabled` in snapshot.values
       : SETTING_FIELDS.some(
           (field) => field.id.startsWith(`${id}.`) && field.id in snapshot.values,
         ),
@@ -51,8 +55,8 @@ function Sections(props: {
     const fields = SETTING_FIELDS.filter(
       (field) => field.id.startsWith(`${id}.`) && field.id in props.snapshot.values,
     );
-    // The assistant's section is its own, with more than fields (ADR 0017).
-    if (fields.length === 0 || id === 'assistant') {
+    // The assistant's and the agents' sections are their own, with more than fields (ADR 0017, 0019).
+    if (fields.length === 0 || OWN_SECTIONS.has(id)) {
       return [];
     }
     return [
@@ -181,6 +185,9 @@ export function Settings({ api }: { readonly api: ChromeApi }): JSX.Element {
       {snapshot.restartPending ? <RestartNotice api={api} /> : null}
       {'assistant.enabled' in snapshot.values ? (
         <AssistantSection api={api} snapshot={snapshot} onChange={change} />
+      ) : null}
+      {'agents.enabled' in snapshot.values ? (
+        <AgentsSection api={api} snapshot={snapshot} onChange={change} />
       ) : null}
       <Sections snapshot={snapshot} onChange={change} onChooseFolder={chooseFolder} />
       <Backup api={api} onImported={reload} />

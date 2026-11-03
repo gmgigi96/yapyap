@@ -174,6 +174,15 @@ export const SettingsSchema = Type.Object(
       },
       { default: {}, additionalProperties: false },
     ),
+    // The MCP server for AI agents (ADR 0019): off until the user turns it on.
+    agents: Type.Object(
+      {
+        enabled: Type.Boolean({ default: false }),
+        // 0 until YapYap picks one, the first time the server is turned on; then kept.
+        port: Type.Integer({ minimum: 0, maximum: 65_535, default: 0 }),
+      },
+      { default: {}, additionalProperties: false },
+    ),
   },
   { additionalProperties: false },
 );

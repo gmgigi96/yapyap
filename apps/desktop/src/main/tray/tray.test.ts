@@ -56,6 +56,7 @@ function setup(platform = 'linux', minimized = false) {
     setDoNotDisturb: vi.fn(),
     stopSharing: vi.fn(),
     togglePrivacyScreen: vi.fn(),
+    stopAgents: vi.fn(),
     quit: vi.fn(),
   };
   const update = setUpTray(tray, window, deps);
@@ -75,6 +76,7 @@ const state = (overrides: Partial<TrayState> = {}): TrayState => ({
   doNotDisturb: false,
   sharing: [],
   privacyScreen: false,
+  agents: false,
   ...overrides,
 });
 
@@ -150,6 +152,13 @@ describe('setUpTray', () => {
     expect(t.deps.togglePrivacyScreen).toHaveBeenCalledOnce();
     const on = t.menu(state({ privacyScreen: true }));
     expect(on.find((entry) => entry.label === 'Privacy Screen')?.checked).toBe(true);
+  });
+
+  it('offers to stop AI agents only while they can connect (ADR 0019)', () => {
+    const t = setup();
+    expect(t.menu(state()).some((entry) => entry.label === 'Stop AI Agents')).toBe(false);
+    t.item(t.menu(state({ agents: true })), 'Stop AI Agents')();
+    expect(t.deps.stopAgents).toHaveBeenCalledOnce();
   });
 
   it('hides the window when it is shown', () => {

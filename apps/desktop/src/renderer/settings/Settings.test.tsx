@@ -85,6 +85,22 @@ describe('Settings', () => {
     expect(settings.settings.set).toHaveBeenCalledWith('assistant.enabled', false);
   });
 
+  it('puts the agents right after the assistant, in a section of their own', async () => {
+    const values = { 'assistant.enabled': true, 'agents.enabled': false, [HARDWARE]: true };
+    const settings = api({ get: vi.fn(() => Promise.resolve(snapshot({ values }))) });
+    vi.mocked(settings.assistant.view).mockReturnValue(new Promise<never>(() => undefined));
+    vi.mocked(settings.agents.view).mockReturnValue(new Promise<never>(() => undefined));
+    render(<Settings api={settings} />);
+    const section = await screen.findByRole('region', { name: 'Agents' });
+    expect(document.querySelectorAll('main section')[1]).toBe(section);
+    expect(screen.getAllByRole('region', { name: 'Agents' })).toHaveLength(1);
+    const nav = screen.getByRole('navigation', { name: 'Settings sections' });
+    expect([...nav.querySelectorAll('a')].map((link) => link.textContent).slice(0, 2)).toEqual([
+      'Assistant',
+      'Agents',
+    ]);
+  });
+
   it('lists the sections it shows at the top, each a jump to its heading', async () => {
     const withAssistant = { 'assistant.enabled': true, [HARDWARE]: true, 'general.unknown': 1 };
     const settings = api({
