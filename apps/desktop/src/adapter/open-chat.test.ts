@@ -160,14 +160,17 @@ describe('chatScroller', () => {
     expect(chatScroller(docWith(row, 'pane-side'), PLACES, scrolls)).toBe('pane-side');
   });
 
-  it('runs in the page, where the named list stands in for a box with no layout', () => {
-    document.body.innerHTML = LIST;
-    const found: unknown = runInNewContext(
-      `(${chatScroller.toString()})(document, ${JSON.stringify(PLACES)}, (element) => /(auto|scroll|overlay)/.test(getComputedStyle(element).overflowY))`,
-      { document, getComputedStyle },
-    );
-    expect(found).toBe(document.querySelector('#pane-side'));
-  });
+  it.skipIf(chatScroller.toString().includes('stryMutAct'))(
+    'runs in the page, where the named list stands in for a box with no layout',
+    () => {
+      document.body.innerHTML = LIST;
+      const found: unknown = runInNewContext(
+        `(${chatScroller.toString()})(document, ${JSON.stringify(PLACES)}, (element) => /(auto|scroll|overlay)/.test(getComputedStyle(element).overflowY))`,
+        { document, getComputedStyle },
+      );
+      expect(found).toBe(document.querySelector('#pane-side'));
+    },
+  );
 });
 
 describe('chatListToTop', () => {
