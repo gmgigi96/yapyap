@@ -14,7 +14,7 @@ browser. YapYap does not read, copy or upload them.
   portable build and unsigned macOS builds, which cannot update themselves,
   ask GitHub for the latest release once a day (a plain request to
   `api.github.com`, with nothing about you in it) and tell you when there is
-  a new one; installs from Flatpak, DEB, RPM and the AUR never ask.
+  a new one; installs from Flatpak, DEB, RPM and Arch Linux never ask.
 - **No hidden downloads.** Chromium normally fetches a spelling dictionary
   from Google whenever a window opens, which tells Google your language and
   your IP address. YapYap stops that, so spell checking is off until you

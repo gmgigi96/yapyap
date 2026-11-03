@@ -36,7 +36,7 @@ number (`+44 7700 900123`), or both, then choose **Add**. **Use the Open
 Chat** fills in the name of the chat open in YapYap.
 
 Give a number when you can: with it, the agent opens the chat wherever it
-is in WhatsApp, archived included, through the same link as **New Chat**.
+is in WhatsApp, archived included, through the same link as **New Chat with Number…**.
 It reloads WhatsApp, so it takes a few seconds. With a name too, the agent
 can find the chat when you ask it about that person, such as "send Vasco
 a message".
