@@ -1,10 +1,12 @@
+import type { ElectronApplication } from '@playwright/test';
 import { readFile } from 'node:fs/promises';
 import { join } from 'node:path';
+import { clickMenu } from './chrome-helpers.ts';
 import { closeApp, expect, launchApp, test, whatsAppContents, whatsAppPage } from './fixtures.ts';
 import type { ChromeApi } from '../src/shared/chrome-api.ts';
 
 /** Where the WhatsApp page's session keeps its data on disk. */
-const storagePath = async (app: Awaited<ReturnType<typeof launchApp>>) =>
+const storagePath = async (app: ElectronApplication) =>
   (await whatsAppContents(app)).evaluate((contents) => contents.session.getStoragePath());
 
 test('keeps the account’s WhatsApp session in its own partition across restarts', async ({
@@ -51,18 +53,8 @@ test('keeps the account’s WhatsApp session in its own partition across restart
   }
 });
 
-/** Clicks an item of the Account menu by its label. */
-async function clickAccountMenu(app: Awaited<ReturnType<typeof launchApp>>, label: string) {
-  await app.evaluate(({ Menu }, wanted) => {
-    Menu.getApplicationMenu()
-      ?.items.flatMap((menu) => menu.submenu?.items ?? [])
-      .find((entry) => entry.label === wanted)
-      ?.click();
-  }, label);
-}
-
 /** The WhatsApp pages, and which one the window shows. */
-const accountPages = (app: Awaited<ReturnType<typeof launchApp>>) =>
+const accountPages = (app: ElectronApplication) =>
   app.evaluate(({ BaseWindow, webContents }) => {
     // A view's page keeps its window after the view is taken out, so ask the window.
     const shown = new Set(
@@ -88,7 +80,7 @@ test('adds, switches and removes accounts, each in its own session', async ({
   await window.evaluate(() => {
     localStorage.setItem('yapyap-e2e', 'first account');
   });
-  await clickAccountMenu(app, 'Add Account');
+  await clickMenu(app, 'Add Account');
   await expect.poll(async () => (await accountPages(app)).length).toBe(2);
   // Playwright lists a new page a moment after Electron creates it.
   const second = await whatsAppPage(app, window);
@@ -99,12 +91,12 @@ test('adds, switches and removes accounts, each in its own session', async ({
     (await accountPages(app)).filter((page) => page.shown).map((page) => page.storage);
   const first = (await accountPages(app)).find((page) => !page.shown)?.storage ?? '';
   expect(await shownStorage()).not.toEqual([first]);
-  await clickAccountMenu(app, 'WhatsApp');
+  await clickMenu(app, 'WhatsApp');
   await expect.poll(shownStorage).toEqual([first]);
   await app.evaluate(({ dialog }) => {
     dialog.showMessageBox = () => Promise.resolve({ response: 0, checkboxChecked: false });
   });
-  await clickAccountMenu(app, 'Remove Account…');
+  await clickMenu(app, 'Remove Account…');
   await expect.poll(async () => (await accountPages(app)).length).toBe(1);
   const saved = JSON.parse(await readFile(join(profile, 'accounts.json'), 'utf8')) as {
     accounts: unknown[];
@@ -118,9 +110,9 @@ test('renames an account and turns another off from the Accounts window', async 
   profile,
 }) => {
   await expect(window.getByTestId('fake-whatsapp')).toBeVisible();
-  await clickAccountMenu(app, 'Add Account');
+  await clickMenu(app, 'Add Account');
   await expect.poll(async () => (await accountPages(app)).length).toBe(2);
-  await clickAccountMenu(app, 'Manage Accounts…');
+  await clickMenu(app, 'Manage Accounts…');
   // Adding the account also opened a page, so find the window by its address.
   await expect
     .poll(() => app.windows().some((page) => page.url() === 'app://chrome/accounts.html'))
@@ -189,7 +181,7 @@ test('sends one account through its own proxy, and leaves the rest alone', async
   window,
 }) => {
   await expect(window.getByTestId('fake-whatsapp')).toBeVisible();
-  await clickAccountMenu(app, 'Manage Accounts…');
+  await clickMenu(app, 'Manage Accounts…');
   await expect
     .poll(() => app.windows().some((page) => page.url() === 'app://chrome/accounts.html'))
     .toBe(true);

@@ -3,6 +3,7 @@ import { expect, test } from '@playwright/test';
 import { mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
+import { clickMenu } from '../chrome-helpers.ts';
 import { startFakeWhatsApp } from '../fake-whatsapp-server.ts';
 import { launchApp, whatsAppPage } from '../fixtures.ts';
 import { median } from './measure.ts';
@@ -56,12 +57,7 @@ const cpuSeconds = (app: ElectronApplication, pid: number): Promise<number> =>
   );
 
 async function addAccount(app: ElectronApplication): Promise<void> {
-  await app.evaluate(({ Menu }) => {
-    Menu.getApplicationMenu()
-      ?.items.flatMap((menu) => menu.submenu?.items ?? [])
-      .find((entry) => entry.label === 'Add Account')
-      ?.click();
-  });
+  await clickMenu(app, 'Add Account');
   await expect.poll(async () => (await accountPids(app)).length).toBe(2);
 }
 

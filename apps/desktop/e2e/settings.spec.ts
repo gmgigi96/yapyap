@@ -1,22 +1,11 @@
 import type { ElectronApplication, Page } from '@playwright/test';
 import { readFile, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
+import { clickMenu, openFromMenu } from './chrome-helpers.ts';
 import { expect, test, whatsAppPage } from './fixtures.ts';
 
-async function openSettings(app: ElectronApplication): Promise<Page> {
-  // The WhatsApp window must exist first so the next window event is Settings'.
-  await whatsAppPage(app);
-  const opened = app.waitForEvent('window');
-  await app.evaluate(({ Menu }) => {
-    const item = Menu.getApplicationMenu()
-      ?.items.flatMap((menu) => menu.submenu?.items ?? [])
-      .find((entry) => entry.label === 'Settings…');
-    item?.click();
-  });
-  const page = await opened;
-  await page.waitForURL('app://chrome/settings.html');
-  return page;
-}
+const openSettings = (app: ElectronApplication): Promise<Page> =>
+  openFromMenu(app, 'Settings…', 'settings.html');
 
 async function savedHardwareAcceleration(profile: string): Promise<unknown> {
   const text = await readFile(join(profile, 'settings.json'), 'utf8').catch(() => '{}');
@@ -94,12 +83,7 @@ test('restarts the app from the restart notice', async ({ app }) => {
 
 test('opens one Settings window and closes it with Escape', async ({ app }) => {
   const settings = await openSettings(app);
-  await app.evaluate(({ Menu }) => {
-    Menu.getApplicationMenu()
-      ?.items.flatMap((menu) => menu.submenu?.items ?? [])
-      .find((entry) => entry.label === 'Settings…')
-      ?.click();
-  });
+  await clickMenu(app, 'Settings…');
   expect(app.windows().filter((page) => page.url().endsWith('/settings.html'))).toHaveLength(1);
   // Only the key-down: the window closes before a key-up could reach it, and
   // can close before Playwright hears back about the key-down itself.

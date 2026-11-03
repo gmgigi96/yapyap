@@ -1,6 +1,7 @@
 import type { ElectronApplication } from '@playwright/test';
 import { createServer, type Server } from 'node:http';
 import type { AddressInfo } from 'node:net';
+import { openFromMenu } from './chrome-helpers.ts';
 import { closeApp, expect, launchApp, test, whatsAppPage } from './fixtures.ts';
 
 /**
@@ -76,17 +77,6 @@ async function recordRequests(app: ElectronApplication): Promise<void> {
   });
 }
 
-async function openFromMenu(app: ElectronApplication, label: string): Promise<void> {
-  const opened = app.waitForEvent('window');
-  await app.evaluate(({ Menu }, wanted) => {
-    Menu.getApplicationMenu()
-      ?.items.flatMap((menu) => menu.submenu?.items ?? [])
-      .find((entry) => entry.label === wanted)
-      ?.click();
-  }, label);
-  await (await opened).waitForLoadState();
-}
-
 test('talks to nothing but WhatsApp during a session', async ({ fakeWhatsApp, profile }) => {
   test.setTimeout(90_000);
   const trap = await startTrap();
@@ -98,8 +88,8 @@ test('talks to nothing but WhatsApp during a session', async ({ fakeWhatsApp, pr
     await expect(window.getByTestId('fake-whatsapp')).toBeVisible();
     await window.reload();
     await expect(window.getByTestId('fake-whatsapp')).toBeVisible();
-    await openFromMenu(app, 'About YapYap');
-    await openFromMenu(app, 'Settings…');
+    await openFromMenu(app, 'About YapYap', 'about.html');
+    await openFromMenu(app, 'Settings…', 'settings.html');
     await new Promise((resolve) => setTimeout(resolve, QUIET_MS));
     expect(trap.hosts).toEqual([]);
     const seen = await app.evaluate(

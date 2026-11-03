@@ -1,5 +1,6 @@
 import { createServer, type Server } from 'node:http';
 import type { AddressInfo } from 'node:net';
+import { chromePage } from './chrome-helpers.ts';
 import { closeApp, expect, launchApp, test, whatsAppPage } from './fixtures.ts';
 
 const CREDENTIALS = `Basic ${Buffer.from('ana:hunter2').toString('base64')}`;
@@ -48,15 +49,7 @@ test('signs in to a proxy that asks for a password', async ({ fakeWhatsApp, prof
   try {
     // The window waits for launch and the proxy's first refusal, which slow
     // Windows runners can take past the default 5 s for (#247).
-    await expect
-      .poll(() => app.windows().some((page) => page.url().endsWith('/proxy-login.html')), {
-        timeout: 20_000,
-      })
-      .toBe(true);
-    const login = app.windows().find((page) => page.url().endsWith('/proxy-login.html'));
-    if (login === undefined) {
-      throw new Error('No sign-in window.');
-    }
+    const login = await chromePage(app, '/proxy-login.html', 20_000);
     const host = new URL(proxy.origin).host;
     await expect(
       login.getByText(`The proxy ${host} asks for a username and password.`),

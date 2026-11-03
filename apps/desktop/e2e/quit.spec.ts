@@ -1,16 +1,8 @@
-import type { ElectronApplication } from '@playwright/test';
+import { clickMenu } from './chrome-helpers.ts';
 import { expect, launchApp, test, whatsAppPage } from './fixtures.ts';
 
 /** Well within the test's timeout, and far longer than a healthy quit takes. */
 const QUIT_WITHIN_MS = 15_000;
-
-const clickMenu = (app: ElectronApplication, label: string) =>
-  app.evaluate(({ Menu }, wanted) => {
-    Menu.getApplicationMenu()
-      ?.items.flatMap((menu) => menu.submenu?.items ?? [])
-      .find((entry) => entry.label === wanted)
-      ?.click();
-  }, label);
 
 test('quits promptly as a user does, with every kind of window open (#223)', async ({
   fakeWhatsApp,

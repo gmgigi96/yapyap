@@ -1,6 +1,7 @@
 import type { ElectronApplication, Page } from '@playwright/test';
 import { mkdir, readdir, readFile, realpath, symlink, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
+import { openFromMenu } from './chrome-helpers.ts';
 import { closeApp, expect, launchApp, seedSettings, test, whatsAppPage } from './fixtures.ts';
 
 /** Points YapYap's downloads folder into the test profile. */
@@ -117,15 +118,7 @@ test('lists the session’s downloads and shows a finished one in its folder', a
   });
   await download(window, 'Invoice.pdf');
   await expect.poll(() => readdir(folder)).toEqual(['Invoice.pdf']);
-  const opened = app.waitForEvent('window');
-  await app.evaluate(({ Menu }) => {
-    Menu.getApplicationMenu()
-      ?.items.flatMap((menu) => menu.submenu?.items ?? [])
-      .find((item) => item.label === 'Downloads…')
-      ?.click();
-  });
-  const downloads = await opened;
-  await downloads.waitForURL('app://chrome/downloads.html');
+  const downloads = await openFromMenu(app, 'Downloads…', 'downloads.html');
   await expect(downloads.getByText('Invoice.pdf')).toBeVisible();
   await expect(downloads.getByText('Done')).toBeVisible();
   await downloads.getByRole('button', { name: 'Show in Folder' }).click();
@@ -147,15 +140,7 @@ test('saves into the folder chosen in Settings', async ({ app, window, profile }
     dialog.showOpenDialog = () => Promise.resolve({ canceled: false, filePaths: [path] });
   }, chosen);
   await expect(window.getByTestId('fake-whatsapp')).toBeVisible();
-  const opened = app.waitForEvent('window');
-  await app.evaluate(({ Menu }) => {
-    Menu.getApplicationMenu()
-      ?.items.flatMap((menu) => menu.submenu?.items ?? [])
-      .find((item) => item.label === 'Settings…')
-      ?.click();
-  });
-  const settings = await opened;
-  await settings.waitForURL('app://chrome/settings.html');
+  const settings = await openFromMenu(app, 'Settings…', 'settings.html');
   await settings.getByRole('button', { name: 'Choose… Save files to' }).click();
   await expect(settings.getByText(chosen)).toBeVisible();
   await download(window, 'Ticket.pdf');

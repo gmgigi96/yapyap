@@ -3,6 +3,7 @@ import { expect, test } from '@playwright/test';
 import { mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
+import { chromePage, clickMenu } from '../chrome-helpers.ts';
 import { startFakeWhatsApp } from '../fake-whatsapp-server.ts';
 import { launchApp, whatsAppPage } from '../fixtures.ts';
 import { median } from './measure.ts';
@@ -42,23 +43,6 @@ const mainCpuSeconds = (app: ElectronApplication): Promise<number> =>
         .cumulativeCPUUsage ?? 0,
   );
 
-const clickMenu = (app: ElectronApplication, label: string): Promise<void> =>
-  app.evaluate(({ Menu }, wanted) => {
-    Menu.getApplicationMenu()
-      ?.items.flatMap((menu) => menu.submenu?.items ?? [])
-      .find((entry) => entry.label === wanted)
-      ?.click();
-  }, label);
-
-const pageAt = async (app: ElectronApplication, suffix: string): Promise<Page> => {
-  await expect.poll(() => app.windows().some((page) => page.url().endsWith(suffix))).toBe(true);
-  const page = app.windows().find((candidate) => candidate.url().endsWith(suffix));
-  if (page === undefined) {
-    throw new Error(`No page at ${suffix}.`);
-  }
-  return page;
-};
-
 /**
  * One round of everyday use: show each account in turn, let each one
  * notify, then open Settings and close it again.
@@ -73,7 +57,7 @@ async function round(app: ElectronApplication, sidebar: Page): Promise<void> {
   }
   // By URL: a page the second account opens late could otherwise pass for the new window.
   await clickMenu(app, 'Settings…');
-  const settings = await pageAt(app, '/settings.html');
+  const settings = await chromePage(app, '/settings.html');
   await settings.getByRole('heading', { name: 'Settings' }).waitFor();
   await settings.close();
   await expect
@@ -89,7 +73,7 @@ async function measureActivity(): Promise<ActivitySample> {
   try {
     await (await whatsAppPage(app)).getByTestId('fake-whatsapp').waitFor({ state: 'visible' });
     await clickMenu(app, 'Add Account');
-    const sidebar = await pageAt(app, '/sidebar.html');
+    const sidebar = await chromePage(app, '/sidebar.html');
     // The fake page wires its buttons once loaded; a first round does that for both accounts.
     await round(app, sidebar);
     await settle();

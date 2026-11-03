@@ -1,23 +1,12 @@
 import type { ElectronApplication, Page } from '@playwright/test';
 import { readFile } from 'node:fs/promises';
 import { join } from 'node:path';
+import { chromePage, clickMenu } from './chrome-helpers.ts';
 import { expect, test } from './fixtures.ts';
 
-const PAGE = 'app://chrome/custom-code.html';
-
 async function openCustomCode(app: ElectronApplication): Promise<Page> {
-  await app.evaluate(({ Menu }) => {
-    Menu.getApplicationMenu()
-      ?.items.flatMap((menu) => menu.submenu?.items ?? [])
-      .find((entry) => entry.label === 'Custom CSS and JavaScript…')
-      ?.click();
-  });
-  await expect.poll(() => app.windows().some((page) => page.url() === PAGE)).toBe(true);
-  const page = app.windows().find((candidate) => candidate.url() === PAGE);
-  if (page === undefined) {
-    throw new Error('The Custom CSS and JavaScript window did not open.');
-  }
-  return page;
+  await clickMenu(app, 'Custom CSS and JavaScript…');
+  return chromePage(app, '/custom-code.html');
 }
 
 const outline = (window: Page) =>

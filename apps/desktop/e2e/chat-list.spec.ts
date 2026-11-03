@@ -1,6 +1,7 @@
-import type { ElectronApplication, Page } from '@playwright/test';
+import type { Page } from '@playwright/test';
 import { readFile } from 'node:fs/promises';
 import { join } from 'node:path';
+import { clickMenu } from './chrome-helpers.ts';
 import { closeApp, expect, launchApp, test, whatsAppPage } from './fixtures.ts';
 
 interface Layout {
@@ -58,16 +59,6 @@ async function accountIds(profile: string): Promise<{ active: string; ids: strin
   return { active: saved.active, ids: saved.accounts.map(({ id }) => id) };
 }
 
-/** Clicks an item of the Account menu by its label. */
-async function clickAccountMenu(app: ElectronApplication, label: string): Promise<void> {
-  await app.evaluate(({ Menu }, wanted) => {
-    Menu.getApplicationMenu()
-      ?.items.flatMap((menu) => menu.submenu?.items ?? [])
-      .find((entry) => entry.label === wanted)
-      ?.click();
-  }, label);
-}
-
 test('resizes the chat list with the mouse and the keyboard, and keeps it across restarts', async ({
   fakeWhatsApp,
   profile,
@@ -122,7 +113,7 @@ test('keeps each account’s own chat list width', async ({ app, window, profile
   await expect(window.getByTestId('fake-whatsapp')).toBeVisible();
   await drag(window, 80);
   const personal = Math.round((await layoutOf(window)).list);
-  await clickAccountMenu(app, 'Add Account');
+  await clickMenu(app, 'Add Account');
   const work = await whatsAppPage(app, window);
   await expect(work.getByTestId('fake-whatsapp')).toBeVisible();
   const fresh = await layoutOf(work);
@@ -135,7 +126,7 @@ test('keeps each account’s own chat list width', async ({ app, window, profile
   const { ids } = await accountIds(profile);
   const [first = '', added = ''] = ids;
   await expect.poll(() => savedWidths(profile)).toEqual({ [first]: personal, [added]: wider });
-  await clickAccountMenu(app, 'WhatsApp');
+  await clickMenu(app, 'WhatsApp');
   await expect.poll(async () => (await layoutOf(window)).list).toBeCloseTo(personal, 0);
   expect((await layoutOf(work)).list).toBeCloseTo(wider, 0);
 });

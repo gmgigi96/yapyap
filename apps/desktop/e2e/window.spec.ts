@@ -1,6 +1,7 @@
 import type { ElectronApplication } from '@playwright/test';
 import { readFile, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
+import { openFromMenu } from './chrome-helpers.ts';
 import { closeApp, expect, launchApp, mainWindow, test } from './fixtures.ts';
 
 const BOUNDS = { x: 60, y: 40, width: 900, height: 640 };
@@ -73,15 +74,7 @@ test('hides the menu bar when the setting says so', async ({ app }) => {
   const main = await mainWindow(app);
   const autoHidden = () => main.evaluate((window) => window.isMenuBarAutoHide());
   expect(await autoHidden()).toBe(false);
-  const opened = app.waitForEvent('window');
-  await app.evaluate(({ Menu }) => {
-    Menu.getApplicationMenu()
-      ?.items.flatMap((menu) => menu.submenu?.items ?? [])
-      .find((entry) => entry.label === 'Settings…')
-      ?.click();
-  });
-  const settings = await opened;
-  await settings.waitForURL('app://chrome/settings.html');
+  const settings = await openFromMenu(app, 'Settings…', 'settings.html');
   await settings.getByRole('checkbox', { name: 'Hide the menu bar' }).check();
   await expect.poll(autoHidden).toBe(true);
 });
