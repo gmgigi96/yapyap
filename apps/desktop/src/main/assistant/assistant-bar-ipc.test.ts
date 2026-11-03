@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
 import type { ViewRegistry } from '../security/views.ts';
-import { listenToAssistantBar } from './bar-ipc.ts';
+import { listenToAssistantBar } from './assistant-bar-ipc.ts';
 
 const ORIGIN = 'https://web.whatsapp.com';
 

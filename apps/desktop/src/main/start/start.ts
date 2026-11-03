@@ -2,7 +2,7 @@ import { unreadInTitle } from '../../adapter/page-state.ts';
 import { accountAvatars, type AccountAvatars } from '../accounts/avatars.ts';
 import type { AccountSummary } from '../../shared/chrome-api.ts';
 import type { AccountMenu, ChromeRuntime } from '../chrome/feature.ts';
-import { listenToAssistantBar } from '../assistant/bar-ipc.ts';
+import { listenToAssistantBar } from '../assistant/assistant-bar-ipc.ts';
 import { suggestAsMessagesArrive } from '../assistant/auto-suggest.ts';
 import { inPageAssistantBar } from '../assistant/bar-page.ts';
 import { listenToChatList } from '../chat-list/chat-list-ipc.ts';
