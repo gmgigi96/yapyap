@@ -1,6 +1,7 @@
 import { Type, type Static } from 'typebox';
 import { Value } from 'typebox/value';
 import { parseInternationalNumber } from '../../shared/phone-number.ts';
+import { MAX_ACCOUNTS } from '../accounts/accounts.ts';
 import {
   AGENT_SCOPES,
   AGENT_TOKEN_EXPIRIES,
@@ -12,8 +13,6 @@ import {
   type AgentTokenSpec,
 } from '../../shared/agents-api.ts';
 
-/** As many accounts as `accounts.json` holds. */
-const MAX_ACCOUNTS = 32;
 /** An account's ID is a UUID. */
 export const ACCOUNT_ID_LENGTH = 36;
 /** The longest chat name WhatsApp shows in the chat list, as the adapter reads it. */

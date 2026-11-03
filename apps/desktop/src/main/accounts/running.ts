@@ -1,4 +1,4 @@
-import { colorFor, defaultName, type Account, type Accounts } from './accounts.ts';
+import { newAccount, type Account, type Accounts } from './accounts.ts';
 
 /** An open account in the window: its views, shown only while it is active. */
 export interface AccountPage {
@@ -95,13 +95,7 @@ function addAccount<Page extends AccountPage>(
   deps: RunningDependencies<Page>,
   state: State<Page>,
 ): void {
-  const position = state.accounts.accounts.length + 1;
-  const account: Account = {
-    id: deps.newId(),
-    name: defaultName(position),
-    color: colorFor(position),
-    enabled: true,
-  };
+  const account = newAccount(deps.newId(), state.accounts.accounts.length + 1);
   state.accounts = { ...state.accounts, accounts: [...state.accounts.accounts, account] };
   state.open.set(account.id, { account, page: deps.open(account) });
   switchAccount(deps, state, account.id);
