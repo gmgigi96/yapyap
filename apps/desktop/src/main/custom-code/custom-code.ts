@@ -6,7 +6,7 @@ import {
   NO_CUSTOM_CODE,
   type CustomCode,
 } from '../../shared/custom-code.ts';
-import type { TextFile } from '../atomic-write.ts';
+import { readIfPresent, type TextFile } from '../atomic-write.ts';
 
 /**
  * A world of its own: user scripts share the page's DOM but neither the
@@ -151,22 +151,13 @@ export interface CustomCodeController {
   readonly preview: (scope: string, css: string | undefined) => void;
 }
 
-/** A file that cannot be read counts as missing. */
-function readSaved(file: TextFile): string | undefined {
-  try {
-    return file.read();
-  } catch {
-    return undefined;
-  }
-}
-
 /** Keeps the user's stylesheets in their pages and runs their scripts on every load (#72). */
 export function createCustomCode(
   file: TextFile,
   warn: (message: string) => void,
 ): CustomCodeController {
   const state: CodeState = {
-    code: parseCustomCode(readSaved(file)),
+    code: parseCustomCode(readIfPresent(file)),
     previews: new Map(),
     pages: new Map(),
     warn,

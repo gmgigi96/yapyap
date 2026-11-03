@@ -2,7 +2,7 @@ import { mkdirSync, mkdtempSync, readdirSync, rmSync, statSync, writeFileSync } 
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
-import { isMissing, textFileAt, writeTextAtomicallyAsync } from './atomic-write.ts';
+import { isMissing, readIfPresent, textFileAt, writeTextAtomicallyAsync } from './atomic-write.ts';
 
 let dir: string;
 
@@ -31,6 +31,15 @@ describe('textFileAt', () => {
   it.skipIf(process.platform === 'win32')('creates the file with the mode it is given', () => {
     textFileAt(join(dir, 'private.json'), 0o600).write('{}');
     expect(statSync(join(dir, 'private.json')).mode & 0o777).toBe(0o600);
+  });
+});
+
+describe('readIfPresent', () => {
+  it('reads a saved file, and nothing from one that is missing', () => {
+    const file = textFileAt(join(dir, 'state.json'));
+    expect(readIfPresent(file)).toBeUndefined();
+    file.write('{}');
+    expect(readIfPresent(file)).toBe('{}');
   });
 });
 

@@ -58,6 +58,15 @@ export function textFileAt(path: string, mode?: number): TextFile {
   };
 }
 
+/** The file's text, or undefined when it is missing or cannot be read. */
+export function readIfPresent(file: TextFile): string | undefined {
+  try {
+    return file.read();
+  } catch {
+    return undefined;
+  }
+}
+
 /** True for the error of a file or folder that does not exist. */
 export function isMissing(error: unknown): boolean {
   return (error as NodeJS.ErrnoException).code === 'ENOENT';
