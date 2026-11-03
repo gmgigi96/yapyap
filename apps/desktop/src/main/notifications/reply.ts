@@ -35,6 +35,19 @@ async function focused(contents: ReplyContents, code = FOCUS_COMPOSER): Promise<
   return result === true;
 }
 
+/** Types `text` into the message box once `code` has focused it; false when no chat is open. */
+async function typeInComposer(
+  contents: ReplyContents,
+  text: string,
+  code = FOCUS_COMPOSER,
+): Promise<boolean> {
+  if (!(await focused(contents, code))) {
+    return false;
+  }
+  await contents.insertText(text);
+  return true;
+}
+
 /** What pressing a key in WhatsApp's page needs: Electron's input events. */
 export interface KeyContents {
   sendInputEvent(event: { type: 'keyDown' | 'char' | 'keyUp'; keyCode: string }): void;
@@ -60,12 +73,8 @@ export async function pressEnter(contents: ReplyContents & KeyContents): Promise
  * for the user to edit and send. False when no chat is open to take it. The
  * text is message content, so it is never logged.
  */
-export async function insertDraft(contents: ReplyContents, text: string): Promise<boolean> {
-  if (!(await focused(contents))) {
-    return false;
-  }
-  await contents.insertText(text);
-  return true;
+export function insertDraft(contents: ReplyContents, text: string): Promise<boolean> {
+  return typeInComposer(contents, text);
 }
 
 /**
@@ -73,12 +82,8 @@ export async function insertDraft(contents: ReplyContents, text: string): Promis
  * as if they typed it over a selection of all of it, for them to edit and
  * send. False when no chat is open. The text is never logged.
  */
-export async function replaceDraft(contents: ReplyContents, text: string): Promise<boolean> {
-  if (!(await focused(contents, SELECT_COMPOSER))) {
-    return false;
-  }
-  await contents.insertText(text);
-  return true;
+export function replaceDraft(contents: ReplyContents, text: string): Promise<boolean> {
+  return typeInComposer(contents, text, SELECT_COMPOSER);
 }
 
 /**
@@ -108,8 +113,7 @@ export async function draftReply(
   attempt = 1,
 ): Promise<void> {
   await deps.wait(STEP_MS);
-  if (await focused(contents)) {
-    await contents.insertText(text);
+  if (await typeInComposer(contents, text)) {
     return;
   }
   if (attempt >= ATTEMPTS) {
