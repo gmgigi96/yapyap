@@ -174,9 +174,10 @@ are signed by GitHub. To set it up:
 
 1. Create a private GitHub App owned by the maintainer, with webhooks off and
    these repository permissions: Contents, Pull requests, Issues, Workflows
-   and Commit statuses (read and write), and Checks (read). Nothing else.
-   Renovate needs Workflows to update action pins, and the statuses and
-   checks to follow its own PRs (ADR 0020).
+   and Commit statuses (read and write), and Checks and Dependabot alerts
+   (read). Nothing else. Renovate needs Workflows to update action pins, the
+   statuses and checks to follow its own PRs (ADR 0020), and the alerts to
+   raise security updates.
 2. Install it on `vascoguita/yapyap` only.
 3. Generate a private key, store it, and delete the downloaded file:
    `gh secret set AUTOMATION_APP_PRIVATE_KEY --repo vascoguita/yapyap < key.pem`
