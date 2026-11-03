@@ -164,10 +164,10 @@ describe('AgentsSection', () => {
     await vi.advanceTimersByTimeAsync(0);
     const before = t.agents.view.mock.calls.length;
     await vi.advanceTimersByTimeAsync(2000);
-    expect(t.agents.view.mock.calls.length).toBe(before + 1);
+    expect(t.agents.view.mock.calls).toHaveLength(before + 1);
     t.rendered.unmount();
     await vi.advanceTimersByTimeAsync(4000);
-    expect(t.agents.view.mock.calls.length).toBe(before + 1);
+    expect(t.agents.view.mock.calls).toHaveLength(before + 1);
   });
 
   it('keeps showing what it had when the view cannot be read', async () => {
@@ -223,7 +223,7 @@ describe('creating a token', () => {
     const t = await openForm();
     t.agents.create.mockResolvedValueOnce({ token: TOKEN, address: null });
     fireEvent.click(button('Create Token'));
-    await screen.findByText(/http:\/\/127\.0\.0\.1:<port>\/mcp/);
+    expect(await screen.findByText(/http:\/\/127\.0\.0\.1:<port>\/mcp/)).toBeTruthy();
   });
 
   it('shows why YapYap refused the token, keeping the form', async () => {

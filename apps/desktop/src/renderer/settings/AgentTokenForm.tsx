@@ -1,5 +1,5 @@
 import type { JSX } from 'preact';
-import { useState } from 'preact/hooks';
+import { useCallback, useState } from 'preact/hooks';
 import {
   AGENT_SCOPES,
   AGENT_TOKEN_EXPIRIES,
@@ -36,6 +36,13 @@ const PRESETS: Readonly<Record<'read' | 'draft', readonly AgentScope[]>> = {
   ],
 };
 
+const SEND: AgentScope = 'messages:send';
+
+const sends = (scopes: readonly AgentScope[]): boolean => scopes.includes(SEND);
+
+const listsChats = (scopes: readonly AgentScope[]): boolean =>
+  scopes.some((scope) => LISTED_CHAT_SCOPES.includes(scope));
+
 interface FormProps {
   readonly api: ChromeApi;
   readonly accounts: AgentsView['accounts'];
@@ -43,33 +50,43 @@ interface FormProps {
   readonly onCancel: () => void;
 }
 
-type Setter<T> = (value: T) => void;
+/** Changes some of the form's choices; the rest stay as they are. */
+type Update = (change: Partial<AgentTokenSpec>) => void;
 
-/** A set toggled one item at a time, as a list of checkboxes keeps it. */
-function toggled<T>(list: readonly T[], item: T, on: boolean): T[] {
-  return on
-    ? [...list.filter((entry) => entry !== item), item]
-    : list.filter((entry) => entry !== item);
+interface SpecProps {
+  readonly spec: AgentTokenSpec;
+  readonly onChange: Update;
+}
+
+function without<T>(list: readonly T[], item: T): T[] {
+  return list.filter((entry) => entry !== item);
+}
+
+/** The list with `item` once, last, as a list of checkboxes keeps it. */
+function withItem<T>(list: readonly T[], item: T): T[] {
+  return [...without(list, item), item];
 }
 
 function Accounts(props: {
   readonly accounts: AgentsView['accounts'];
   readonly chosen: readonly string[];
-  readonly onChange: Setter<string[]>;
+  readonly onChange: Update;
 }): JSX.Element {
+  const { chosen, onChange } = props;
   return (
     <fieldset>
       <legend>{text.form.accounts}</legend>
-      {props.accounts.map((account) => (
-        <label key={account.id}>
+      {props.accounts.map(({ id, name }) => (
+        <label key={id}>
           <input
             type="checkbox"
-            checked={props.chosen.includes(account.id)}
+            checked={chosen.includes(id)}
             onChange={(event) => {
-              props.onChange(toggled(props.chosen, account.id, event.currentTarget.checked));
+              const on = event.currentTarget.checked;
+              onChange({ accounts: on ? withItem(chosen, id) : without(chosen, id) });
             }}
           />{' '}
-          {account.name}
+          {name}
         </label>
       ))}
     </fieldset>
@@ -79,7 +96,7 @@ function Accounts(props: {
 function ScopeBox(props: {
   readonly scope: AgentScope;
   readonly chosen: readonly AgentScope[];
-  readonly onChange: Setter<AgentScope[]>;
+  readonly onChange: Update;
 }): JSX.Element {
   const { scope, chosen, onChange } = props;
   return (
@@ -88,7 +105,8 @@ function ScopeBox(props: {
         type="checkbox"
         checked={chosen.includes(scope)}
         onChange={(event) => {
-          onChange(toggled(chosen, scope, event.currentTarget.checked));
+          const on = event.currentTarget.checked;
+          onChange({ scopes: on ? withItem(chosen, scope) : without(chosen, scope) });
         }}
       />{' '}
       {text.scopes[scope]}
@@ -96,43 +114,32 @@ function ScopeBox(props: {
   );
 }
 
-function Presets({ onChange }: { readonly onChange: Setter<AgentScope[]> }): JSX.Element {
-  return (
-    <div class="actions">
-      <button
-        type="button"
-        onClick={() => {
-          onChange([...PRESETS.read]);
-        }}
-      >
-        {text.form.presets.read}
-      </button>
-      <button
-        type="button"
-        onClick={() => {
-          onChange([...PRESETS.draft]);
-        }}
-      >
-        {text.form.presets.draft}
-      </button>
-    </div>
-  );
-}
-
 function Scopes(props: {
   readonly chosen: readonly AgentScope[];
-  readonly onChange: Setter<AgentScope[]>;
+  readonly onChange: Update;
 }): JSX.Element {
   return (
     <fieldset>
       <legend>{text.form.scopes}</legend>
-      <Presets onChange={props.onChange} />
-      {AGENT_SCOPES.filter((scope) => scope !== 'messages:send').map((scope) => (
+      <div class="actions">
+        {(['read', 'draft'] as const).map((preset) => (
+          <button
+            key={preset}
+            type="button"
+            onClick={() => {
+              props.onChange({ scopes: [...PRESETS[preset]] });
+            }}
+          >
+            {text.form.presets[preset]}
+          </button>
+        ))}
+      </div>
+      {AGENT_SCOPES.filter((scope) => scope !== SEND).map((scope) => (
         <ScopeBox key={scope} scope={scope} {...props} />
       ))}
       <div class="danger-box">
-        <ScopeBox scope="messages:send" {...props} />
-        {props.chosen.includes('messages:send') ? <p role="note">{text.form.sendWarning}</p> : null}
+        <ScopeBox scope={SEND} {...props} />
+        {sends(props.chosen) ? <p role="note">{text.form.sendWarning}</p> : null}
       </div>
     </fieldset>
   );
@@ -140,7 +147,7 @@ function Scopes(props: {
 
 interface ListedProps {
   readonly listed: readonly AgentChatEntry[];
-  readonly onChange: Setter<readonly AgentChatEntry[]>;
+  readonly onChange: Update;
 }
 
 /** How a listed chat reads in a chip: its name and its number, as far as it has them. */
@@ -157,7 +164,7 @@ function ChatChips({ listed, onChange }: ListedProps): JSX.Element {
             type="button"
             aria-label={text.tokens.remove({ item: chatLabel(chat) })}
             onClick={() => {
-              onChange(listed.filter((entry) => entry !== chat));
+              onChange({ chats: without(listed, chat) });
             }}
           >
             {text.tokens.removeMark}
@@ -172,7 +179,7 @@ function ChatChips({ listed, onChange }: ListedProps): JSX.Element {
 function UseOpenChat(props: {
   readonly api: ChromeApi;
   readonly account: string;
-  readonly onName: Setter<string>;
+  readonly onName: (name: string) => void;
 }): JSX.Element {
   const { api, account, onName } = props;
   const [status, setStatus] = useState('');
@@ -200,7 +207,7 @@ function ChatField(props: {
   readonly label: string;
   readonly value: string;
   readonly max: number;
-  readonly onInput: Setter<string>;
+  readonly onInput: (value: string) => void;
   readonly onEnter: () => void;
 }): JSX.Element {
   return (
@@ -232,15 +239,15 @@ function AddChat(
   const [name, setName] = useState('');
   const [phone, setPhone] = useState('');
   const empty = name.trim() === '' && phone.trim() === '';
-  const add = (): void => {
+  const add = useCallback((): void => {
     if (empty) {
       return;
     }
     const entry = { name: name.trim() || null, phone: phone.trim() || null };
-    onChange([...listed.filter((chat) => chatLabel(chat) !== chatLabel(entry)), entry]);
+    onChange({ chats: [...listed.filter((chat) => chatLabel(chat) !== chatLabel(entry)), entry] });
     setName('');
     setPhone('');
-  };
+  }, [empty, name, phone, listed, onChange]);
   return (
     <div class="add-chat">
       <p class="hint">{text.form.chatHint}</p>
@@ -268,9 +275,10 @@ function AddChat(
 
 function ChatsChoice(props: {
   readonly label: string;
+  readonly value: AgentTokenSpec['chats'];
   readonly checked: boolean;
   readonly disabled?: boolean;
-  readonly onChoose: () => void;
+  readonly onChange: Update;
 }): JSX.Element {
   return (
     <label>
@@ -279,7 +287,9 @@ function ChatsChoice(props: {
         name="chats"
         checked={props.checked}
         disabled={props.disabled}
-        onChange={props.onChoose}
+        onChange={() => {
+          props.onChange({ chats: props.value });
+        }}
       />{' '}
       {props.label}
     </label>
@@ -289,9 +299,9 @@ function ChatsChoice(props: {
 function Chats(props: {
   readonly api: ChromeApi;
   readonly account: string | undefined;
-  readonly chats: readonly AgentChatEntry[] | 'all';
+  readonly chats: AgentTokenSpec['chats'];
   readonly listOnly: boolean;
-  readonly onChange: Setter<readonly AgentChatEntry[] | 'all'>;
+  readonly onChange: Update;
 }): JSX.Element {
   const { chats, listOnly, onChange } = props;
   const listed = chats === 'all' ? [] : chats;
@@ -300,18 +310,16 @@ function Chats(props: {
       <legend>{text.form.chats}</legend>
       <ChatsChoice
         label={text.form.allChats}
+        value="all"
         checked={chats === 'all'}
         disabled={listOnly}
-        onChoose={() => {
-          onChange('all');
-        }}
+        onChange={onChange}
       />
       <ChatsChoice
         label={text.form.listedChats}
+        value={listed}
         checked={chats !== 'all'}
-        onChoose={() => {
-          onChange(listed);
-        }}
+        onChange={onChange}
       />
       {chats === 'all' ? null : (
         <>
@@ -325,11 +333,15 @@ function Chats(props: {
 
 function LimitField(props: {
   readonly label: string;
-  readonly value: number | null;
-  readonly fallback: number;
-  readonly onChange: Setter<number | null>;
+  readonly limit: keyof AgentLimits;
+  readonly limits: AgentLimits;
+  readonly onChange: Update;
 }): JSX.Element {
-  const { label, value, fallback, onChange } = props;
+  const { label, limit, limits, onChange } = props;
+  const value = limits[limit];
+  const set = (next: number | null): void => {
+    onChange({ limits: { ...limits, [limit]: next } });
+  };
   return (
     <div class="limit">
       <label>
@@ -342,7 +354,7 @@ function LimitField(props: {
           disabled={value === null}
           onInput={(event) => {
             const next = Math.round(Number(event.currentTarget.value));
-            onChange(Number.isFinite(next) && next >= 1 ? Math.min(next, MAX_AGENT_LIMIT) : 1);
+            set(Number.isFinite(next) && next >= 1 ? Math.min(next, MAX_AGENT_LIMIT) : 1);
           }}
         />
       </label>{' '}
@@ -351,7 +363,7 @@ function LimitField(props: {
           type="checkbox"
           checked={value === null}
           onChange={(event) => {
-            onChange(event.currentTarget.checked ? null : fallback);
+            set(event.currentTarget.checked ? null : DEFAULT_AGENT_LIMITS[limit]);
           }}
         />{' '}
         {text.form.unlimited}
@@ -360,45 +372,14 @@ function LimitField(props: {
   );
 }
 
-function Limits(props: {
-  readonly limits: AgentLimits;
-  readonly sends: boolean;
-  readonly notify: boolean;
-  readonly onChange: Setter<AgentLimits>;
-  readonly onNotify: Setter<boolean>;
-}): JSX.Element {
-  const { limits, sends, onChange } = props;
-  const field = (key: keyof AgentLimits, label: string): JSX.Element => (
-    <LimitField
-      label={label}
-      value={limits[key]}
-      fallback={DEFAULT_AGENT_LIMITS[key]}
-      onChange={(value) => {
-        onChange({ ...limits, [key]: value });
-      }}
-    />
-  );
-  const unlimitedSending = sends && (limits.sendsPerMinute === null || limits.sendsPerDay === null);
-  return (
-    <fieldset>
-      <legend>{text.form.limits}</legend>
-      {field('callsPerMinute', text.form.callsPerMinute)}
-      {sends ? field('sendsPerMinute', text.form.sendsPerMinute) : null}
-      {sends ? field('sendsPerDay', text.form.sendsPerDay) : null}
-      {unlimitedSending ? <p role="note">{text.form.unlimitedSending}</p> : null}
-      {sends ? <Notify notify={props.notify} onNotify={props.onNotify} /> : null}
-    </fieldset>
-  );
-}
-
-function Notify(props: { readonly notify: boolean; readonly onNotify: Setter<boolean> }) {
+function Notify({ spec, onChange }: SpecProps): JSX.Element {
   return (
     <label>
       <input
         type="checkbox"
-        checked={props.notify}
+        checked={spec.notify}
         onChange={(event) => {
-          props.onNotify(event.currentTarget.checked);
+          onChange({ notify: event.currentTarget.checked });
         }}
       />{' '}
       {text.form.notify}
@@ -406,24 +387,45 @@ function Notify(props: { readonly notify: boolean; readonly onNotify: Setter<boo
   );
 }
 
-const expiryKey = (days: AgentTokenExpiry): keyof typeof text.form.expiryOptions =>
-  days === null ? 'never' : (String(days) as '1' | '7' | '30' | '90');
+function Limits(props: SpecProps): JSX.Element {
+  const { spec, onChange } = props;
+  const { limits } = spec;
+  const sending = sends(spec.scopes);
+  const field = (limit: keyof AgentLimits, label: string): JSX.Element => (
+    <LimitField label={label} limit={limit} limits={limits} onChange={onChange} />
+  );
+  const unlimitedSending =
+    sending && (limits.sendsPerMinute === null || limits.sendsPerDay === null);
+  return (
+    <fieldset>
+      <legend>{text.form.limits}</legend>
+      {field('callsPerMinute', text.form.callsPerMinute)}
+      {sending ? field('sendsPerMinute', text.form.sendsPerMinute) : null}
+      {sending ? field('sendsPerDay', text.form.sendsPerDay) : null}
+      {unlimitedSending ? <p role="note">{text.form.unlimitedSending}</p> : null}
+      {sending ? <Notify {...props} /> : null}
+    </fieldset>
+  );
+}
 
-function Expiry(props: {
-  readonly value: AgentTokenExpiry;
-  readonly sends: boolean;
-  readonly onChange: Setter<AgentTokenExpiry>;
-}): JSX.Element {
-  const allowed = AGENT_TOKEN_EXPIRIES.filter((days) => !props.sends || soon(days));
+const expiryKey = (days: AgentTokenExpiry): keyof typeof text.form.expiryOptions =>
+  days === null ? 'never' : (String(days) as `${typeof days}`);
+
+/** Whether a token expires within the time a sending token may last. */
+const soon = (days: AgentTokenExpiry): boolean => days !== null && days <= SENDING_TOKEN_DAYS;
+
+function Expiry({ spec, onChange }: SpecProps): JSX.Element {
+  const value = spec.expiresInDays;
+  const allowed = AGENT_TOKEN_EXPIRIES.filter((days) => !sends(spec.scopes) || soon(days));
   return (
     <label>
       {text.form.expiry}{' '}
       <select
-        value={expiryKey(props.value)}
+        value={expiryKey(value)}
         onChange={(event) => {
           const chosen = allowed.find((days) => expiryKey(days) === event.currentTarget.value);
           // `find` gives null for Never, and undefined only for a value the list does not offer.
-          props.onChange(chosen === undefined ? props.value : chosen);
+          onChange({ expiresInDays: chosen === undefined ? value : chosen });
         }}
       >
         {allowed.map((days) => (
@@ -436,11 +438,8 @@ function Expiry(props: {
   );
 }
 
-/** Whether a token expires within the time a sending token may last. */
-const soon = (days: AgentTokenExpiry): boolean => days !== null && days <= SENDING_TOKEN_DAYS;
-
 /** The form's choices, kept consistent: a token that opens or sends lists chats; one that sends expires soon. */
-function useSpec(accounts: AgentsView['accounts']) {
+function useSpec(accounts: AgentsView['accounts']): readonly [AgentTokenSpec, Update] {
   const [spec, setSpec] = useState<AgentTokenSpec>({
     name: '',
     scopes: [...PRESETS.read],
@@ -450,22 +449,21 @@ function useSpec(accounts: AgentsView['accounts']) {
     expiresInDays: SENDING_TOKEN_DAYS,
     notify: true,
   });
-  const update = (change: Partial<AgentTokenSpec>): void => {
-    const next = { ...spec, ...change };
-    const listOnly = next.scopes.some((scope) => LISTED_CHAT_SCOPES.includes(scope));
-    const sends = next.scopes.includes('messages:send');
-    setSpec({
-      ...next,
-      chats: listOnly && next.chats === 'all' ? [] : next.chats,
-      expiresInDays: sends && !soon(next.expiresInDays) ? SENDING_TOKEN_DAYS : next.expiresInDays,
+  const update = useCallback<Update>((change) => {
+    setSpec((current) => {
+      const next = { ...current, ...change };
+      return {
+        ...next,
+        chats: listsChats(next.scopes) && next.chats === 'all' ? [] : next.chats,
+        expiresInDays:
+          sends(next.scopes) && !soon(next.expiresInDays) ? SENDING_TOKEN_DAYS : next.expiresInDays,
+      };
     });
-  };
-  return [spec, update] as const;
+  }, []);
+  return [spec, update];
 }
 
-type Spec = ReturnType<typeof useSpec>;
-
-function NameField({ spec: [spec, update] }: { readonly spec: Spec }): JSX.Element {
+function NameField({ spec, onChange }: SpecProps): JSX.Element {
   return (
     <label>
       {text.form.name}{' '}
@@ -476,7 +474,7 @@ function NameField({ spec: [spec, update] }: { readonly spec: Spec }): JSX.Eleme
         placeholder={text.form.namePlaceholder}
         value={spec.name}
         onInput={(event) => {
-          update({ name: event.currentTarget.value });
+          onChange({ name: event.currentTarget.value });
         }}
       />
     </label>
@@ -484,62 +482,20 @@ function NameField({ spec: [spec, update] }: { readonly spec: Spec }): JSX.Eleme
 }
 
 /** Where the token may act and what it may do there. */
-function Reach(props: {
-  readonly api: ChromeApi;
-  readonly accounts: AgentsView['accounts'];
-  readonly spec: Spec;
-}): JSX.Element {
-  const [spec, update] = props.spec;
+function Reach(
+  props: SpecProps & { readonly api: ChromeApi; readonly accounts: AgentsView['accounts'] },
+): JSX.Element {
+  const { spec, onChange } = props;
   return (
     <>
-      <Accounts
-        accounts={props.accounts}
-        chosen={[...spec.accounts]}
-        onChange={(chosen) => {
-          update({ accounts: chosen });
-        }}
-      />
-      <Scopes
-        chosen={[...spec.scopes]}
-        onChange={(scopes) => {
-          update({ scopes });
-        }}
-      />
+      <Accounts accounts={props.accounts} chosen={spec.accounts} onChange={onChange} />
+      <Scopes chosen={spec.scopes} onChange={onChange} />
       <Chats
         api={props.api}
         account={spec.accounts[0]}
         chats={spec.chats}
-        listOnly={spec.scopes.some((scope) => LISTED_CHAT_SCOPES.includes(scope))}
-        onChange={(chats) => {
-          update({ chats });
-        }}
-      />
-    </>
-  );
-}
-
-/** How fast and for how long the token may act. */
-function Bounds({ spec: [spec, update] }: { readonly spec: Spec }): JSX.Element {
-  const sends = spec.scopes.includes('messages:send');
-  return (
-    <>
-      <Limits
-        limits={spec.limits}
-        sends={sends}
-        notify={spec.notify}
-        onChange={(limits) => {
-          update({ limits });
-        }}
-        onNotify={(notify) => {
-          update({ notify });
-        }}
-      />
-      <Expiry
-        value={spec.expiresInDays}
-        sends={sends}
-        onChange={(expiresInDays) => {
-          update({ expiresInDays });
-        }}
+        listOnly={listsChats(spec.scopes)}
+        onChange={onChange}
       />
     </>
   );
@@ -547,10 +503,10 @@ function Bounds({ spec: [spec, update] }: { readonly spec: Spec }): JSX.Element 
 
 /** Creating a token: what it may do, where, for how long, and how fast (ADR 0019). */
 export function AgentTokenForm({ api, accounts, onCreated, onCancel }: FormProps): JSX.Element {
-  const spec = useSpec(accounts);
+  const [spec, update] = useSpec(accounts);
   const [problem, setProblem] = useState('');
   const create = (): void => {
-    void api.agents.create(spec[0]).then((result) => {
+    void api.agents.create(spec).then((result) => {
       if ('problem' in result) {
         setProblem(result.problem);
         return;
@@ -568,9 +524,10 @@ export function AgentTokenForm({ api, accounts, onCreated, onCancel }: FormProps
       }}
     >
       <h4 id="token-form-title">{text.form.title}</h4>
-      <NameField spec={spec} />
-      <Reach api={api} accounts={accounts} spec={spec} />
-      <Bounds spec={spec} />
+      <NameField spec={spec} onChange={update} />
+      <Reach api={api} accounts={accounts} spec={spec} onChange={update} />
+      <Limits spec={spec} onChange={update} />
+      <Expiry spec={spec} onChange={update} />
       <p role="alert">{problem}</p>
       <div class="actions">
         <button type="submit">{text.form.create}</button>

@@ -16,13 +16,18 @@ export type AgentScope = (typeof AGENT_SCOPES)[number];
 /** Scopes that reach chats by name or number, so their token must list the chats it may reach. */
 export const LISTED_CHAT_SCOPES: readonly AgentScope[] = ['chat:open', 'messages:send'];
 
+const DAY = 1;
+const WEEK = 7;
+const MONTH = 30;
+const QUARTER = 90;
+
 /** How long a new token lasts, in days; null never expires. */
-export const AGENT_TOKEN_EXPIRIES = [1, 7, 30, 90, null] as const;
+export const AGENT_TOKEN_EXPIRIES = [DAY, WEEK, MONTH, QUARTER, null] as const;
 
 export type AgentTokenExpiry = (typeof AGENT_TOKEN_EXPIRIES)[number];
 
 /** The longest a token that sends may last, in days. */
-export const SENDING_TOKEN_DAYS = 30;
+export const SENDING_TOKEN_DAYS = MONTH;
 
 /** The most chats a token may list. */
 export const MAX_TOKEN_CHATS = 100;
@@ -77,7 +82,6 @@ export interface AgentTokenView {
   readonly name: string;
   readonly scopes: readonly AgentScope[];
   readonly accounts: readonly string[];
-  /** A chat whose name YapYap could not keep safely has a null name. */
   /** Each listed chat by its ID; a chat YapYap could not keep the details of has neither. */
   readonly chats: 'all' | readonly (AgentChatEntry & { readonly id: string })[];
   readonly limits: AgentLimits;
