@@ -80,6 +80,14 @@ export function types(signature: string): string[] {
   return found;
 }
 
+/** A 32-bit number's bytes, least significant first. */
+const littleEndian = (value: number): number[] => [
+  value & 0xff,
+  (value >>> 8) & 0xff,
+  (value >>> 16) & 0xff,
+  value >>> 24,
+];
+
 /** Writes values into a growing buffer, aligned as D-Bus requires. */
 export class Writer {
   private readonly bytes: number[] = [];
@@ -96,7 +104,7 @@ export class Writer {
 
   uint32(value: number): void {
     this.pad(4);
-    this.bytes.push(value & 0xff, (value >>> 8) & 0xff, (value >>> 16) & 0xff, value >>> 24);
+    this.bytes.push(...littleEndian(value));
   }
 
   raw(data: readonly number[]): void {
@@ -159,14 +167,7 @@ export class Writer {
       this.write(element, item);
     }
     const size = this.bytes.length - start;
-    this.bytes.splice(
-      lengthAt,
-      4,
-      size & 0xff,
-      (size >>> 8) & 0xff,
-      (size >>> 16) & 0xff,
-      size >>> 24,
-    );
+    this.bytes.splice(lengthAt, 4, ...littleEndian(size));
   }
 
   private struct(inner: string, fields: readonly DBusValue[]): void {

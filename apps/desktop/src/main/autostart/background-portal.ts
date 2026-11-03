@@ -2,13 +2,7 @@ import { randomBytes } from 'node:crypto';
 import { createConnection } from 'node:net';
 import { variant, type DBusValue, type Variant } from './dbus-codec.ts';
 import type { Environment } from '../environment.ts';
-import { connectBus, type Bus } from './dbus-client.ts';
-
-const BUS = {
-  destination: 'org.freedesktop.DBus',
-  path: '/org/freedesktop/DBus',
-  interface: 'org.freedesktop.DBus',
-} as const;
+import { BUS, connectBus, type Bus } from './dbus-client.ts';
 
 const PORTAL = {
   destination: 'org.freedesktop.portal.Desktop',
