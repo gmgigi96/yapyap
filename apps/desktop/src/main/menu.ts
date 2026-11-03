@@ -226,97 +226,73 @@ function assistantMenu(actions: MenuActions, keys: Keys): MenuItemConstructorOpt
   };
 }
 
+/** The items whose place differs between macOS and the other platforms. */
+interface PlacedItems {
+  readonly about: MenuItemConstructorOptions;
+  /** Settings, and beside it the user's own code, as Settings is where Developer Mode lives. */
+  readonly settings: MenuItemConstructorOptions[];
+  readonly help: MenuItemConstructorOptions[];
+  readonly quit: MenuItemConstructorOptions;
+}
+
+function placedItems(actions: MenuActions, keys: Keys): PlacedItems {
+  return {
+    about: { label: en.menu.about({ product: PRODUCT_NAME }), click: actions.openAbout },
+    settings: [
+      { label: en.menu.settings, ...keyed('settings', keys), click: actions.openSettings },
+      { label: en.menu.customCode, click: actions.openCustomCode },
+    ],
+    help: [
+      { label: en.menu.shortcuts, ...keyed('shortcuts', keys), click: actions.openShortcuts },
+      { label: en.menu.reportProblem, click: actions.openReport },
+      { label: en.menu.copyDiagnostics, click: actions.copyDiagnostics },
+      { label: en.menu.recordTrace, click: actions.recordTrace },
+    ],
+    quit: { role: 'quit', ...keyed('quit', keys) },
+  };
+}
+
 /**
  * The application menu: the platform's standard menus, with About opening
  * YapYap's own window instead of the stock panel. Settings sits where each
  * platform expects it, on the conventional shortcut.
  */
-function commonItems(
-  actions: MenuActions,
-  keys: Keys,
-): Record<'about' | 'settings' | 'help', MenuItemConstructorOptions[]> {
-  const about: MenuItemConstructorOptions = {
-    label: en.menu.about({ product: PRODUCT_NAME }),
-    click: actions.openAbout,
-  };
-  const diagnostics: MenuItemConstructorOptions = {
-    label: en.menu.copyDiagnostics,
-    click: actions.copyDiagnostics,
-  };
-  const settings: MenuItemConstructorOptions = {
-    label: en.menu.settings,
-    ...keyed('settings', keys),
-    click: actions.openSettings,
-  };
-  const shortcuts: MenuItemConstructorOptions = {
-    label: en.menu.shortcuts,
-    ...keyed('shortcuts', keys),
-    click: actions.openShortcuts,
-  };
-  const report: MenuItemConstructorOptions = {
-    label: en.menu.reportProblem,
-    click: actions.openReport,
-  };
-  const trace: MenuItemConstructorOptions = {
-    label: en.menu.recordTrace,
-    click: actions.recordTrace,
-  };
-  return { about: [about], settings: [settings], help: [shortcuts, report, diagnostics, trace] };
-}
-
-/** The user's own code sits beside Settings, as Settings is where Developer Mode lives. */
-function customCode(actions: MenuActions): MenuItemConstructorOptions {
-  return { label: en.menu.customCode, click: actions.openCustomCode };
-}
-
 export function buildMenuTemplate(
   platform: string,
   actions: MenuActions,
   custom: CustomShortcuts = {},
 ): MenuItemConstructorOptions[] {
   const keys = { platform, custom };
-  const { about, settings, help } = commonItems(actions, keys);
-  const quit: MenuItemConstructorOptions = { role: 'quit', ...keyed('quit', keys) };
-  const standard: MenuItemConstructorOptions[] = [
+  const placed = placedItems(actions, keys);
+  const menus: MenuItemConstructorOptions[] = [
+    accountMenu(actions, keys),
+    assistantMenu(actions, keys),
     editMenu(keys),
     viewMenu(actions, keys),
     windowMenu(actions, keys),
   ];
   if (platform !== 'darwin') {
-    const file: MenuItemConstructorOptions = {
-      label: en.menu.file,
-      submenu: [...settings, customCode(actions), { type: 'separator' }, quit],
-    };
     return [
-      file,
-      accountMenu(actions, keys),
-      assistantMenu(actions, keys),
-      ...standard,
-      { role: 'help', submenu: [...about, { type: 'separator' }, ...help] },
+      { label: en.menu.file, submenu: [...placed.settings, { type: 'separator' }, placed.quit] },
+      ...menus,
+      { role: 'help', submenu: [placed.about, { type: 'separator' }, ...placed.help] },
     ];
   }
   return [
-    macAppMenu([...about], [...settings, customCode(actions)], quit, keys),
+    macAppMenu(placed, keys),
     { role: 'fileMenu' },
-    accountMenu(actions, keys),
-    assistantMenu(actions, keys),
-    ...standard,
-    { role: 'help', submenu: help },
+    ...menus,
+    { role: 'help', submenu: placed.help },
   ];
 }
 
-function macAppMenu(
-  about: MenuItemConstructorOptions[],
-  settings: MenuItemConstructorOptions[],
-  quit: MenuItemConstructorOptions,
-  keys: Keys,
-): MenuItemConstructorOptions {
+function macAppMenu(placed: PlacedItems, keys: Keys): MenuItemConstructorOptions {
   return {
     label: PRODUCT_NAME,
     submenu: [
-      ...about,
+      placed.about,
       { type: 'separator' },
-      ...settings,
+      ...placed.settings,
       { type: 'separator' },
       { role: 'services' },
       { type: 'separator' },
@@ -324,7 +300,7 @@ function macAppMenu(
       { role: 'hideOthers' },
       { role: 'unhide' },
       { type: 'separator' },
-      quit,
+      placed.quit,
     ],
   };
 }
