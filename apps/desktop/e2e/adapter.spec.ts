@@ -1,6 +1,7 @@
 import type { ElectronApplication } from '@playwright/test';
 import { ADAPTER_WORLD_ID } from '../src/adapter/world.ts';
 import { PAGE_STATE_PROBE } from '../src/adapter/page-state.ts';
+import { LOGIN_CODE } from '../src/adapter/login-code.ts';
 import { expect, test } from './fixtures.ts';
 
 /** p95 time from a key press to the next frame after the composer updates. */
@@ -34,6 +35,22 @@ test.describe('when the account is logged out', () => {
     expect(await copiedDiagnostics(app)).toContain(
       '\nWhatsApp view=logged-out, chat_open=false (landmarks v9)\n',
     );
+  });
+
+  test('reads the login code’s modules from the page’s canvas', async ({ app, window }) => {
+    await expect(window.getByTestId('fake-whatsapp')).toBeVisible();
+    const code: unknown = await app.evaluate(
+      ({ webContents }, probe) =>
+        webContents
+          .getAllWebContents()
+          .find((candidate) => candidate.getURL().startsWith('http://127.0.0.1'))
+          ?.executeJavaScriptInIsolatedWorld(probe.world, [{ code: probe.code }]),
+      { world: ADAPTER_WORLD_ID, code: LOGIN_CODE },
+    );
+    // The fake page draws 25 modules a side, with a finder pattern in the corner.
+    expect(code).toHaveLength(25);
+    expect((code as string[])[0]).toMatch(/^11111110[01]{10}1111111$/);
+    expect((code as string[])[1]).toMatch(/^10000010[01]{10}1000001$/);
   });
 });
 

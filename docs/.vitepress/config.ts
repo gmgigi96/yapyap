@@ -76,6 +76,7 @@ export default defineConfig({
             { text: 'Get started', link: '/guide/get-started' },
             { text: 'AI assistant', link: '/guide/ai-assistant' },
             { text: 'AI agents (MCP)', link: '/guide/ai-agents' },
+            { text: 'Headless mode', link: '/guide/headless' },
             { text: 'User guide', link: '/guide/' },
             { text: 'Install', link: '/guide/install' },
             { text: 'Troubleshooting', link: '/guide/troubleshooting' },

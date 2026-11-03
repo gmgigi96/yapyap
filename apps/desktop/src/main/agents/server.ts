@@ -19,6 +19,10 @@ export interface AgentSources {
   readonly serve: (port: number, answer: Answer) => Promise<AgentListener>;
   readonly now: () => number;
   readonly version: string;
+  /** Listens whatever Settings › Agents says, as in headless mode (ADR 0020). */
+  readonly alwaysOn: boolean;
+  /** Hears the address each time the server starts listening. */
+  readonly onListening: (address: string) => void;
 }
 
 export interface AgentServerDependencies extends AgentSources {
@@ -40,6 +44,8 @@ export interface AgentServer {
 }
 
 const noAccounts: AgentAccounts = { list: () => [], page: () => undefined };
+
+const addressOf = (port: number): string => `http://127.0.0.1:${String(port)}/mcp`;
 
 /** Records calls in memory alone, newest first: Settings shows them, nothing keeps them. */
 function activityLog(now: () => number) {
@@ -99,6 +105,7 @@ function listening(deps: AgentServerDependencies, answer: (port: number) => Answ
       if (port === 0) {
         keep(deps.settings, actual);
       }
+      deps.onListening(addressOf(actual));
     } catch {
       state.problem = en.agents.portTaken({ port: String(port) });
       deps.warn('The MCP server could not listen on its port.');
@@ -126,9 +133,9 @@ function listening(deps: AgentServerDependencies, answer: (port: number) => Answ
 
 /**
  * The MCP server for AI agents (ADR 0019): it listens on 127.0.0.1 only
- * while Settings › Agents has it on, and stops the moment it is turned
- * off. The system picks the port once, and it is kept, so agents' configs
- * stay valid.
+ * while Settings › Agents has it on, or for a whole headless run (ADR 0020),
+ * and stops the moment it is turned off. The system picks the port once,
+ * and it is kept, so agents' configs stay valid.
  */
 export function agentServer(deps: AgentServerDependencies): AgentServer {
   const log = activityLog(deps.now);
@@ -137,14 +144,14 @@ export function agentServer(deps: AgentServerDependencies): AgentServer {
     keep(deps.settings, 0);
   };
   const follow = (): void => {
-    const { enabled, port } = deps.settings.current().agents;
+    const { port, enabled: chosen } = deps.settings.current().agents;
+    const enabled = deps.alwaysOn || chosen;
     listenOn(enabled ? port : undefined);
   };
   deps.settings.onChange(follow);
   follow();
   return {
-    address: () =>
-      state.listener === undefined ? null : `http://127.0.0.1:${String(state.listener.port)}/mcp`,
+    address: () => (state.listener === undefined ? null : addressOf(state.listener.port)),
     problem: () => state.problem,
     activity: log.entries,
     newPort,

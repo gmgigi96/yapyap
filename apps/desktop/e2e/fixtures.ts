@@ -339,6 +339,24 @@ export async function spawnApp(
   });
 }
 
+/**
+ * Starts the development build headless (ADR 0020), as from a script: with
+ * no display to reach and its output piped, which is no terminal.
+ */
+export async function spawnHeadless(
+  origin: string,
+  profile: string,
+): Promise<ChildProcessByStdio<null, Readable, Readable>> {
+  const { default: executable } = (await import('electron')) as unknown as { default: string };
+  const env = appEnvironment(origin, profile);
+  delete env['DISPLAY'];
+  delete env['WAYLAND_DISPLAY'];
+  return spawn(executable, [MAIN, `--user-data-dir=${profile}`, '--headless'], {
+    env,
+    stdio: ['ignore', 'pipe', 'pipe'],
+  });
+}
+
 /** How long a second launch may take to hand over to the running app and exit. */
 const HANDOVER_TIMEOUT_MS = 30_000;
 

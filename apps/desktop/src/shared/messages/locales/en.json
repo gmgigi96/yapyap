@@ -720,6 +720,12 @@
     },
     "trayStop": "Stop AI Agents"
   },
+  "headless": {
+    "agents": "AI agents connect to {{address}}",
+    "scan": "To link the account “{{account}}”, open WhatsApp on your phone, go to Settings › Linked devices › Link a device, and scan this code:",
+    "linked": "The account “{{account}}” is linked.",
+    "notTerminal": "The account “{{account}}” is not linked. To see the code to scan, start YapYap with --headless in a terminal."
+  },
   "chatList": {
     "label": "Chat list width",
     "hint": "Drag, or use the arrow keys, to resize the chat list. Double-click or press Enter to go back to WhatsApp’s own width."

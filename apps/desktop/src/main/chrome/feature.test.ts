@@ -162,6 +162,8 @@ function setup() {
       serve: vi.fn(() => Promise.reject(new Error('Not in this test.'))),
       now: () => 0,
       version: '1.0.0',
+      alwaysOn: false,
+      onListening: vi.fn(),
     },
   } satisfies ChromeFeatureDependencies;
   const views = new WeakMap<object, ViewInfo>();

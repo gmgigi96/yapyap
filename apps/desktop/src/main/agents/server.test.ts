@@ -47,7 +47,7 @@ function settingsOf(initial: Partial<Settings['agents']> = {}): SettingsService 
 
 const settle = () => new Promise((resolve) => setTimeout(resolve, 0));
 
-function setup(initial: Partial<Settings['agents']> = {}) {
+function setup(initial: Partial<Settings['agents']> = {}, alwaysOn = false) {
   const answers: ((request: AgentRequest) => unknown)[] = [];
   const closed: number[] = [];
   const deps = {
@@ -78,6 +78,8 @@ function setup(initial: Partial<Settings['agents']> = {}) {
     notify: vi.fn(),
     warn: vi.fn(),
     version: '1.2.3',
+    alwaysOn,
+    onListening: vi.fn(),
   } satisfies AgentServerDependencies;
   return { deps, answers, closed, server: agentServer(deps) };
 }
@@ -111,6 +113,7 @@ describe('agentServer', () => {
     expect(t.deps.settings.current().agents.port).toBe(57_345);
     expect(t.deps.serve).toHaveBeenCalledExactlyOnceWith(0, expect.any(Function));
     expect(t.server.address()).toBe('http://127.0.0.1:57345/mcp');
+    expect(t.deps.onListening).toHaveBeenCalledExactlyOnceWith('http://127.0.0.1:57345/mcp');
     // Requests are checked against the port it got, not the 0 it asked for.
     const answered = await t.answers[0]?.(
       request(57_345, { jsonrpc: '2.0', id: 1, method: 'ping' }),
@@ -153,6 +156,17 @@ describe('agentServer', () => {
     expect(t.server.address()).toBeNull();
   });
 
+  it('listens for a whole headless run, whatever the setting says, and leaves it alone', async () => {
+    const t = setup({ enabled: false, port: 50_000 }, true);
+    await settle();
+    expect(t.deps.serve).toHaveBeenCalledExactlyOnceWith(50_000, expect.any(Function));
+    expect(t.deps.onListening).toHaveBeenCalledExactlyOnceWith('http://127.0.0.1:50000/mcp');
+    t.deps.settings.update((settings) => ({ ...settings, general: { ...settings.general } }));
+    await settle();
+    expect(t.closed).toEqual([]);
+    expect(t.deps.settings.current().agents.enabled).toBe(false);
+  });
+
   it('says when its port is taken, and clears that once it moves', async () => {
     const t = setup();
     t.deps.serve.mockRejectedValueOnce(new Error('EADDRINUSE'));
@@ -166,6 +180,7 @@ describe('agentServer', () => {
       'Another program uses port 50000, so agents can’t connect. Pick another port.',
     );
     expect(t.deps.warn).toHaveBeenCalledWith('The MCP server could not listen on its port.');
+    expect(t.deps.onListening).not.toHaveBeenCalled();
     t.server.newPort();
     await settle();
     expect(t.server.problem()).toBe('');

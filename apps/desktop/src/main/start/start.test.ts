@@ -16,6 +16,9 @@ import { WHATSAPP_ORIGIN } from '../whatsapp-origin.ts';
 import type { WindowOptions } from '../window/windows.ts';
 import type { AssistantBar } from '../assistant/bar.ts';
 import type { AssistantBarView } from '../assistant/bar-page.ts';
+import { LOGIN_CODE } from '../../adapter/login-code.ts';
+import { en } from '../../shared/messages/en.ts';
+import { PAIRING_CHECK_MS } from '../headless/pairing.ts';
 
 const ACCOUNT = '0b6c3f0e-58a4-4a39-9a43-6f0c1c1f6a01';
 const SECOND = '7d2e9b1c-3f4a-4c5d-8e6f-1a2b3c4d5e6f';
@@ -341,6 +344,7 @@ function fakes(env: Record<string, string | undefined> = {}, argv: readonly stri
     onResume: vi.fn(),
     env,
     argv,
+    terminal: { isTTY: true, write: vi.fn<(text: string) => void>() },
     chatListWidths: {
       get: vi.fn<(account: string) => number | undefined>(() => undefined),
       set: vi.fn(),
@@ -1723,5 +1727,99 @@ describe('startApp', () => {
     await startApp(f);
     expect(f.web.contents.loadURL).toHaveBeenCalledWith(WHATSAPP_ORIGIN);
     expect(f.warn).toHaveBeenCalledWith(expect.stringContaining('only loopback'));
+  });
+});
+
+describe('startApp headless', () => {
+  beforeEach(() => {
+    vi.useFakeTimers();
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
+  /** A first launch with an unclean exit and a release out, all of which would ask the user. */
+  function headless() {
+    const f = fakes({ WAYLAND_DISPLAY: 'wayland-0', DISPLAY: ':0' }, ['yapyap', '--headless']);
+    f.settings.firstRun = true;
+    f.releases.policy = 'self-update';
+    f.stored.set('running.json', '{"version":"0.0.9","startedAt":1000}');
+    const settings = defaultSettings();
+    f.settings.current = () => ({
+      ...settings,
+      privacy: { ...settings.privacy, crashReports: 'ask' },
+      reliability: { ...settings.reliability, displayBackend: 'x11' },
+    });
+    return f;
+  }
+
+  it('runs on Chromium’s headless backend, whatever display backend is chosen', async () => {
+    const f = headless();
+    await startApp(f);
+    expect(f.app.commandLine.appendSwitch).toHaveBeenCalledWith('ozone-platform', 'headless');
+    expect(f.app.commandLine.appendSwitch).toHaveBeenCalledWith('disable-gpu');
+    expect(f.app.commandLine.appendSwitch).not.toHaveBeenCalledWith('ozone-platform', 'x11');
+    expect(f.capture).toHaveBeenCalledExactlyOnceWith(expect.any(Function), false);
+  });
+
+  it('shows no window, tray, welcome, update or crash review, and takes no shortcut', async () => {
+    const f = headless();
+    await startApp(f);
+    f.web.fire('dom-ready');
+    f.web.fire('page-title-updated', {}, '(2) WhatsApp');
+    await vi.advanceTimersByTimeAsync(5000);
+    expect(f.window.show).not.toHaveBeenCalled();
+    expect(f.tray.create).not.toHaveBeenCalled();
+    expect(f.runtime.openWelcome).not.toHaveBeenCalled();
+    expect(f.selfUpdate.updater).not.toHaveBeenCalled();
+    expect(f.crashes.review).not.toHaveBeenCalled();
+    expect(f.globalShortcuts.register).not.toHaveBeenCalled();
+    expect(f.createWindow).toHaveBeenCalledWith(expect.objectContaining({ show: false }));
+  });
+
+  it('shows a logged-out account’s code in the terminal until it is linked', async () => {
+    const f = headless();
+    let state = { view: 'logged-out', chatOpen: false, unread: 0 };
+    const code = Array.from({ length: 21 }, () => '1'.repeat(21));
+    const probe = f.web.contents.executeJavaScriptInIsolatedWorld;
+    probe.mockImplementation(() => {
+      const [, [script]] = probe.mock.lastCall as unknown as [number, { code: string }[]];
+      return Promise.resolve(script?.code === LOGIN_CODE ? code : state);
+    });
+    await startApp(f);
+    expect(f.terminal.write).not.toHaveBeenCalled();
+    await vi.advanceTimersByTimeAsync(PAIRING_CHECK_MS);
+    expect(f.terminal.write).toHaveBeenCalledExactlyOnceWith(
+      expect.stringContaining(`${en.headless.scan({ account: 'WhatsApp' })}\n`),
+    );
+    state = { view: 'chats', chatOpen: false, unread: 0 };
+    await vi.advanceTimersByTimeAsync(PAIRING_CHECK_MS);
+    expect(f.terminal.write).toHaveBeenLastCalledWith(
+      `${en.headless.linked({ account: 'WhatsApp' })}\n`,
+    );
+  });
+
+  it('never shows a code outside headless mode', async () => {
+    const f = fakes();
+    f.web.contents.executeJavaScriptInIsolatedWorld.mockResolvedValue({
+      view: 'logged-out',
+      chatOpen: false,
+      unread: 0,
+    });
+    await startApp(f);
+    await vi.advanceTimersByTimeAsync(PAIRING_CHECK_MS * 2);
+    expect(f.terminal.write).not.toHaveBeenCalled();
+  });
+
+  it('refuses to start without the sandbox with no dialog, only the logged reason', async () => {
+    const f = { ...headless(), sandboxDisabled: true };
+    await startApp(f);
+    expect(f.app.commandLine.appendSwitch).toHaveBeenCalledWith('ozone-platform', 'headless');
+    expect(f.logError).toHaveBeenCalledExactlyOnceWith(
+      expect.stringMatching(/cannot start safely/),
+    );
+    expect(f.explainUnsafeStart).not.toHaveBeenCalled();
+    expect(f.app.quit).toHaveBeenCalledOnce();
   });
 });

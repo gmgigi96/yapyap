@@ -55,6 +55,8 @@ import { followTrayIconSetting } from '../tray/tray-icon.ts';
 import { syncAutostartSetting } from '../autostart/autostart.ts';
 import { followSpellingSetting } from '../spelling/spelling.ts';
 import { sidebarSource } from '../accounts/sidebar-source.ts';
+import { headlessRequested } from '../headless/headless.ts';
+import { showPairingCodes } from '../headless/pairing.ts';
 import {
   beforeReady,
   applyDisplayBackend,
@@ -374,6 +376,10 @@ function accountsTray<Window extends WindowPort>(
   visibility: Visibility,
   screens: Screens,
 ): { readonly refresh: () => void; readonly setUnread: (unread: number) => void } {
+  if (headlessRequested(deps.argv)) {
+    // Headless, a tray has nobody to show it to, and no display to show it on.
+    return { refresh: () => undefined, setUnread: () => undefined };
+  }
   let unread = 0;
   const port = deps.tray.create();
   followTrayIconSetting(port, { ...deps.tray, platform: deps.platform, settings: deps.settings });
@@ -655,7 +661,8 @@ function wireMainWindow<Window extends WindowPort>(
       activePage().focus();
     },
   });
-  showWhenPageReady(window, deps.settings.current().general.startMinimized, activePage());
+  const hidden = deps.settings.current().general.startMinimized || headlessRequested(deps.argv);
+  showWhenPageReady(window, hidden, activePage());
   return page;
 }
 
@@ -699,6 +706,23 @@ function listenToNotifications<Window extends WindowPort>(
   return notifiers;
 }
 
+/** Shows each logged-out account's login code in the terminal (ADR 0020). */
+function pairInTerminal<Window extends WindowPort>(
+  deps: StartDependencies<Window>,
+  running: RunningAccounts<OpenedAccount>,
+): void {
+  showPairingCodes({
+    accounts: () =>
+      running.opened().map(({ account, page }) => ({
+        id: account.id,
+        name: account.name,
+        page: page.contents,
+      })),
+    terminal: deps.terminal,
+    every: setInterval,
+  });
+}
+
 /** Opens the main window with every account, and waits for their first loads. */
 async function openWindow<Window extends WindowPort>(
   deps: StartDependencies<Window>,
@@ -709,7 +733,10 @@ async function openWindow<Window extends WindowPort>(
   proxy: ProxyController,
 ): Promise<void> {
   const window = openMainWindow(deps);
-  takeGlobalShortcuts(deps, window);
+  const headless = headlessRequested(deps.argv);
+  if (!headless) {
+    takeGlobalShortcuts(deps, window);
+  }
   const chatList = attachChatList(deps, window, security, origin);
   const running = openAccounts({
     deps,
@@ -729,6 +756,9 @@ async function openWindow<Window extends WindowPort>(
   }));
   attachAssistantBar({ deps, chrome, window, security, origin }, running);
   instances.attach(window, wireMainWindow(deps, chrome, window, running, origin));
+  if (headless) {
+    pairInTerminal(deps, running);
+  }
   // A failed load must not end startup: the monitor shows the recovery screen.
   await Promise.all(running.opened().map(({ page }) => page.loaded));
 }
@@ -741,7 +771,8 @@ function welcomeOnFirstRun<Window extends WindowPort>(
   deps: StartDependencies<Window>,
   chrome: ReturnType<StartDependencies<Window>['chrome']['afterReady']>,
 ): void {
-  if (!deps.settings.firstRun) {
+  // Headless, nobody would see the welcome, which waits for the first desktop launch.
+  if (!deps.settings.firstRun || headlessRequested(deps.argv)) {
     return;
   }
   deps.settings.update((settings) => settings);
@@ -762,6 +793,8 @@ export async function startApp<Window extends WindowPort>(
   deps: StartDependencies<Window>,
 ): Promise<void> {
   const { app, warn } = deps;
+  // First, so that even the sandbox refusal starts on a display that exists.
+  const display = applyDisplayBackend(deps);
   if (deps.sandboxDisabled) {
     await refuseWithoutSandbox(deps);
     return;
@@ -778,7 +811,6 @@ export async function startApp<Window extends WindowPort>(
   const views: ViewRegistry = new WeakMap();
   const identity = browserIdentity(deps);
   const picker = latePicker();
-  const display = applyDisplayBackend(deps);
   const capture = deps.capture(picker.pick, display.active === 'wayland');
   const security = { ...deps, capture, views, identity };
   const graphics = beforeReady(deps, security);
@@ -792,8 +824,11 @@ export async function startApp<Window extends WindowPort>(
   const chrome = deps.chrome.afterReady(views, warn, rendering);
   signInToProxies(deps, chrome);
   picker.bind(chrome.pickCaptureSource);
-  announceStartup(deps, graphics);
-  reportCrash(chrome.technicalDetails);
+  // Headless, nobody could answer an update or crash report dialog.
+  if (!headlessRequested(deps.argv)) {
+    announceStartup(deps, graphics);
+    reportCrash(chrome.technicalDetails);
+  }
   await openWindow(deps, chrome, security, instances, origin, proxy);
   welcomeOnFirstRun(deps, chrome);
 }

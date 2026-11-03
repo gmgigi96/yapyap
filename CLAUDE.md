@@ -39,6 +39,7 @@ Use pnpm (version pinned in `package.json`) on Node.js 26 LTS.
 | Vulnerability audit               | `pnpm audit --audit-level high`                                                                     |
 | Docs site (dev / build)           | `pnpm docs:dev` / `pnpm docs:build`                                                                 |
 | Package installers for this OS    | `pnpm package` (output in `apps/desktop/release/`)                                                  |
+| Run headless (no display)         | `pnpm --filter @yapyap/desktop exec electron out/main/index.js --headless` after `pnpm build`       |
 | Smoke-test an installed package   | `YAPYAP_PACKAGED_EXECUTABLE=<path> pnpm test:smoke`                                                 |
 | Verify hardened fuses             | `node scripts/src/bin/verify-fuses.ts <executable or .app>`                                         |
 | AUR PKGBUILD and .SRCINFO         | `node scripts/src/bin/aur.ts <version> <amd64 .deb> <arm64 .deb> <output dir>`                      |
@@ -283,3 +284,9 @@ Update this table in the PR that adds a command.
 - Packaged builds disable the Node inspector fuse, so Playwright's Electron
   launcher cannot drive them. The smoke test connects over CDP through the
   `DevToolsActivePort` file in the profile directory instead.
+- `--headless` (ADR 0020) runs with no window, tray or dialog: anything
+  that shows one checks `headlessRequested(deps.argv)` first. On Linux it
+  puts Chromium on `--ozone-platform=headless --disable-gpu`; never turn on
+  unsafe SwiftShader instead. The login QR code goes only to a terminal
+  (`Terminal.isTTY`), never to the log. E2E tests start it with
+  `spawnHeadless`, which drops the display.

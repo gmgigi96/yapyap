@@ -14,6 +14,7 @@ import { en } from '../../shared/messages/en.ts';
 import { followGlobalShortcuts, toggleWindow } from '../shortcuts/global-shortcuts.ts';
 import { createProxyLogin } from '../network/proxy-login.ts';
 import { useCameraPortal } from '../permissions/camera-portal.ts';
+import { headlessRequested, useHeadlessDisplay } from '../headless/headless.ts';
 import type { StartDependencies, WindowPort } from './types.ts';
 
 /** Starts without hardware acceleration, for when graphics problems stop YapYap from starting. */
@@ -68,6 +69,9 @@ export function beforeReady<Window extends WindowPort>(
 export function applyDisplayBackend<Window extends WindowPort>(
   deps: StartDependencies<Window>,
 ): DisplayBackend {
+  if (headlessRequested(deps.argv)) {
+    return useHeadlessDisplay(deps.app.commandLine, deps.platform);
+  }
   const display = chooseDisplayBackend({
     platform: deps.platform,
     setting: deps.settings.current().reliability.displayBackend,
@@ -189,13 +193,16 @@ export function openMainWindow<Window extends WindowPort>(deps: StartDependencie
   return window;
 }
 
-/** Never runs unsandboxed: explains why YapYap will not start, then quits. */
+/**
+ * Never runs unsandboxed: explains why YapYap will not start, then quits.
+ * Headless, the logged reason is all there is, since nobody sees a dialog.
+ */
 export function refuseWithoutSandbox<Window extends WindowPort>(
   deps: StartDependencies<Window>,
 ): Promise<void> {
   return refuseUnsafeStart({
     whenReady: () => deps.app.whenReady(),
-    explain: deps.explainUnsafeStart,
+    explain: headlessRequested(deps.argv) ? () => Promise.resolve(false) : deps.explainUnsafeStart,
     openExternal: deps.openExternal,
     logError: deps.logError,
     quit: () => {

@@ -364,3 +364,9 @@ title, escape })` (`src/renderer/shared/mount.tsx`), which titles the
 - Install page button (#579): the download button carries its own styles,
   so it shows as a button on the install page too, not only on the home
   page.
+- Headless mode (#587, ADR 0020, C48 in ADR 0008): `--headless` runs with
+  no window, tray, welcome, update check or crash review, on Chromium's
+  headless backend without a GPU on Linux, and keeps the MCP server on for
+  the run. The `login-code.ts` probe reads the logged-out page's QR code as
+  modules, which `headless/pairing.ts` draws in the terminal, and only
+  there.

@@ -642,6 +642,12 @@ export interface Messages {
     };
     readonly trayStop: string;
   };
+  readonly headless: {
+    readonly agents: (params: { readonly address: string | number }) => string;
+    readonly scan: (params: { readonly account: string | number }) => string;
+    readonly linked: (params: { readonly account: string | number }) => string;
+    readonly notTerminal: (params: { readonly account: string | number }) => string;
+  };
   readonly chatList: { readonly label: string; readonly hint: string };
   readonly notifications: {
     readonly titled: (params: {

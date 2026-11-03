@@ -1,3 +1,4 @@
+import type { Terminal } from '../headless/headless.ts';
 import type { AccountAvatars, AvatarPage } from '../accounts/avatars.ts';
 import type { ChromeFeature, WhatsAppContents } from '../chrome/feature.ts';
 import type { SidebarPort } from '../chrome/sidebar.ts';
@@ -196,8 +197,10 @@ export interface StartDependencies<Window extends WindowPort> {
   readonly capture: (pickInApp: PickInApp, wayland: boolean) => DisplayCapturePort;
   readonly chrome: ChromeFeature;
   readonly env: Readonly<Record<string, string | undefined>>;
-  /** The command line, for `--safe-mode`. */
+  /** The command line, for `--safe-mode` and `--headless`. */
   readonly argv: readonly string[];
+  /** Where headless mode shows what the user must see, such as a login code (ADR 0020). */
+  readonly terminal: Terminal;
   readonly openExternal: (url: string) => Promise<unknown>;
   readonly isOnline: () => boolean;
   readonly onResume: (listener: () => void) => void;
