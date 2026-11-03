@@ -67,6 +67,22 @@ pnpm package            # build installers for the current OS
 
 See [ADR 0007](docs/adr/0007-git-and-merge-strategy.md) for the reasoning.
 
+### Pull requests from forks
+
+GitHub gives pull requests from forks no secrets, so SonarQube Cloud cannot
+analyze them and their `SonarQube Cloud` check fails. Once the changes have
+been read and are safe to run with the repository's secrets, the maintainer
+pushes the branch to this repository and opens a pull request from it, which
+keeps the contributor's signed commits:
+
+```sh
+gh pr checkout <number>
+git push origin HEAD:<type>/<short-description>
+gh pr create --head <type>/<short-description> --fill   # then add "Closes #<number>"
+```
+
+The fork's pull request is closed in favor of the new one.
+
 UI text lives in `apps/desktop/src/shared/messages/locales/en.json`. After
 changing it, run `node scripts/src/bin/i18n-types.ts`. Translations follow
 [docs/translations.md](docs/translations.md).

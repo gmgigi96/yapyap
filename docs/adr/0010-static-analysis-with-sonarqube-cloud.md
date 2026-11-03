@@ -24,12 +24,13 @@ analysis must run in CI.
   copy of the secret, so dependency updates are analyzed too. A run without
   `SONAR_TOKEN` fails rather than pass unanalyzed.
 - **Pull requests from forks** (amended 2026-11-03, after #577 merged with
-  no analysis) get no secrets, so CI leaves them to `sonar-fork.yml`. It
-  runs on `workflow_run` once their CI ends, in this repository with the
-  token, and never runs their code: it installs master's dependencies and
-  takes master's `sonar-project.properties` (which can name programs the
-  scanner runs) before checking out their files, then scans them with the
-  coverage report from their CI run.
+  no analysis) get no secrets, so their analysis fails and says why. Once
+  their changes have been read, the maintainer pushes the branch to this
+  repository and opens the pull request from there (CONTRIBUTING). A
+  `workflow_run` workflow could analyze them with the token, but it brings
+  their files into a job that holds secrets, which SonarQube Cloud reports
+  as a vulnerability (`githubactions:S7631`); the maintainer chose the
+  manual step over marking that finding as a false positive.
 - **Scope:** `sonar-project.properties`. Test code (unit tests, E2E specs, the
   fake WhatsApp page) is analyzed with test rules and kept out of duplication
   and coverage. Coverage exclusions mirror `vitest.config.ts`, so Sonar and
@@ -69,7 +70,7 @@ analysis must run in CI.
   entry's promise chain (no top-level await), and two E2E rules the
   analyzer misreads for Playwright (assertions and conditional skips).
 - **Required check:** SonarQube Cloud's own `SonarCloud Code Analysis`
-  check, which it posts on every analyzed pull request, forks included, is
+  check, which it posts on every analyzed pull request, is
   required in `.github/rulesets/master.json`, pinned to SonarQube Cloud's
   GitHub App. The CI job (through `CI result`) was required first, added
   only once overall code passed the strict gate, so the backlog never
@@ -80,8 +81,8 @@ analysis must run in CI.
 ## Consequences
 
 - Every pull request gets a quality gate result and a decoration with its new
-  issues, coverage and duplication. A fork's arrives a few minutes after its
-  CI.
+  issues, coverage and duplication. A fork's waits for the maintainer to
+  push its branch here.
 - The CI job repeats the unit tests to produce coverage next to the scan;
   this costs about a minute and keeps the job self-contained.
 - A rule that conflicts with a project convention is turned off with a reason
