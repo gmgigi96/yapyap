@@ -1,4 +1,5 @@
 import type { ElectronApplication, Page } from '@playwright/test';
+import { standInKeyring } from './assistant-helpers.ts';
 import { chromePage, clickMenu } from './chrome-helpers.ts';
 import { expect, test } from './fixtures.ts';
 
@@ -16,13 +17,14 @@ async function turnOnAgents(
 }
 
 /** Creates a token that may send to `chat` alone, as a user would in Settings. */
-async function sendingToken(settings: Page, chat: string): Promise<string> {
+async function sendingToken(settings: Page, chat: string, phone = ''): Promise<string> {
   const agents = settings.getByRole('region', { name: 'Agents' });
   await agents.getByRole('button', { name: 'Create a Token…' }).click();
   await agents.getByRole('textbox', { name: /^Name/ }).fill('E2E agent');
   await agents.getByRole('checkbox', { name: 'Send messages, without asking you' }).check();
   await expect(agents.getByText(/can be tricked by a message someone sends you/)).toBeVisible();
   await agents.getByRole('textbox', { name: /Chat name/ }).fill(chat);
+  await agents.getByRole('textbox', { name: /International number/ }).fill(phone);
   await agents.getByRole('button', { name: 'Add', exact: true }).click();
   await agents.getByRole('button', { name: 'Create Token' }).click();
   const token = agents.locator('.copyable code').first();
@@ -103,6 +105,47 @@ test('lets an agent with a token send to the one chat it lists, and nothing else
   const agents = settings.getByRole('region', { name: 'Agents' });
   await expect(agents.getByText(/E2E agent · send_message in .*: ok/)).toBeVisible();
   await expect(agents.getByText('Sent by an agent')).toHaveCount(0);
+});
+
+test('finds a listed chat by part of its name, and sends to its number wherever it is', async ({
+  app,
+  window,
+  fakeWhatsApp,
+}) => {
+  await expect(window.getByTestId('fake-whatsapp')).toBeVisible();
+  // The chat names and numbers the agent sees are kept encrypted.
+  await standInKeyring(app);
+  const { settings, address } = await turnOnAgents(app);
+  const token = await sendingToken(settings, 'Test Chat Two', '+44 7700 900123');
+  const [account] = JSON.parse((await callTool(address, token, 'list_accounts')).text) as {
+    id: string;
+  }[];
+
+  const found = await callTool(address, token, 'list_chats', { query: 'chat two' });
+  expect(JSON.parse(found.text)).toEqual({
+    chats: [{ name: 'Test Chat Two', phone: '+447700900123' }],
+    unnamed: 0,
+  });
+  const none = await callTool(address, token, 'list_chats', { query: 'chat one' });
+  expect(JSON.parse(none.text)).toEqual({ chats: [], unnamed: 0 });
+
+  const sent = await callTool(address, token, 'send_message', {
+    account: account?.id,
+    phone: '+447700900123',
+    text: 'Sent by number',
+  });
+  expect(sent).toMatchObject({ isError: false, text: '{"sent":true}' });
+  // WhatsApp's own link opened the chat, as New Chat does.
+  expect(window.url()).toBe(`${fakeWhatsApp.origin}/send?phone=447700900123`);
+  await expect(window.locator('#main header')).toHaveText('Test Chat Two');
+  await expect(window.getByTestId('sent')).toHaveText('Sent by number');
+
+  const unlisted = await callTool(address, token, 'send_message', {
+    account: account?.id,
+    phone: '+447700900456',
+    text: 'Should not arrive',
+  });
+  expect(unlisted).toMatchObject({ isError: true, text: 'chat_not_allowed' });
 });
 
 test('turns away browser pages and wrong tokens, and stops listening when turned off', async ({

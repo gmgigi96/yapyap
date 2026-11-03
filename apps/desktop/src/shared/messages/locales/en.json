@@ -632,7 +632,8 @@
     "problems": {
       "invalid": "Give the token a name, at least one thing it may do, and at least one account.",
       "unknownAccount": "One of the accounts no longer exists.",
-      "chatsNeeded": "A token that opens chats or sends messages must list the chats it may reach.",
+      "invalidPhone": "One of the numbers is not an international number. Start it with + and the country code, such as +44 7700 900123.",
+      "chatsNeeded": "A token that opens chats or sends messages must list the chats it may reach, by name or by number.",
       "sendingExpiry": "A token that sends messages must expire within 30 days.",
       "tooMany": "YapYap keeps at most 20 tokens. Revoke one first."
     },
@@ -671,8 +672,10 @@
       "allChats": "All chats",
       "listedChats": "Only these chats",
       "chatName": "Chat name, exactly as WhatsApp shows it",
+      "chatPhone": "International number, such as +44 7700 900123",
+      "chatHint": "Give a name, a number, or both. With a number, agents open the chat wherever it is; with a name, they can find it when you ask for that person.",
       "addChat": "Add",
-      "addOpenChat": "Add the Open Chat",
+      "addOpenChat": "Use the Open Chat",
       "noOpenChat": "No chat is open in that account.",
       "limits": "Limits",
       "callsPerMinute": "Calls a minute",
@@ -703,7 +706,7 @@
     "scopes": {
       "chat:read-unread-summary": "See unread chats: name, unread count and last message",
       "chat:read-active": "Read the open chat’s latest messages",
-      "chat:open": "Open a chat it lists",
+      "chat:open": "Open a chat it lists, by name or by number",
       "composer:read-draft": "Read what is typed in the message box",
       "composer:insert-draft": "Write drafts in the message box, without sending",
       "messages:send": "Send messages, without asking you"

@@ -59,6 +59,7 @@ function setup(initial: Partial<Settings['agents']> = {}) {
       count: vi.fn(),
       revoke: vi.fn(),
       narrow: vi.fn(),
+      listed: vi.fn(),
     },
     accounts: vi.fn<AgentServerDependencies['accounts']>(() => undefined),
     serve: vi.fn((port: number, answer: (request: AgentRequest) => unknown) => {
@@ -233,6 +234,7 @@ describe('agentServer', () => {
       replaceDraft: () => Promise.resolve(true),
       pressEnter: () => Promise.resolve(true),
       openChat: () => Promise.resolve(true),
+      openPhone: () => Promise.resolve(null),
     };
     t.deps.accounts.mockReturnValue({ list: () => [], page: () => page });
     await t.answers[0]?.(

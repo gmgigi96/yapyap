@@ -550,6 +550,7 @@ export interface Messages {
     readonly problems: {
       readonly invalid: string;
       readonly unknownAccount: string;
+      readonly invalidPhone: string;
       readonly chatsNeeded: string;
       readonly sendingExpiry: string;
       readonly tooMany: string;
@@ -587,6 +588,8 @@ export interface Messages {
       readonly allChats: string;
       readonly listedChats: string;
       readonly chatName: string;
+      readonly chatPhone: string;
+      readonly chatHint: string;
       readonly addChat: string;
       readonly addOpenChat: string;
       readonly noOpenChat: string;

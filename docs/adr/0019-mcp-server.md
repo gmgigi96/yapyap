@@ -127,20 +127,23 @@ bytes and `<secret>` 32, both in hex. Only `<id>` and the SHA-256 of
 
 Each token has:
 
-| Field    | Values                                                                                                                           |
-| -------- | -------------------------------------------------------------------------------------------------------------------------------- |
-| Name     | What the user calls it ("Claude Code on this laptop"), up to 64 characters                                                       |
-| Scopes   | A subset of §5                                                                                                                   |
-| Accounts | One or more of the user's accounts                                                                                               |
-| Chats    | **All chats**, or **Only these chats** (at most 100). A token with `chat:open` or `messages:send` must use **Only these chats**. |
-| Limits   | Calls per minute; for `messages:send`, messages per minute and per day. Each is a number or **Unlimited**.                       |
-| Expiry   | 1, 7, 30 (default) or 90 days, or never. A token with `messages:send` expires within 30 days.                                    |
-| Notify   | For `messages:send`: show a notification each time it sends (on by default)                                                      |
+| Field    | Values                                                                                                                                                                                |
+| -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Name     | What the user calls it ("Claude Code on this laptop"), up to 64 characters                                                                                                            |
+| Scopes   | A subset of §5                                                                                                                                                                        |
+| Accounts | One or more of the user's accounts                                                                                                                                                    |
+| Chats    | **All chats**, or **Only these chats** (at most 100), each by its name, its international number, or both. A token with `chat:open` or `messages:send` must use **Only these chats**. |
+| Limits   | Calls per minute; for `messages:send`, messages per minute and per day. Each is a number or **Unlimited**.                                                                            |
+| Expiry   | 1, 7, 30 (default) or 90 days, or never. A token with `messages:send` expires within 30 days.                                                                                         |
+| Notify   | For `messages:send`: show a notification each time it sends (on by default)                                                                                                           |
 
 Records live in `agent-tokens.json` (at most 20 tokens). Chat allowlists
-follow C42: the record holds the SHA-256 of each chat name, and the names
-themselves, for the UI, are kept encrypted in the secrets under
-`agents/chat/<token>/<chat>`. A token can be **narrowed**, one scope,
+follow C42: the record holds, for each listed chat, the SHA-256 of its
+name and of its number's digits (apart, so a chat named like a number is
+not that number), and the names and numbers themselves are kept encrypted
+in the secrets under `agents/chat/<token>/<chat>`, for Settings and for
+`list_chats`. YapYap never reads a number from WhatsApp: an agent learns
+only the numbers the user put on its token. A token can be **narrowed**, one scope,
 account or chat at a time, but never left with none and never widened:
 wanting more means creating a new token.
 
@@ -169,17 +172,32 @@ and has no setting.
 
 The tools:
 
-| Tool            | Arguments                       | Needs                                                         |
-| --------------- | ------------------------------- | ------------------------------------------------------------- |
-| `list_accounts` | none                            | any scope (lists only the token's accounts)                   |
-| `list_unread`   | `account`                       | `chat:read-unread-summary`                                    |
-| `read_chat`     | `account`, `chat?`, `messages?` | `chat:read-active`, and `chat:open` when `chat` is given      |
-| `read_draft`    | `account`                       | `composer:read-draft`                                         |
-| `write_draft`   | `account`, `chat?`, `text`      | `composer:insert-draft`, and `chat:open` when `chat` is given |
-| `send_message`  | `account`, `chat`, `text`       | `messages:send`                                               |
+| Tool            | Arguments                                   | Needs                                                   |
+| --------------- | ------------------------------------------- | ------------------------------------------------------- |
+| `list_accounts` | none                                        | any scope (lists only the token's accounts)             |
+| `list_chats`    | `query?`                                    | any scope (lists only the token's chats)                |
+| `list_unread`   | `account`                                   | `chat:read-unread-summary`                              |
+| `read_chat`     | `account`, `chat?` or `phone?`, `messages?` | `chat:read-active`, and `chat:open` to open a chat      |
+| `read_draft`    | `account`                                   | `composer:read-draft`                                   |
+| `write_draft`   | `account`, `chat?` or `phone?`, `text`      | `composer:insert-draft`, and `chat:open` to open a chat |
+| `send_message`  | `account`, `chat` or `phone`, `text`        | `messages:send`                                         |
 
-`send_message` checks the token and the allowlist; opens the chat and
-checks its header names that chat; **refuses with `composer_busy` if the
+`list_chats` gives the token's chats, each with its name and number as
+far as they were kept; with `query`, only those whose name has every word
+of it, whatever the case and accents, or whose number has its digits. So
+"vasco" finds "Vasco Guita" and "Vasco Silva", and the agent asks the user
+which one it means.
+
+A chat is opened by `chat`, its exact name, which YapYap looks for in the
+chat list, or by `phone`, an international number on the token's list,
+which YapYap opens with WhatsApp's own `/send?phone=` link, as New Chat
+does. The link reloads WhatsApp, so it takes a few seconds, but it opens
+the chat wherever it is, archived included. The chat it opens may then be
+read, drafted in or sent to for the rest of that call, under the name
+WhatsApp shows for it.
+
+`send_message` checks the token and the allowlist; opens the chat, by
+name (checking its header names that chat) or by number; **refuses with `composer_busy` if the
 message box holds anything** (it never overwrites or sends what the user
 is typing); counts the send against the limits; puts the text in; and
 presses Enter. A send that fails leaves its text in the box, so the next
@@ -217,7 +235,8 @@ All text lives in `en.json` under `agents` (ADR 0012).
    also switches the chats to **Only these chats** and caps the expiry at
    30 days.
 4. **Chats**: **All chats** or **Only these chats**. A chat is added by
-   its exact name or with **Add the Open Chat**.
+   its exact name, its international number, or both; **Use the Open
+   Chat** fills in the name of the chat open in the token's first account.
 5. **Limits**: each starts at its default from §5 and has a number field
    and an **Unlimited** checkbox. Choosing **Unlimited** for sending shows
    that nothing will slow a hijacked agent down but the chats it may reach.

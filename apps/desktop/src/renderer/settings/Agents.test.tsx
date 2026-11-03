@@ -33,8 +33,8 @@ const SENDER: AgentTokenView = {
   name: 'Bot',
   scopes: ['messages:send'],
   chats: [
-    { id: 'a'.repeat(64), name: 'Ana' },
-    { id: 'b'.repeat(64), name: null },
+    { id: 'a'.repeat(64), name: 'Ana', phone: '+447700900123' },
+    { id: 'b'.repeat(64), name: null, phone: null },
   ],
   limits: { callsPerMinute: null, sendsPerMinute: 5, sendsPerDay: null },
   expires: Date.UTC(2099, 0, 1),
@@ -126,7 +126,7 @@ describe('AgentsSection', () => {
     await screen.findByText('http://127.0.0.1:50000/mcp');
     fireEvent.click(button('Remove Send messages, without asking you'));
     expect(t.agents.narrow).toHaveBeenCalledWith(SENDER.id, { scope: 'messages:send' });
-    fireEvent.click(button('Remove Ana'));
+    fireEvent.click(button('Remove Ana · +447700900123'));
     expect(t.agents.narrow).toHaveBeenCalledWith(SENDER.id, { chat: 'a'.repeat(64) });
     fireEvent.click(nth(screen.getAllByRole('button', { name: 'Remove gone' }), 0));
     expect(t.agents.narrow).toHaveBeenCalledWith(READER.id, { account: 'gone' });
@@ -265,12 +265,25 @@ describe('creating a token', () => {
     const expiry = screen.getByRole<HTMLSelectElement>('combobox', { name: /Expires/ });
     expect(expiry.value).toBe('30');
     expect([...expiry.options].map((option) => option.value)).toEqual(['1', '7', '30']);
-    fireEvent.input(screen.getByRole('textbox', { name: /Chat name/ }), {
-      target: { value: ' Eva ' },
-    });
+    const name = screen.getByRole<HTMLInputElement>('textbox', { name: /Chat name/ });
+    const number = screen.getByRole('textbox', { name: /International number/ });
+    expect(button('Add').hasAttribute('disabled')).toBe(true);
+    fireEvent.input(name, { target: { value: ' Eva ' } });
     fireEvent.click(button('Add'));
-    fireEvent.click(button('Add the Open Chat'));
-    await screen.findByText('Rui');
+    // The open chat's name goes in the field, for a number to go with it.
+    fireEvent.click(button('Use the Open Chat'));
+    await waitFor(() => {
+      expect(name.value).toBe('Rui');
+    });
+    fireEvent.input(number, { target: { value: '+44 7700 900123' } });
+    fireEvent.click(button('Add'));
+    fireEvent.input(number, { target: { value: '+44 7700 900456' } });
+    fireEvent.click(button('Add'));
+    // The same entry again replaces it rather than listing it twice.
+    fireEvent.input(number, { target: { value: '+44 7700 900456' } });
+    fireEvent.click(button('Add'));
+    await screen.findByText('Rui · +44 7700 900123');
+    expect(screen.getAllByText('+44 7700 900456')).toHaveLength(1);
     fireEvent.click(button('Remove Eva'));
     fireEvent.click(screen.getByRole('checkbox', { name: 'Notify me each time it sends' }));
     fireEvent.change(expiry, { target: { value: '7' } });
@@ -279,7 +292,10 @@ describe('creating a token', () => {
       expect(t.agents.create).toHaveBeenCalledWith(
         expect.objectContaining({
           scopes: ['chat:read-unread-summary', 'chat:read-active', 'messages:send'],
-          chats: ['Rui'],
+          chats: [
+            { name: 'Rui', phone: '+44 7700 900123' },
+            { name: null, phone: '+44 7700 900456' },
+          ],
           expiresInDays: 7,
           notify: false,
         }),
@@ -291,10 +307,10 @@ describe('creating a token', () => {
     const t = await openForm();
     t.agents.openChat.mockResolvedValueOnce(null);
     fireEvent.click(screen.getByRole('radio', { name: 'Only these chats' }));
-    fireEvent.click(button('Add the Open Chat'));
+    fireEvent.click(button('Use the Open Chat'));
     await screen.findByText('No chat is open in that account.');
     fireEvent.click(screen.getByRole('radio', { name: 'All chats' }));
-    expect(screen.queryByRole('button', { name: 'Add the Open Chat' })).toBeNull();
+    expect(screen.queryByRole('button', { name: 'Use the Open Chat' })).toBeNull();
     fireEvent.click(button('Create Token'));
     await waitFor(() => {
       expect(t.agents.create).toHaveBeenCalledWith(expect.objectContaining({ chats: 'all' }));
@@ -305,7 +321,7 @@ describe('creating a token', () => {
     await openForm();
     fireEvent.click(screen.getByRole('checkbox', { name: 'Personal' }));
     fireEvent.click(screen.getByRole('radio', { name: 'Only these chats' }));
-    expect(screen.queryByRole('button', { name: 'Add the Open Chat' })).toBeNull();
+    expect(screen.queryByRole('button', { name: 'Use the Open Chat' })).toBeNull();
   });
 
   it('sets limits, lifts them, and warns when sending is unlimited', async () => {

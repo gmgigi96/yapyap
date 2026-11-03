@@ -356,9 +356,11 @@ title, escape })` (`src/renderer/shared/mount.tsx`), which titles the
   carry scopes, accounts, a chat list, limits (or Unlimited) and an
   expiry; agents can list unread chats, read the open chat, open listed
   chats, read and write drafts and, with `messages:send`, send to listed
-  chats, which YapYap finds by scrolling WhatsApp's chat list. The tray
-  stops it, the activity stays in memory, and `no-endpoint.test.ts`
-  allows the one listener file.
+  chats. A listed chat has a name, an international number or both;
+  `list_chats` searches them, and a number opens its chat through
+  WhatsApp's own link wherever it is, while a name is found by scrolling
+  the chat list. The tray stops it, the activity stays in memory, and
+  `no-endpoint.test.ts` allows the one listener file.
 - Install page button (#579): the download button carries its own styles,
   so it shows as a button on the install page too, not only on the home
   page.

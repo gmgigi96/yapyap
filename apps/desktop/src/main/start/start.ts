@@ -271,6 +271,7 @@ function accountMenu(
   running: RunningAccounts<OpenedAccount>,
   warn: (message: string) => void,
   privacy: PrivacyScreen,
+  origin: string,
 ): AccountMenu {
   return {
     privacyScreen: privacy.covered(),
@@ -285,7 +286,7 @@ function accountMenu(
     pressEnter: () => pressEnter(running.active().page.contents),
     agentPage: (id) => {
       const page = pageOf(running, id);
-      return page && agentPageOf(page.contents);
+      return page && agentPageOf(page.contents, origin);
     },
     switchTo: running.switchTo,
     add: running.add,
@@ -508,7 +509,7 @@ function openAccounts<Window extends WindowPort>(
 ): RunningAccounts<OpenedAccount> {
   const { deps, chrome, window } = wiring;
   const menuChanged = (): void => {
-    chrome.setAccountMenu(accountMenu(running, deps.warn, indicators.privacy));
+    chrome.setAccountMenu(accountMenu(running, deps.warn, indicators.privacy, wiring.origin));
   };
   const indicators: AccountIndicators = accountIndicators(
     wiring,

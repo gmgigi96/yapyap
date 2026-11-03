@@ -13,7 +13,7 @@ export const AGENT_SCOPES = [
 
 export type AgentScope = (typeof AGENT_SCOPES)[number];
 
-/** Scopes that reach chats by name, so their token must list the chats it may reach. */
+/** Scopes that reach chats by name or number, so their token must list the chats it may reach. */
 export const LISTED_CHAT_SCOPES: readonly AgentScope[] = ['chat:open', 'messages:send'];
 
 /** How long a new token lasts, in days; null never expires. */
@@ -47,13 +47,24 @@ export const DEFAULT_AGENT_LIMITS: { readonly [Limit in keyof AgentLimits]: numb
   sendsPerDay: 100,
 };
 
+/**
+ * A chat on a token's list: its name as WhatsApp shows it, its
+ * international number, or both. A number lets the agent open the chat
+ * wherever it is, through WhatsApp's own link; a name lets it find it.
+ */
+export interface AgentChatEntry {
+  readonly name: string | null;
+  /** As the user typed it; YapYap keeps it as `+` and its digits. */
+  readonly phone: string | null;
+}
+
 /** What the user chose for a new token, or for a narrower version of one. */
 export interface AgentTokenSpec {
   readonly name: string;
   readonly scopes: readonly AgentScope[];
   readonly accounts: readonly string[];
-  /** Every chat, or only the chats named here. */
-  readonly chats: 'all' | readonly string[];
+  /** Every chat, or only the chats listed here. */
+  readonly chats: 'all' | readonly AgentChatEntry[];
   readonly limits: AgentLimits;
   readonly expiresInDays: AgentTokenExpiry;
   /** Notify each time it sends. */
@@ -67,7 +78,8 @@ export interface AgentTokenView {
   readonly scopes: readonly AgentScope[];
   readonly accounts: readonly string[];
   /** A chat whose name YapYap could not keep safely has a null name. */
-  readonly chats: 'all' | readonly { readonly id: string; readonly name: string | null }[];
+  /** Each listed chat by its ID; a chat YapYap could not keep the details of has neither. */
+  readonly chats: 'all' | readonly (AgentChatEntry & { readonly id: string })[];
   readonly limits: AgentLimits;
   /** Milliseconds since the epoch; null never expires. */
   readonly expires: number | null;

@@ -16,6 +16,9 @@ const OPEN_MS = 300;
 const LOAD_MS = 150;
 /** The most screens of the chat list YapYap looks through for one chat. */
 const MAX_SCREENS = 60;
+/** How often, and how many times, YapYap looks for the chat a number's link opens. */
+const LINK_STEP_MS = 500;
+const LINK_STEPS = 40;
 
 type Wait = (ms: number) => Promise<void>;
 
@@ -60,11 +63,49 @@ const pause = (ms: number): Promise<void> =>
     setTimeout(resolve, ms);
   });
 
+/** The page as opening a number needs it: WhatsApp's own `/send?phone=` link. */
+interface LinkContents extends ReplyContents {
+  loadURL(url: string): Promise<unknown>;
+}
+
+/** The chat open once the page has loaded, looked for a while; null if none opens. */
+async function openedChat(contents: ReplyContents, wait: Wait, step = 1): Promise<string | null> {
+  const chat = await readOpenChat(contents, 1).catch(() => null);
+  if (chat !== null || step >= LINK_STEPS) {
+    return chat?.name ?? null;
+  }
+  await wait(LINK_STEP_MS);
+  return openedChat(contents, wait, step + 1);
+}
+
+/**
+ * Opens the chat of a number with WhatsApp's own link, as New Chat does:
+ * it reloads WhatsApp, which then opens the chat, wherever it is in the
+ * list, or says the number is not on WhatsApp, and no chat opens.
+ */
+async function openByLink(
+  contents: LinkContents,
+  origin: string,
+  digits: string,
+  wait: Wait,
+): Promise<string | null> {
+  const link = new URL('/send', origin);
+  link.searchParams.set('phone', digits);
+  // A failed load is reported by the recovery monitor; no chat then opens.
+  await contents.loadURL(link.href).catch(() => undefined);
+  return openedChat(contents, wait);
+}
+
 /**
  * One account's WhatsApp as the agents' tools reach it: the adapter's
- * readers, and the message box as the assistant bar's Send uses it.
+ * readers, the message box as the assistant bar's Send uses it, and
+ * WhatsApp's own link to a number, as New Chat uses it.
  */
-export function agentPageOf(contents: ReplyContents & KeyContents, wait: Wait = pause): AgentPage {
+export function agentPageOf(
+  contents: LinkContents & KeyContents,
+  origin: string,
+  wait: Wait = pause,
+): AgentPage {
   return {
     readOpenChat: (messages) => readOpenChat(contents, messages),
     readUnread: () => readUnreadChats(contents),
@@ -72,5 +113,6 @@ export function agentPageOf(contents: ReplyContents & KeyContents, wait: Wait = 
     replaceDraft: (text) => replaceDraft(contents, text),
     pressEnter: () => pressEnter(contents),
     openChat: (name) => openFromList(contents, name, wait),
+    openPhone: (digits) => openByLink(contents, origin, digits, wait),
   };
 }

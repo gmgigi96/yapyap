@@ -157,6 +157,7 @@ function setup() {
         count: vi.fn(() => 0),
         revoke: vi.fn(),
         narrow: vi.fn(() => false),
+        listed: vi.fn(() => Promise.resolve('all' as const)),
       },
       serve: vi.fn(() => Promise.reject(new Error('Not in this test.'))),
       random: () => 0,

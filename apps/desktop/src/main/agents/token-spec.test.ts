@@ -45,6 +45,25 @@ describe('checkSpec', () => {
     expect(checkSpec('token', ACCOUNTS)).toBe('invalid');
   });
 
+  it('lists chats by name, number or both, never by nothing', () => {
+    const chats = [
+      { name: 'Vasco Guita', phone: '+44 7700 900123' },
+      { name: 'Ana', phone: null },
+      { name: null, phone: '0044 7700 900456' },
+    ];
+    expect(checkSpec(spec({ chats }), ACCOUNTS)).toMatchObject({ chats });
+    const nothing = [{ name: null, phone: null }];
+    expect(checkSpec(spec({ chats: nothing }), ACCOUNTS)).toBe('invalid');
+    const blank = [{ name: '  ', phone: null }];
+    expect(checkSpec(spec({ chats: blank }), ACCOUNTS)).toBe('invalid');
+    expect(checkSpec({ ...spec(), chats: ['Ana'] }, ACCOUNTS)).toBe('invalid');
+  });
+
+  it('refuses a number that is not international', () => {
+    const local = [{ name: 'Ana', phone: '07700 900123' }];
+    expect(checkSpec(spec({ chats: local }), ACCOUNTS)).toBe('invalidPhone');
+  });
+
   it('refuses an account YapYap does not have', () => {
     expect(checkSpec(spec({ accounts: ['gone'] }), ACCOUNTS)).toBe('unknownAccount');
   });
@@ -52,12 +71,15 @@ describe('checkSpec', () => {
   it('makes a token that opens chats or sends list its chats', () => {
     expect(checkSpec(spec({ scopes: ['chat:open'] }), ACCOUNTS)).toBe('chatsNeeded');
     expect(checkSpec(spec({ scopes: ['messages:send'] }), ACCOUNTS)).toBe('chatsNeeded');
-    const listed = spec({ scopes: ['chat:open'], chats: ['Ana'] });
+    const listed = spec({ scopes: ['chat:open'], chats: [{ name: 'Ana', phone: null }] });
     expect(checkSpec(listed, ACCOUNTS)).toEqual(listed);
   });
 
   it('makes a token that sends expire within 30 days', () => {
-    const sending = { scopes: ['messages:send'] as const, chats: ['Ana'] };
+    const sending = {
+      scopes: ['messages:send'] as const,
+      chats: [{ name: null, phone: '+44 7700 900123' }],
+    };
     expect(checkSpec(spec({ ...sending, expiresInDays: 90 }), ACCOUNTS)).toBe('sendingExpiry');
     expect(checkSpec(spec({ ...sending, expiresInDays: null }), ACCOUNTS)).toBe('sendingExpiry');
     expect(checkSpec(spec({ ...sending, expiresInDays: 30 }), ACCOUNTS)).toMatchObject(sending);

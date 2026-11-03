@@ -4,13 +4,25 @@ import { DEFAULT_AGENT_LIMITS, type AgentScope } from '../../shared/agents-api.t
 import { chatId } from '../assistant/chats.ts';
 import { answerAgent, type AgentHandlerDependencies } from './handler.ts';
 import { failureLock, slidingCounter } from './limits.ts';
-import type { AgentToken } from './tokens.ts';
+import type { AgentToken, ListedChats } from './tokens.ts';
 import { accountQueue, type AgentPage } from './tool-steps.ts';
 
 const PORT = 51_234;
 const ACCOUNT = '11111111-2222-4333-8444-555555555555';
 const OTHER = '66666666-7777-4888-8999-aaaaaaaaaaaa';
 const PRESENTED = `yapyap_mcp_${'2'.repeat(16)}_${'1'.repeat(64)}`;
+
+/** A token's list of chats by these names, as the token store keeps them. */
+const named = (...names: string[]) =>
+  names.map((name) => ({ id: chatId(`entry:${name}\n`), name: chatId(name), phone: null }));
+
+/** A token's list of chats by these numbers' digits, as the token store keeps them. */
+const numbered = (...numbers: string[]) =>
+  numbers.map((digits) => ({
+    id: chatId(`entry:\n+${digits}`),
+    name: null,
+    phone: chatId(`phone:${digits}`),
+  }));
 
 const token = (overrides: Partial<AgentToken> = {}): AgentToken => ({
   id: '2'.repeat(16),
@@ -62,13 +74,30 @@ function fakePage(open: string | null = 'Ana') {
       }
       return Promise.resolve(found);
     }),
+    // The number's link opens the contact the number is saved as.
+    openPhone: vi.fn((digits: string) => {
+      state.open = digits === '447700900123' ? 'Vasco Guita' : null;
+      return Promise.resolve(state.open);
+    }),
   } satisfies AgentPage;
   return { state, page };
 }
 
+const VASCOS = [
+  { name: 'Vasco Guita', phone: '+447700900123' },
+  { name: 'Vasco Silva', phone: null },
+];
+const LISTED: ListedChats = {
+  chats: [...VASCOS, { name: null, phone: '+447700900456' }],
+  unnamed: 1,
+};
+
 function setup(presented: AgentToken | undefined = token(), page = fakePage().page) {
   const deps = {
-    tokens: { verify: vi.fn((given: string) => (given === PRESENTED ? presented : undefined)) },
+    tokens: {
+      verify: vi.fn((given: string) => (given === PRESENTED ? presented : undefined)),
+      listed: vi.fn((): Promise<ListedChats> => Promise.resolve(LISTED)),
+    },
     accounts: {
       list: () => [
         { id: ACCOUNT, name: 'Personal' },
@@ -203,6 +232,7 @@ describe('the tools', () => {
   it('shows an agent only the tools its token’s scopes allow', async () => {
     expect(await toolNames(setup(token({ scopes: ['composer:read-draft'] })))).toEqual([
       'list_accounts',
+      'list_chats',
       'read_draft',
     ]);
     const every: AgentScope[] = [
@@ -215,6 +245,7 @@ describe('the tools', () => {
     ];
     expect(await toolNames(setup(token({ scopes: every })))).toEqual([
       'list_accounts',
+      'list_chats',
       'list_unread',
       'read_chat',
       'read_draft',
@@ -256,7 +287,7 @@ describe('the tools', () => {
         { name: 'Rui', unread: 1, messages: [{ outgoing: false, text: 'Hello' }] },
       ],
     });
-    const listed = setup(token({ scopes: ['chat:read-unread-summary'], chats: [chatId('Rui')] }));
+    const listed = setup(token({ scopes: ['chat:read-unread-summary'], chats: named('Rui') }));
     expect(await call(listed, 'list_unread', { account: ACCOUNT })).toEqual({
       value: [{ name: 'Rui', unread: 1, messages: [{ outgoing: false, text: 'Hello' }] }],
     });
@@ -272,7 +303,7 @@ describe('the tools', () => {
     expect(page.readOpenChat).toHaveBeenLastCalledWith(20);
     await call(deps, 'read_chat', { account: ACCOUNT, messages: 5 });
     expect(page.readOpenChat).toHaveBeenLastCalledWith(5);
-    const listed = setup(token({ chats: [chatId('Rui')] }), page);
+    const listed = setup(token({ chats: named('Rui') }), page);
     expect(await call(listed, 'read_chat', { account: ACCOUNT })).toEqual({
       failure: 'chat_not_allowed',
     });
@@ -284,12 +315,12 @@ describe('the tools', () => {
 
   it('opens a named chat only with chat:open, and only one the token lists', async () => {
     const { page, state } = fakePage();
-    const reading = setup(token({ chats: [chatId('Rui')] }), page);
+    const reading = setup(token({ chats: named('Rui') }), page);
     expect(await call(reading, 'read_chat', { account: ACCOUNT, chat: 'Rui' })).toEqual({
       failure: 'scope_missing',
     });
     const opening = setup(
-      token({ scopes: ['chat:read-active', 'chat:open'], chats: [chatId('Rui')] }),
+      token({ scopes: ['chat:read-active', 'chat:open'], chats: named('Rui') }),
       page,
     );
     expect(await call(opening, 'read_chat', { account: ACCOUNT, chat: 'Ana' })).toEqual({
@@ -305,7 +336,7 @@ describe('the tools', () => {
   it('says a listed chat is not found when WhatsApp cannot open it, or opens another', async () => {
     const { page } = fakePage();
     const deps = setup(
-      token({ scopes: ['chat:read-active', 'chat:open'], chats: [chatId('Eva'), chatId('Rui')] }),
+      token({ scopes: ['chat:read-active', 'chat:open'], chats: named('Eva', 'Rui') }),
       page,
     );
     expect(await call(deps, 'read_chat', { account: ACCOUNT, chat: 'Eva' })).toEqual({
@@ -333,7 +364,7 @@ describe('the tools', () => {
     expect(await call(deps, 'read_draft', { account: ACCOUNT })).toEqual({
       value: { draft: 'See you' },
     });
-    const listed = setup(token({ scopes: ['composer:read-draft'], chats: [chatId('Rui')] }), page);
+    const listed = setup(token({ scopes: ['composer:read-draft'], chats: named('Rui') }), page);
     expect(await call(listed, 'read_draft', { account: ACCOUNT })).toEqual({
       failure: 'chat_not_allowed',
     });
@@ -342,7 +373,7 @@ describe('the tools', () => {
   it('writes a draft without sending it, opening a named chat first', async () => {
     const { page, state } = fakePage();
     const scopes: AgentScope[] = ['composer:insert-draft', 'chat:open'];
-    const deps = setup(token({ scopes, chats: [chatId('Ana'), chatId('Rui')] }), page);
+    const deps = setup(token({ scopes, chats: named('Ana', 'Rui') }), page);
     expect(await call(deps, 'write_draft', { account: ACCOUNT, text: 'On my way' })).toEqual({
       value: { written: true },
     });
@@ -356,6 +387,57 @@ describe('the tools', () => {
     });
   });
 
+  it('lists the token’s chats, or those matching a query, for the agent to pass on', async () => {
+    const deps = setup();
+    expect(await call(deps, 'list_chats')).toEqual({ value: LISTED });
+    expect(deps.tokens.listed).toHaveBeenCalledWith('2'.repeat(16));
+    expect(await call(deps, 'list_chats', { query: 'vasco' })).toEqual({
+      value: { chats: VASCOS, unnamed: 1 },
+    });
+  });
+
+  it('opens a listed number with WhatsApp’s link, and reaches that chat for the call', async () => {
+    const { page, state } = fakePage();
+    const scopes: AgentScope[] = ['chat:read-active', 'chat:open', 'composer:insert-draft'];
+    const deps = setup(token({ scopes, chats: numbered('447700900123') }), page);
+    expect(
+      await call(deps, 'read_chat', { account: ACCOUNT, phone: '+44 7700 900123' }),
+    ).toMatchObject({ value: { name: 'Vasco Guita' } });
+    expect(page.openPhone).toHaveBeenCalledWith('447700900123');
+    expect(
+      await call(deps, 'write_draft', { account: ACCOUNT, phone: '0044 7700 900123', text: 'Hi' }),
+    ).toEqual({ value: { written: true } });
+    expect(state.draft).toBe('Hi');
+    // Without the number, the chat it opened is no longer on the list.
+    expect(await call(deps, 'read_chat', { account: ACCOUNT })).toEqual({
+      failure: 'chat_not_allowed',
+    });
+  });
+
+  it('refuses a number that is not listed, not a number, or opens no chat', async () => {
+    const { page } = fakePage();
+    const deps = setup(
+      token({ scopes: ['chat:read-active', 'chat:open'], chats: numbered('447700900999') }),
+      page,
+    );
+    const read = (phone: string) => call(deps, 'read_chat', { account: ACCOUNT, phone });
+    expect(await read('+447700900123')).toEqual({ failure: 'chat_not_allowed' });
+    expect(await read('07700 900123')).toEqual({ failure: 'invalid_phone' });
+    expect(page.openPhone).not.toHaveBeenCalled();
+    expect(await read('+447700900999')).toEqual({ failure: 'chat_not_found' });
+  });
+
+  it('wants one chat, by name or by number, and chat:open to open it', async () => {
+    const deps = setup(token({ chats: [...named('Ana'), ...numbered('447700900123')] }));
+    expect(await call(deps, 'read_chat', { account: ACCOUNT, phone: '+447700900123' })).toEqual({
+      failure: 'scope_missing',
+    });
+    const opener = setup(token({ scopes: ['chat:read-active', 'chat:open'], chats: named('Ana') }));
+    expect(
+      await call(opener, 'read_chat', { account: ACCOUNT, chat: 'Ana', phone: '+447700900123' }),
+    ).toEqual({ failure: 'ambiguous_chat' });
+  });
+
   it('refuses arguments the tool’s schema does not take', async () => {
     const deps = setup(token({ scopes: ['composer:insert-draft'] }));
     const long = await call(deps, 'write_draft', { account: ACCOUNT, text: 'x'.repeat(4097) });
@@ -366,7 +448,7 @@ describe('the tools', () => {
 
 describe('send_message', () => {
   const sender = (overrides: Partial<AgentToken> = {}) =>
-    token({ scopes: ['messages:send'], chats: [chatId('Ana'), chatId('Rui')], ...overrides });
+    token({ scopes: ['messages:send'], chats: named('Ana', 'Rui'), ...overrides });
 
   it('sends to a listed chat, opening it first, and tells the user', async () => {
     const { page, state } = fakePage();
@@ -382,6 +464,23 @@ describe('send_message', () => {
     expect(deps.record).toHaveBeenLastCalledWith(expect.anything(), 'send_message', ACCOUNT, 'ok');
   });
 
+  it('sends to a listed number, naming the chat it opened', async () => {
+    const { page, state } = fakePage();
+    const deps = setup(sender({ chats: numbered('447700900123') }), page);
+    expect(
+      await call(deps, 'send_message', { account: ACCOUNT, phone: '+447700900123', text: 'Hi' }),
+    ).toEqual({ value: { sent: true } });
+    expect(state).toMatchObject({ open: 'Vasco Guita', sent: ['Hi'] });
+    expect(deps.notifySent).toHaveBeenCalledWith(expect.anything(), 'Vasco Guita');
+  });
+
+  it('wants to know where to send', async () => {
+    const deps = setup(sender());
+    expect(await call(deps, 'send_message', { account: ACCOUNT, text: 'Hi' })).toEqual({
+      failure: 'chat_missing',
+    });
+  });
+
   it('stays quiet when the token asks not to notify', async () => {
     const deps = setup(sender({ notify: false }));
     await call(deps, 'send_message', { account: ACCOUNT, chat: 'Ana', text: 'Hi' });
@@ -390,7 +489,7 @@ describe('send_message', () => {
 
   it('never sends to a chat the token does not list', async () => {
     const { page, state } = fakePage();
-    const deps = setup(sender({ chats: [chatId('Rui')] }), page);
+    const deps = setup(sender({ chats: named('Rui') }), page);
     expect(await call(deps, 'send_message', { account: ACCOUNT, chat: 'Ana', text: 'Hi' })).toEqual(
       { failure: 'chat_not_allowed' },
     );

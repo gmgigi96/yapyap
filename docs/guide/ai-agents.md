@@ -22,17 +22,24 @@ computer: nothing on the network can connect to it.
 Every agent needs a token, and each token says exactly what that agent
 may do:
 
-| Choice         | What it means                                                                                        |
-| -------------- | ---------------------------------------------------------------------------------------------------- |
-| Accounts       | The WhatsApp accounts it may use                                                                     |
-| What it can do | Read unread chats, read the open chat, open a chat it lists, read or write drafts, and send messages |
-| Chats          | Every chat, or only the chats you list. A token that opens chats or sends must list them             |
-| Limits         | Calls a minute and, for sending, messages a minute and a day. Each can be **Unlimited**              |
-| Expires        | In 1, 7, 30 or 90 days, or never. A token that sends expires within 30 days                          |
+| Choice         | What it means                                                                                                          |
+| -------------- | ---------------------------------------------------------------------------------------------------------------------- |
+| Accounts       | The WhatsApp accounts it may use                                                                                       |
+| What it can do | Read unread chats, read the open chat, open a chat it lists, read or write drafts, and send messages                   |
+| Chats          | Every chat, or only the chats you list, each by name, number or both. A token that opens chats or sends must list them |
+| Limits         | Calls a minute and, for sending, messages a minute and a day. Each can be **Unlimited**                                |
+| Expires        | In 1, 7, 30 or 90 days, or never. A token that sends expires within 30 days                                            |
 
-**Read Only** and **Read and Draft** set the usual choices for you. Add a
-chat by its name exactly as WhatsApp shows it, or open it in YapYap and
-choose **Add the Open Chat**.
+**Read Only** and **Read and Draft** set the usual choices for you. List
+a chat by its name exactly as WhatsApp shows it, by its international
+number (`+44 7700 900123`), or both, then choose **Add**. **Use the Open
+Chat** fills in the name of the chat open in YapYap.
+
+Give a number when you can: with it, the agent opens the chat wherever it
+is in WhatsApp, archived included, through the same link as **New Chat**.
+It reloads WhatsApp, so it takes a few seconds. With a name too, the agent
+can find the chat when you ask it about that person, such as "send Vasco
+a message".
 
 When you choose **Create Token**, YapYap shows the token once, with the
 command that adds it to Claude Code:
@@ -47,14 +54,20 @@ it again. Other MCP clients connect over HTTP with the same
 
 ## What agents can do
 
-| Tool            | What it does                                                       |
-| --------------- | ------------------------------------------------------------------ |
-| `list_accounts` | Lists the accounts the token may use                               |
-| `list_unread`   | Lists unread chats the token may reach                             |
-| `read_chat`     | Reads the open chat's latest messages, opening a listed chat first |
-| `read_draft`    | Reads what is typed in the message box                             |
-| `write_draft`   | Writes a draft in the message box, without sending it              |
-| `send_message`  | Sends a message to a chat the token lists                          |
+| Tool            | What it does                                                                          |
+| --------------- | ------------------------------------------------------------------------------------- |
+| `list_accounts` | Lists the accounts the token may use                                                  |
+| `list_chats`    | Lists, or searches, the chats the token lists, with their numbers                     |
+| `list_unread`   | Lists unread chats the token may reach                                                |
+| `read_chat`     | Reads the open chat's latest messages, opening a listed chat first, by name or number |
+| `read_draft`    | Reads what is typed in the message box                                                |
+| `write_draft`   | Writes a draft in the message box, without sending it                                 |
+| `send_message`  | Sends a message to a chat the token lists, by name or number                          |
+
+When you ask an agent to message someone, it searches the token's chats
+with `list_chats`. When several match, such as two people called Vasco, it
+should ask you which one. YapYap never gives an agent a number you did not
+list.
 
 An agent never sees a tool its token does not allow, and YapYap checks
 every call against the token, whatever the agent asks for. It never

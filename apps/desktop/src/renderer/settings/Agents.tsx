@@ -3,7 +3,7 @@ import { useCallback, useEffect, useState } from 'preact/hooks';
 import type { AgentsView, AgentTokenView } from '../../shared/agents-api.ts';
 import type { ChromeApi, SettingsSnapshot } from '../../shared/chrome-api.ts';
 import { en } from '../../shared/messages/en.ts';
-import { AgentTokenForm, CreatedToken, type Created } from './AgentTokenForm.tsx';
+import { AgentTokenForm, chatLabel, CreatedToken, type Created } from './AgentTokenForm.tsx';
 import { fieldsOf, type Change } from './Field.tsx';
 
 const text = en.agents;
@@ -141,7 +141,7 @@ function TokenScopes({ api, token, accounts, reload }: TokenProps): JSX.Element 
         token.chats.map((chat) => (
           <Removable
             key={chat.id}
-            label={chat.name ?? text.tokens.unnamedChat}
+            label={chatLabel(chat) || text.tokens.unnamedChat}
             onRemove={narrow({ chat: chat.id })}
           />
         ))

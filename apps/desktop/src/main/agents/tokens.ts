@@ -2,12 +2,14 @@ import { createHash, timingSafeEqual } from 'node:crypto';
 import { Type, type Static } from 'typebox';
 import { Value } from 'typebox/value';
 import type {
+  AgentChatEntry,
   AgentNarrowingStep,
   AgentTokenSpec,
   AgentTokenView,
 } from '../../shared/agents-api.ts';
 import type { TextFile } from '../atomic-write.ts';
 import type { SecretStore } from '../secrets/secret-store.ts';
+import { parseInternationalNumber } from '../../shared/phone-number.ts';
 import { chatId } from '../assistant/chats.ts';
 import { LimitsSchema, ScopeSchema } from './token-spec.ts';
 
@@ -26,8 +28,22 @@ const TokenSchema = Type.Object(
     name: Type.String({ minLength: 1, maxLength: 64 }),
     scopes: Type.Array(ScopeSchema, { minItems: 1, uniqueItems: true }),
     accounts: Type.Array(Type.String({ maxLength: 36 }), { minItems: 1, uniqueItems: true }),
-    // Chats by fingerprint (C42 in ADR 0008); their names are kept encrypted in the secrets.
-    chats: Type.Union([Type.Literal('all'), Type.Array(Hex(64), { minItems: 1, maxItems: 100 })]),
+    // Chats by fingerprint (C42 in ADR 0008): the entry's, its name's and its
+    // number's. The names and numbers are kept encrypted in the secrets.
+    chats: Type.Union([
+      Type.Literal('all'),
+      Type.Array(
+        Type.Object(
+          {
+            id: Hex(64),
+            name: Type.Union([Hex(64), Type.Null()]),
+            phone: Type.Union([Hex(64), Type.Null()]),
+          },
+          { additionalProperties: false },
+        ),
+        { minItems: 1, maxItems: 100 },
+      ),
+    ]),
     limits: LimitsSchema,
     created: Type.Integer({ minimum: 0 }),
     expires: Type.Union([Type.Integer({ minimum: 0 }), Type.Null()]),
@@ -58,6 +74,8 @@ export interface AgentTokens {
   readonly revoke: (id: string) => void;
   /** False when the token is gone, or the step would leave it unusable. */
   readonly narrow: (id: string, step: AgentNarrowingStep) => boolean;
+  /** The chats a token lists, as the user entered them, for the agent to see what it may reach. */
+  readonly listed: (id: string) => Promise<ListedChats>;
 }
 
 export interface TokenSources {
@@ -66,6 +84,52 @@ export interface TokenSources {
   readonly randomHex: (bytes: number) => string;
   readonly now: () => number;
   readonly warn: (message: string) => void;
+}
+
+/** A listed chat as the agent sees it: its name, and its number as `+` and digits. */
+export interface ListedChat {
+  readonly name: string | null;
+  readonly phone: string | null;
+}
+
+/**
+ * The chats a token lists, as far as the system kept them, and how many it
+ * could not keep; or every chat.
+ */
+export type ListedChats =
+  'all' | { readonly chats: readonly ListedChat[]; readonly unnamed: number };
+
+/** A number's fingerprint: apart from names, so a chat named like a number is not one. */
+const phoneId = (digits: string): string => chatId(`phone:${digits}`);
+
+/** A listed chat, normalized: its name trimmed, its number as `+` and digits. */
+function shownOf({ name, phone }: AgentChatEntry): ListedChat {
+  const digits = phone === null ? undefined : parseInternationalNumber(phone);
+  const trimmed = name?.trim() ?? '';
+  return {
+    name: trimmed === '' ? null : trimmed,
+    phone: digits === undefined ? null : `+${digits}`,
+  };
+}
+
+/** A listed chat's fingerprints: the entry's own, its name's and its number's. */
+function keptChatOf(shown: ListedChat) {
+  return {
+    id: chatId(`entry:${shown.name ?? ''}\n${shown.phone ?? ''}`),
+    name: shown.name === null ? null : chatId(shown.name),
+    phone: shown.phone === null ? null : phoneId(shown.phone.slice(1)),
+  };
+}
+
+/** A chat's details as the secrets kept them; nothing for anything else. */
+function parseShown(text: string | undefined): ListedChat {
+  try {
+    const value = JSON.parse(text ?? 'null') as Partial<ListedChat> | null;
+    const field = (raw: unknown) => (typeof raw === 'string' ? raw : null);
+    return { name: field(value?.name), phone: field(value?.phone) };
+  } catch {
+    return { name: null, phone: null };
+  }
 }
 
 /** A token as the agent presents it: `yapyap_mcp_<id>_<secret>`. */
@@ -99,7 +163,7 @@ function stripped(token: Kept): AgentToken {
   return { id, name, scopes, accounts, chats, limits, created, expires, notify, lastUsed };
 }
 
-/** A token's view, with the chat names the secrets kept. */
+/** A token's view, with the chat details the secrets kept. */
 async function viewOf(token: Kept, names: TokenSources['names']): Promise<AgentTokenView> {
   const { id, name, scopes, accounts, limits, expires, notify, lastUsed } = token;
   const chats =
@@ -107,8 +171,8 @@ async function viewOf(token: Kept, names: TokenSources['names']): Promise<AgentT
       ? 'all'
       : await Promise.all(
           token.chats.map(async (chat) => ({
-            id: chat,
-            name: (await names.get(nameKey(id, chat)).catch(() => undefined)) ?? null,
+            id: chat.id,
+            ...parseShown(await names.get(nameKey(id, chat.id)).catch(() => undefined)),
           })),
         );
   return { id, name, scopes, accounts, chats, limits, expires, notify, lastUsed };
@@ -116,19 +180,20 @@ async function viewOf(token: Kept, names: TokenSources['names']): Promise<AgentT
 
 /** The token one step narrower, or undefined when the step would leave nothing to use. */
 function narrowed(token: Kept, step: AgentNarrowingStep): Kept | undefined {
-  const without = <T>(list: readonly T[], item: T): T[] | undefined => {
-    const left = list.filter((entry) => entry !== item);
+  const without = <T>(list: readonly T[], gone: (entry: T) => boolean): T[] | undefined => {
+    const left = list.filter((entry) => !gone(entry));
     return left.length > 0 && left.length < list.length ? left : undefined;
   };
   if ('scope' in step) {
-    const scopes = without(token.scopes, step.scope);
+    const scopes = without(token.scopes, (scope) => scope === step.scope);
     return scopes && { ...token, scopes };
   }
   if ('account' in step) {
-    const accounts = without(token.accounts, step.account);
+    const accounts = without(token.accounts, (account) => account === step.account);
     return accounts && { ...token, accounts };
   }
-  const chats = token.chats === 'all' ? undefined : without(token.chats, step.chat);
+  const chats =
+    token.chats === 'all' ? undefined : without(token.chats, (chat) => chat.id === step.chat);
   return chats && { ...token, chats };
 }
 
@@ -140,7 +205,7 @@ function keptOf(spec: AgentTokenSpec, id: string, secret: string, now: number): 
     name: spec.name.trim(),
     scopes: [...spec.scopes],
     accounts: [...spec.accounts],
-    chats: spec.chats === 'all' ? 'all' : spec.chats.map(chatId),
+    chats: spec.chats === 'all' ? 'all' : spec.chats.map((entry) => keptChatOf(shownOf(entry))),
     limits: spec.limits,
     created: now,
     expires: spec.expiresInDays === null ? null : now + spec.expiresInDays * DAY_MS,
@@ -181,11 +246,13 @@ async function create(store: Store, sources: TokenSources, spec: AgentTokenSpec)
   store.tokens = [...store.tokens, kept];
   store.save();
   if (spec.chats !== 'all') {
-    // Where the system cannot keep a name safely, Settings shows it unnamed.
+    // Where the system cannot keep the details safely, Settings shows the chat unnamed.
     await Promise.all(
-      spec.chats.map((name) =>
-        sources.names.set(nameKey(kept.id, chatId(name)), name).catch(() => false),
-      ),
+      spec.chats.map((entry) => {
+        const shown = shownOf(entry);
+        const key = nameKey(kept.id, keptChatOf(shown).id);
+        return sources.names.set(key, JSON.stringify(shown)).catch(() => false);
+      }),
     );
   }
   return `yapyap_mcp_${kept.id}_${secret}`;
@@ -215,6 +282,22 @@ function narrow(store: Store, id: string, step: AgentNarrowingStep): boolean {
   return true;
 }
 
+async function listed(
+  store: Store,
+  names: TokenSources['names'],
+  id: string,
+): Promise<ListedChats> {
+  const token = store.tokens.find((entry) => entry.id === id);
+  const view = token === undefined ? undefined : await viewOf(token, names);
+  if (view === undefined || view.chats === 'all') {
+    return view === undefined ? { chats: [], unnamed: 0 } : 'all';
+  }
+  const chats = view.chats.flatMap(({ name, phone }) =>
+    name === null && phone === null ? [] : [{ name, phone }],
+  );
+  return { chats, unnamed: view.chats.length - chats.length };
+}
+
 /**
  * The agent tokens (ADR 0019), read once from `agent-tokens.json` and
  * written whenever they change. The file holds each token's hash and chat
@@ -233,10 +316,16 @@ export function agentTokens(sources: TokenSources): AgentTokens {
       store.save();
     },
     narrow: (id, step) => narrow(store, id, step),
+    listed: (id) => listed(store, sources.names, id),
   };
 }
 
 /** Whether `token` may reach the chat named `name`. */
 export function reaches(token: Pick<AgentToken, 'chats'>, name: string): boolean {
-  return token.chats === 'all' || token.chats.includes(chatId(name));
+  return token.chats === 'all' || token.chats.some((chat) => chat.name === chatId(name));
+}
+
+/** Whether `token` may reach the chat of the number whose digits are `digits`. */
+export function reachesPhone(token: Pick<AgentToken, 'chats'>, digits: string): boolean {
+  return token.chats === 'all' || token.chats.some((chat) => chat.phone === phoneId(digits));
 }

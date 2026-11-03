@@ -1,15 +1,17 @@
 import type { CallToolResult, McpServer } from '@modelcontextprotocol/server';
 import { z } from 'zod';
 import type { AgentScope } from '../../shared/agents-api.ts';
+import { searchChats } from './chat-search.ts';
 import { DAY_MS, MINUTE_MS, type Counter } from './limits.ts';
-import { reaches, type AgentToken } from './tokens.ts';
+import { reaches, type AgentToken, type ListedChats } from './tokens.ts';
 import {
   allowedOpenChat,
-  openNamed,
+  openTarget,
   refuse,
   ToolRefusal,
   type AgentAccounts,
   type AgentPage,
+  type ChatTarget,
 } from './tool-steps.ts';
 
 /** The most messages `read_chat` returns, as the adapter reads them. */
@@ -28,10 +30,24 @@ export interface ToolContext {
   readonly record: (tool: string, account: string, result: string) => void;
   /** Tells the user the token sent a message to `chat`. */
   readonly notifySent: (chat: string) => void;
+  /** The chats the token lists, as the user entered them. */
+  readonly listed: () => Promise<ListedChats>;
 }
 
 const account = z.string().min(1).max(36).describe('The account’s ID, from list_accounts.');
-const chat = z.string().min(1).max(256).describe('The chat’s name, exactly as WhatsApp shows it.');
+const chat = z
+  .string()
+  .min(1)
+  .max(256)
+  .describe('A chat’s name, exactly as WhatsApp shows it and as list_chats gives it.');
+const phone = z
+  .string()
+  .min(1)
+  .max(64)
+  .describe(
+    'Instead of chat: an international number from list_chats, such as +447700900123. ' +
+      'It opens the chat wherever it is, but reloads WhatsApp, so it takes a few seconds.',
+  );
 const text = z.string().min(1).max(MAX_TEXT);
 
 const answer = (value: unknown): CallToolResult => ({
@@ -80,12 +96,29 @@ async function forAccount(
 
 const has = (ctx: ToolContext, scope: AgentScope): boolean => ctx.token.scopes.includes(scope);
 
-function readingTools(server: McpServer, ctx: ToolContext): void {
+/** What every token may see: where it may act. */
+function listingTools(server: McpServer, ctx: ToolContext): void {
   server.registerTool(
     'list_accounts',
     { description: 'The WhatsApp accounts this token may use.' },
     () => answer(ctx.accounts.list().filter((entry) => ctx.token.accounts.includes(entry.id))),
   );
+  server.registerTool(
+    'list_chats',
+    {
+      description:
+        'The chats this token may open, write to or send to, each with its name, its ' +
+        'international number, or both: pass the name as chat or the number as phone. ' +
+        'With query, only the chats whose name or number has every word of it, such as ' +
+        '"vasco" for "Vasco Guita"; several may match, so ask the user which one when it ' +
+        'is not clear. "all" means any chat, for reading only.',
+      inputSchema: z.object({ query: z.string().max(100).optional() }),
+    },
+    async (args) => answer(searchChats(await ctx.listed(), args.query)),
+  );
+}
+
+function readingTools(server: McpServer, ctx: ToolContext): void {
   if (has(ctx, 'chat:read-unread-summary')) {
     server.registerTool(
       'list_unread',
@@ -103,17 +136,18 @@ function readingTools(server: McpServer, ctx: ToolContext): void {
     server.registerTool(
       'read_chat',
       {
-        description: `The open chat's last messages; names a chat to open it first (needs chat:open).`,
+        description: `The open chat's last messages; with chat or phone, it opens that chat first (needs chat:open).`,
         inputSchema: z.object({
           account,
           chat: chat.optional(),
+          phone: phone.optional(),
           messages: z.number().int().min(1).max(MAX_MESSAGES).optional(),
         }),
       },
       (args) =>
         forAccount(ctx, 'read_chat', args.account, async (page) => {
-          await openNamed(page, ctx.token, args.chat);
-          return allowedOpenChat(page, ctx.token, args.messages ?? DEFAULT_MESSAGES);
+          const opened = await openTarget(page, ctx.token, args);
+          return allowedOpenChat(page, ctx.token, args.messages ?? DEFAULT_MESSAGES, opened);
         }),
     );
   }
@@ -139,13 +173,13 @@ function draftTools(server: McpServer, ctx: ToolContext): void {
       'write_draft',
       {
         description:
-          'Puts text in the message box without sending it; names a chat to open it first.',
-        inputSchema: z.object({ account, chat: chat.optional(), text }),
+          'Puts text in the message box without sending it; with chat or phone, it opens that chat first.',
+        inputSchema: z.object({ account, chat: chat.optional(), phone: phone.optional(), text }),
       },
       (args) =>
         forAccount(ctx, 'write_draft', args.account, async (page) => {
-          await openNamed(page, ctx.token, args.chat);
-          await allowedOpenChat(page, ctx.token, 1);
+          const opened = await openTarget(page, ctx.token, args);
+          await allowedOpenChat(page, ctx.token, 1, opened);
           return { written: (await page.replaceDraft(args.text)) || refuse('no_chat_open') };
         }),
     );
@@ -168,15 +202,23 @@ function countSend(ctx: ToolContext): void {
 }
 
 /**
- * Sends `message` in `name`, which must be on the token's list. It never
- * touches what the user is typing: a message box with anything in it is
- * refused, not overwritten or sent (ADR 0019).
+ * Opens the chat a send goes to, which the agent must name, and returns its
+ * name as WhatsApp shows it. Sending to a listed chat opens it, whether or
+ * not the token may open chats otherwise.
  */
-async function send(ctx: ToolContext, page: AgentPage, name: string, message: string) {
-  if (!reaches(ctx.token, name)) {
-    refuse('chat_not_allowed');
-  }
-  await openNamed(page, { ...ctx.token, scopes: ['chat:open'] }, name);
+async function openToSend(ctx: ToolContext, page: AgentPage, target: ChatTarget) {
+  const opened = await openTarget(page, { ...ctx.token, scopes: ['chat:open'] }, target);
+  return opened ?? refuse('chat_missing');
+}
+
+/**
+ * Sends `message` in the chat the agent names, by name or by number, which
+ * must be on the token's list. It never touches what the user is typing: a
+ * message box with anything in it is refused, not overwritten or sent (ADR
+ * 0019).
+ */
+async function send(ctx: ToolContext, page: AgentPage, target: ChatTarget, message: string) {
+  const name = await openToSend(ctx, page, target);
   if (((await page.readDraft()) ?? '').trim() !== '') {
     refuse('composer_busy');
   }
@@ -197,18 +239,18 @@ function sendingTool(server: McpServer, ctx: ToolContext): void {
   server.registerTool(
     'send_message',
     {
-      description: 'Sends a plain-text message to a chat this token lists.',
-      inputSchema: z.object({ account, chat, text }),
+      description:
+        'Sends a plain-text message to a chat this token lists, named by chat or by phone.',
+      inputSchema: z.object({ account, chat: chat.optional(), phone: phone.optional(), text }),
     },
     (args) =>
-      forAccount(ctx, 'send_message', args.account, (page) =>
-        send(ctx, page, args.chat, args.text),
-      ),
+      forAccount(ctx, 'send_message', args.account, (page) => send(ctx, page, args, args.text)),
   );
 }
 
 /** Registers the tools the calling token's scopes allow; the agent sees no other (ADR 0019). */
 export function registerTools(server: McpServer, ctx: ToolContext): void {
+  listingTools(server, ctx);
   readingTools(server, ctx);
   draftTools(server, ctx);
   sendingTool(server, ctx);

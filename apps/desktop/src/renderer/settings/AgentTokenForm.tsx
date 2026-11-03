@@ -8,6 +8,7 @@ import {
   MAX_AGENT_LIMIT,
   MAX_TOKEN_NAME,
   SENDING_TOKEN_DAYS,
+  type AgentChatEntry,
   type AgentLimits,
   type AgentScope,
   type AgentsView,
@@ -138,21 +139,25 @@ function Scopes(props: {
 }
 
 interface ListedProps {
-  readonly listed: readonly string[];
-  readonly onChange: Setter<readonly string[]>;
+  readonly listed: readonly AgentChatEntry[];
+  readonly onChange: Setter<readonly AgentChatEntry[]>;
 }
+
+/** How a listed chat reads in a chip: its name and its number, as far as it has them. */
+export const chatLabel = ({ name, phone }: AgentChatEntry): string =>
+  [name, phone].filter((part) => part !== null).join(' · ');
 
 function ChatChips({ listed, onChange }: ListedProps): JSX.Element {
   return (
     <ul class="chips">
       {listed.map((chat) => (
-        <li key={chat} class="chip">
-          {chat}{' '}
+        <li key={chatLabel(chat)} class="chip">
+          {chatLabel(chat)}{' '}
           <button
             type="button"
-            aria-label={text.tokens.remove({ item: chat })}
+            aria-label={text.tokens.remove({ item: chatLabel(chat) })}
             onClick={() => {
-              onChange(toggled(listed, chat, false));
+              onChange(listed.filter((entry) => entry !== chat));
             }}
           >
             {text.tokens.removeMark}
@@ -163,13 +168,13 @@ function ChatChips({ listed, onChange }: ListedProps): JSX.Element {
   );
 }
 
-/** Adds the chat open in the token's first account. */
-function AddOpenChat(props: {
+/** Puts the name of the chat open in the token's first account in the name field. */
+function UseOpenChat(props: {
   readonly api: ChromeApi;
   readonly account: string;
-  readonly add: (chat: string) => void;
+  readonly onName: Setter<string>;
 }): JSX.Element {
-  const { api, account, add } = props;
+  const { api, account, onName } = props;
   const [status, setStatus] = useState('');
   return (
     <>
@@ -179,7 +184,7 @@ function AddOpenChat(props: {
           void api.agents.openChat(account).then((open) => {
             setStatus(open === null ? text.form.noOpenChat : '');
             if (open !== null) {
-              add(open);
+              onName(open);
             }
           });
         }}
@@ -191,38 +196,49 @@ function AddOpenChat(props: {
   );
 }
 
-/** Adds a chat by its name, or the chat open in the token's first account. */
+function ChatField(props: {
+  readonly label: string;
+  readonly value: string;
+  readonly max: number;
+  readonly onInput: Setter<string>;
+}): JSX.Element {
+  return (
+    <input
+      type="text"
+      aria-label={props.label}
+      placeholder={props.label}
+      value={props.value}
+      maxLength={props.max}
+      onInput={(event) => {
+        props.onInput(event.currentTarget.value);
+      }}
+    />
+  );
+}
+
+/** Adds a chat by its name, its number, or both; the open chat can give the name. */
 function AddChat(
   props: ListedProps & { readonly api: ChromeApi; readonly account: string | undefined },
 ): JSX.Element {
   const { api, account, listed, onChange } = props;
   const [name, setName] = useState('');
-  const add = (chat: string): void => {
-    onChange(toggled(listed, chat.trim(), true));
+  const [phone, setPhone] = useState('');
+  const empty = name.trim() === '' && phone.trim() === '';
+  const add = (): void => {
+    const entry = { name: name.trim() || null, phone: phone.trim() || null };
+    onChange([...listed.filter((chat) => chatLabel(chat) !== chatLabel(entry)), entry]);
     setName('');
+    setPhone('');
   };
   return (
     <div class="add-chat">
-      <input
-        type="text"
-        aria-label={text.form.chatName}
-        placeholder={text.form.chatName}
-        value={name}
-        maxLength={256}
-        onInput={(event) => {
-          setName(event.currentTarget.value);
-        }}
-      />{' '}
-      <button
-        type="button"
-        disabled={name.trim() === ''}
-        onClick={() => {
-          add(name);
-        }}
-      >
+      <p class="hint">{text.form.chatHint}</p>
+      <ChatField label={text.form.chatName} value={name} max={256} onInput={setName} />{' '}
+      <ChatField label={text.form.chatPhone} value={phone} max={64} onInput={setPhone} />{' '}
+      <button type="button" disabled={empty} onClick={add}>
         {text.form.addChat}
       </button>{' '}
-      {account === undefined ? null : <AddOpenChat api={api} account={account} add={add} />}
+      {account === undefined ? null : <UseOpenChat api={api} account={account} onName={setName} />}
     </div>
   );
 }
@@ -250,9 +266,9 @@ function ChatsChoice(props: {
 function Chats(props: {
   readonly api: ChromeApi;
   readonly account: string | undefined;
-  readonly chats: readonly string[] | 'all';
+  readonly chats: readonly AgentChatEntry[] | 'all';
   readonly listOnly: boolean;
-  readonly onChange: Setter<readonly string[] | 'all'>;
+  readonly onChange: Setter<readonly AgentChatEntry[] | 'all'>;
 }): JSX.Element {
   const { chats, listOnly, onChange } = props;
   const listed = chats === 'all' ? [] : chats;

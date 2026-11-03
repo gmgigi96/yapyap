@@ -38,6 +38,7 @@ function setup() {
     replaceDraft: vi.fn(),
     pressEnter: vi.fn(),
     openChat: vi.fn(),
+    openPhone: vi.fn(),
   };
   const deps = {
     server: {
@@ -56,6 +57,7 @@ function setup() {
       count: vi.fn(() => 1),
       revoke: vi.fn(),
       narrow: vi.fn(() => true),
+      listed: vi.fn(),
     },
     accounts: vi.fn<AgentsSettingsDependencies['accounts']>(() => ({
       list: () => [{ id: ACCOUNT, name: 'Personal' }],
@@ -114,7 +116,8 @@ describe('agentsHandlers', () => {
       problem: 'Give the token a name, at least one thing it may do, and at least one account.',
     });
     expect(await t.call('agents:create', { ...SPEC, scopes: ['messages:send'] })).toEqual({
-      problem: 'A token that opens chats or sends messages must list the chats it may reach.',
+      problem:
+        'A token that opens chats or sends messages must list the chats it may reach, by name or by number.',
     });
     t.deps.accounts.mockReturnValue(undefined);
     expect(await t.call('agents:create', SPEC)).toEqual({

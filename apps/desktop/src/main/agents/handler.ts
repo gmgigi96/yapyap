@@ -18,7 +18,7 @@ export interface AgentAnswer {
 }
 
 export interface AgentHandlerDependencies {
-  readonly tokens: Pick<AgentTokens, 'verify'>;
+  readonly tokens: Pick<AgentTokens, 'verify' | 'listed'>;
   readonly accounts: AgentAccounts;
   readonly counter: Counter;
   readonly lock: FailureLock;
@@ -73,6 +73,7 @@ async function serve(
       notifySent: (chat) => {
         deps.notifySent(token, chat);
       },
+      listed: () => deps.tokens.listed(token.id),
     });
     return server;
   });
