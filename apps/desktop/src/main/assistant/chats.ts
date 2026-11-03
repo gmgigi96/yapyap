@@ -2,7 +2,7 @@ import { createHash } from 'node:crypto';
 import { Type } from 'typebox';
 import { Value } from 'typebox/value';
 import type { SecretStore } from '../secrets/secret-store.ts';
-import type { TextFile } from '../atomic-write.ts';
+import { readChecked, type TextFile } from '../atomic-write.ts';
 
 const UUID = '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$';
 const FORMAT_VERSION = 1;
@@ -52,14 +52,8 @@ export interface AllowedChats {
 }
 
 function readChats(file: TextFile): Map<string, string[]> {
-  try {
-    const value: unknown = JSON.parse(file.read());
-    return Value.Check(ChatsSchema, value)
-      ? new Map(Object.entries(value.accounts).map(([account, ids]) => [account, [...ids]]))
-      : new Map<string, string[]>();
-  } catch {
-    return new Map<string, string[]>();
-  }
+  const accounts = readChecked(file, ChatsSchema)?.accounts ?? {};
+  return new Map(Object.entries(accounts).map(([account, ids]) => [account, [...ids]]));
 }
 
 /** Where a chat's encrypted name is kept among YapYap's secrets. */

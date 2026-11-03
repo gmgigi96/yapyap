@@ -1,6 +1,5 @@
 import { Type, type Static } from 'typebox';
-import { Value } from 'typebox/value';
-import type { TextFile } from '../atomic-write.ts';
+import { readChecked, type TextFile } from '../atomic-write.ts';
 
 const FORMAT_VERSION = 1;
 
@@ -35,22 +34,13 @@ export interface AssistantState {
 
 const EMPTY: Saved = { version: FORMAT_VERSION, privateModel: null };
 
-function readState(file: TextFile): Saved {
-  try {
-    const value: unknown = JSON.parse(file.read());
-    return Value.Check(StateSchema, value) ? value : EMPTY;
-  } catch {
-    return EMPTY;
-  }
-}
-
 /**
  * The assistant's state, read once and written whenever it changes. Like
  * the window's size, it is state, not a preference, so it stays out of
  * settings and their export. A write that fails keeps it for this run.
  */
 export function assistantState(file: TextFile, warn: (message: string) => void): AssistantState {
-  let state = readState(file);
+  let state = readChecked(file, StateSchema) ?? EMPTY;
   const change = (next: Partial<Saved>): void => {
     state = { ...state, ...next };
     try {

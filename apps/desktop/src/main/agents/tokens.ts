@@ -1,13 +1,12 @@
 import { createHash, timingSafeEqual } from 'node:crypto';
 import { Type, type Static } from 'typebox';
-import { Value } from 'typebox/value';
 import type {
   AgentChatEntry,
   AgentNarrowingStep,
   AgentTokenSpec,
   AgentTokenView,
 } from '../../shared/agents-api.ts';
-import type { TextFile } from '../atomic-write.ts';
+import { readChecked, type TextFile } from '../atomic-write.ts';
 import type { SecretStore } from '../secrets/secret-store.ts';
 import { parseInternationalNumber } from '../../shared/phone-number.ts';
 import { chatId } from '../assistant/chats.ts';
@@ -146,15 +145,6 @@ const nameKey = (token: string, chat: string): string => `${NAMES}${token}/${cha
 
 type Kept = Static<typeof TokenSchema>;
 
-function readTokens(file: TextFile): Kept[] {
-  try {
-    const value: unknown = JSON.parse(file.read());
-    return Value.Check(FileSchema, value) ? value.tokens : [];
-  } catch {
-    return [];
-  }
-}
-
 /** Whether the presented secret is the token's, compared in constant time. */
 function matches(token: Kept, secret: string): boolean {
   return timingSafeEqual(Buffer.from(token.hash, 'hex'), Buffer.from(hashOf(secret), 'hex'));
@@ -226,7 +216,7 @@ interface Store {
 
 function storeOf({ file, names, warn }: TokenSources): Store {
   const store: Store = {
-    tokens: readTokens(file),
+    tokens: readChecked(file, FileSchema)?.tokens ?? [],
     save: () => {
       try {
         file.write(`${JSON.stringify({ version: FORMAT_VERSION, tokens: store.tokens })}\n`);

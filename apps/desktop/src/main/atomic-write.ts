@@ -1,4 +1,6 @@
 import { closeSync, fsyncSync, openSync, readFileSync, renameSync, writeSync } from 'node:fs';
+import type { Static, TSchema } from 'typebox';
+import { Value } from 'typebox/value';
 
 /**
  * Writes `text` to a temporary file, flushes it to disk, then renames it
@@ -38,6 +40,22 @@ export function textFileAt(path: string, mode?: number): TextFile {
 export function readIfPresent(file: TextFile): string | undefined {
   try {
     return file.read();
+  } catch {
+    return undefined;
+  }
+}
+
+/**
+ * The file's JSON when it matches `schema`, or undefined when the file is
+ * missing, damaged or of another version, so a store starts empty instead.
+ */
+export function readChecked<Schema extends TSchema>(
+  file: TextFile,
+  schema: Schema,
+): Static<Schema> | undefined {
+  try {
+    const value: unknown = JSON.parse(file.read());
+    return Value.Check(schema, value) ? value : undefined;
   } catch {
     return undefined;
   }

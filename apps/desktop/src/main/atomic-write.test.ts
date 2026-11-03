@@ -1,8 +1,9 @@
 import { mkdtempSync, readdirSync, rmSync, statSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
+import { Type } from 'typebox';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
-import { readIfPresent, textFileAt } from './atomic-write.ts';
+import { readChecked, readIfPresent, textFileAt } from './atomic-write.ts';
 
 let dir: string;
 
@@ -40,5 +41,24 @@ describe('readIfPresent', () => {
     expect(readIfPresent(file)).toBeUndefined();
     file.write('{}');
     expect(readIfPresent(file)).toBe('{}');
+  });
+});
+
+describe('readChecked', () => {
+  const schema = Type.Object({ version: Type.Literal(1) });
+
+  it('reads JSON that matches the schema', () => {
+    const file = textFileAt(join(dir, 'state.json'));
+    file.write('{"version":1}');
+    expect(readChecked(file, schema)).toEqual({ version: 1 });
+  });
+
+  it('reads nothing from a missing, damaged or other-version file', () => {
+    const file = textFileAt(join(dir, 'state.json'));
+    expect(readChecked(file, schema)).toBeUndefined();
+    file.write('{"version":');
+    expect(readChecked(file, schema)).toBeUndefined();
+    file.write('{"version":2}');
+    expect(readChecked(file, schema)).toBeUndefined();
   });
 });
