@@ -381,3 +381,7 @@ title, escape })` (`src/renderer/shared/mount.tsx`), which titles the
   keeps its window handlers in its own folder, `src/main/` holds only
   `index.ts` beside its folders, the process contracts sit in
   `src/shared/api/`, and `AGENTS.md` links to `CLAUDE.md`.
+- minimatch advisory (#594): overrides move electron-builder to
+  `@electron/asar` 4, `@electron/universal` 3, `filelist` 2 and `glob` 14,
+  so every package gets minimatch 11, and drop the Squirrel.Windows
+  packager YapYap never builds. `pnpm audit` finds nothing.
