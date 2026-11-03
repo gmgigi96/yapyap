@@ -47,15 +47,6 @@ export function bringToFront(window: LinkWindow): void {
   window.focus();
 }
 
-/** A link handed to the running app: a chat link, or something else. */
-function follow(url: string, home: string, links: LinkTargets): boolean {
-  const target = chatLinkTarget(url, home);
-  if (target !== undefined) {
-    links.open(target);
-  }
-  return target !== undefined;
-}
-
 /** Hands every later launch, and every macOS link event, to the links' targets. */
 function listenForLaunches(
   app: InstanceApp,
@@ -76,9 +67,12 @@ function listenForLaunches(
   // macOS hands links to the running app instead of starting another one.
   app.on('open-url', (event, url) => {
     event.preventDefault();
-    if (!follow(url, home, links)) {
+    const target = chatLinkTarget(url, home);
+    if (target === undefined) {
       // The link itself is never logged: a chat link names a phone number.
       warn('Ignored a link that is not a WhatsApp chat link.');
+    } else {
+      links.open(target);
     }
   });
 }
