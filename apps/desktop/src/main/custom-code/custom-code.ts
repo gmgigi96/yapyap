@@ -131,11 +131,9 @@ function run(state: CodeState, page: CodePage, entry: PageEntry): void {
 /** Restyles every page, or only those a scope's CSS applies to; forgets pages that are gone. */
 function restyleAll(state: CodeState, scope?: string): void {
   for (const [page, entry] of state.pages) {
-    const gone = page.isDestroyed();
-    if (gone) {
+    if (page.isDestroyed()) {
       state.pages.delete(page);
-    }
-    if (!gone && (scope === undefined || scope === ALL_ACCOUNTS || scope === entry.account)) {
+    } else if (scope === undefined || scope === ALL_ACCOUNTS || scope === entry.account) {
       restyle(state, page, entry);
     }
   }
