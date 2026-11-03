@@ -14,6 +14,7 @@ import { en } from '../../shared/messages/en.ts';
 import { followGlobalShortcuts, toggleWindow } from '../shortcuts/global-shortcuts.ts';
 import { createProxyLogin } from '../network/proxy-login.ts';
 import { useCameraPortal } from '../permissions/camera-portal.ts';
+import type { ChromeRuntime } from '../chrome/feature.ts';
 import type { StartDependencies, WindowPort } from './types.ts';
 
 /** Starts without hardware acceleration, for when graphics problems stop YapYap from starting. */
@@ -148,7 +149,7 @@ const NO_PAGE = {};
 /** Proxies that ask for a password get the saved one, or the user is asked (#76). */
 export function signInToProxies<Window extends WindowPort>(
   deps: Pick<StartDependencies<Window>, 'app' | 'secrets'>,
-  chrome: Pick<ReturnType<StartDependencies<Window>['chrome']['afterReady']>, 'askProxyLogin'>,
+  chrome: Pick<ChromeRuntime, 'askProxyLogin'>,
 ): void {
   const login = createProxyLogin({
     secrets: deps.secrets,

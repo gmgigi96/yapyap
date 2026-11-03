@@ -282,7 +282,7 @@ export interface ChromeFeatureDependencies {
 
 export type WhatsAppContents = MonitoredContents & RecoverableContents & CrashableContents;
 
-interface ChromeRuntime {
+export interface ChromeRuntime {
   /** Watches a WhatsApp view and shows the recovery screen over it when it fails. */
   readonly attachRecovery: (
     contents: WhatsAppContents,

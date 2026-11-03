@@ -1,5 +1,5 @@
 import type { AccountAvatars, AvatarPage } from '../accounts/avatars.ts';
-import type { ChromeFeature, WhatsAppContents } from '../chrome/feature.ts';
+import type { ChromeFeature, ChromeRuntime, WhatsAppContents } from '../chrome/feature.ts';
 import type { SidebarPort } from '../chrome/sidebar.ts';
 import type { InPageChatList } from '../chat-list/chat-list-page.ts';
 import type { ChatListWidths } from '../chat-list/widths.ts';
@@ -268,6 +268,9 @@ export interface StartDependencies<Window extends WindowPort> {
 
 export type PickInApp = (contents: object) => Promise<CaptureChoice | undefined>;
 
+/** What every session's guards share: the view registry, capture and the identity. */
+export type SessionSecurity = Parameters<typeof secureSession>[1];
+
 /** An open account's views, and how to bring its WhatsApp back after an outage. */
 export interface OpenedAccount extends AccountPage {
   readonly contents: AccountContents;
@@ -280,8 +283,8 @@ export interface OpenedAccount extends AccountPage {
 
 export interface AccountWiring<Window extends WindowPort> {
   readonly deps: StartDependencies<Window>;
-  readonly chrome: ReturnType<StartDependencies<Window>['chrome']['afterReady']>;
-  readonly security: Parameters<typeof secureSession>[1];
+  readonly chrome: ChromeRuntime;
+  readonly security: SessionSecurity;
   readonly window: Window;
   readonly signals: AccountSignals;
   /** Each account's profile photo, for the sidebar (#87). */
