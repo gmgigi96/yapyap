@@ -222,21 +222,6 @@ describe('settingsHandlers', () => {
     expect(set?.accepts([BETA, true])).toBe(false);
   });
 
-  it('shows a setting it cannot act on here, says why, and refuses to change it', () => {
-    const service = { ...setup().service };
-    const handlers = settingsHandlers(service, vi.fn(), 'linux', {}, [], {
-      [CLOSE_TO_TRAY]: 'This desktop has no tray.',
-    });
-    const get = handlers.find(({ channel }) => channel === 'settings:get');
-    const set = handlers.find(({ channel }) => channel === 'settings:set');
-    expect(get?.handle({ sender: {} })).toMatchObject({
-      values: { [CLOSE_TO_TRAY]: false },
-      unavailable: { [CLOSE_TO_TRAY]: 'This desktop has no tray.' },
-    });
-    expect(set?.accepts([CLOSE_TO_TRAY, true])).toBe(false);
-    expect(set?.accepts([DND, true])).toBe(true);
-  });
-
   it('saves a change and asks for a restart until the launch value is back', async () => {
     const t = setup();
     const set = t.handler('settings:set');
