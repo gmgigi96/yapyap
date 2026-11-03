@@ -157,7 +157,9 @@ function refresh(state: ReturnType<typeof proxyState>, only?: string): void {
   for (const [page, account] of state.pages) {
     if (page.isDestroyed()) {
       state.pages.delete(page);
-    } else if (matches(account, only)) {
+      continue;
+    }
+    if (matches(account, only)) {
       state.callPolicy(page, account);
     }
   }

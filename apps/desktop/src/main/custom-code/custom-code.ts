@@ -133,7 +133,9 @@ function restyleAll(state: CodeState, scope?: string): void {
   for (const [page, entry] of state.pages) {
     if (page.isDestroyed()) {
       state.pages.delete(page);
-    } else if (scope === undefined || scope === ALL_ACCOUNTS || scope === entry.account) {
+      continue;
+    }
+    if (scope === undefined || scope === ALL_ACCOUNTS || scope === entry.account) {
       restyle(state, page, entry);
     }
   }
