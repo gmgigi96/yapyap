@@ -83,9 +83,11 @@ export function openChatStep(
   if (list === null) {
     return 'end';
   }
+  // Less than a screen, so a row cut at the edge is whole in the next look.
+  // Declared here, not at module level, because the step runs as source text.
+  const scrollShare = 0.8;
   const before = list.scrollTop;
-  // A little overlap, so a row cut at the edge is whole in the next look.
-  list.scrollTop = before + Math.max(1, Math.floor(list.clientHeight * 0.8));
+  list.scrollTop = before + Math.max(1, Math.floor(list.clientHeight * scrollShare));
   return list.scrollTop > before ? 'scrolled' : 'end';
 }
 
