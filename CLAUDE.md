@@ -54,7 +54,7 @@ Update this table in the PR that adds a command.
 
 | Part             | Path                                                                              | Notes                                                                                   |
 | ---------------- | --------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------- |
-| Main process     | `apps/desktop/src/main/`                                                          | App lifecycle, windows, IPC validation, settings, updates                               |
+| Main process     | `apps/desktop/src/main/`                                                          | One folder per feature; app lifecycle in `app/`, shared chrome plumbing in `chrome/`    |
 | Preloads         | `apps/desktop/src/preload/`                                                       | Minimal typed `contextBridge` APIs, one per zone                                        |
 | Chrome renderer  | `apps/desktop/src/renderer/`                                                      | YapYap's own UI (Preact), served from `app://`                                          |
 | WhatsApp adapter | `apps/desktop/src/adapter/`                                                       | **The only place** with WhatsApp DOM knowledge; versioned selectors; returns plain data |
@@ -176,6 +176,12 @@ Update this table in the PR that adds a command.
   `src/shared/api/chrome-api.ts`, the preload bridge, and a handler registered
   through `registerChromeHandlers`, which checks the sender and payload. Node's
   URL parser treats `app:` as opaque, so compare origins with `isSameOrigin`.
+  A window's handlers live in its feature's folder as `<page>-handlers.ts`;
+  `src/main/chrome/` keeps only what every chrome window shares. Contracts
+  between processes (`*-api.ts`) live in `src/shared/api/`, and the main
+  process answers each in a `<name>-ipc.ts` or a handlers file.
+  `src/main/` holds only `index.ts` beside its folders: lifecycle code goes
+  in `app/`, small utilities in `support/`.
 - A setting appears in the settings window only once YapYap acts on it: add
   it to `SETTING_FIELDS` in `src/shared/settings-fields.ts` in the PR that
   implements it. The `settings:set` handler accepts only listed fields and

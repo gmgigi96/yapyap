@@ -378,4 +378,7 @@ title, escape })` (`src/renderer/shared/mount.tsx`), which titles the
   pauses and following a setting, and one fake settings service for tests.
   Dead code and leftovers of the removed extensions and quick access panel
   are gone, the MCP server's SonarQube Cloud issues are fixed, and mutation
-  testing covers the moved security and window modules again.
+  testing covers the moved security and window modules again. Each feature
+  keeps its window handlers in its own folder, `src/main/` holds only
+  `index.ts` beside its folders, the process contracts sit in
+  `src/shared/api/`, and `AGENTS.md` links to `CLAUDE.md`.
