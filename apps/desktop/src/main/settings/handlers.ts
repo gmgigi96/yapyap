@@ -52,7 +52,6 @@ function snapshotOf(
   return {
     values,
     problems,
-    unavailable: {},
     restartPending: fields.some(
       ({ id, restart: needsRestart }) =>
         needsRestart && readValue(current, id) !== readValue(launched, id),

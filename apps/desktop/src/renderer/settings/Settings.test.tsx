@@ -14,7 +14,6 @@ const snapshot = (overrides: Partial<SettingsSnapshot> = {}): SettingsSnapshot =
   values: { [THEME]: 'system', [HARDWARE]: true },
   restartPending: false,
   problems: {},
-  unavailable: {},
   ...overrides,
 });
 
@@ -207,33 +206,6 @@ describe('Settings', () => {
     );
     expect(document.getElementById('general.example-hint')?.textContent).toBe(
       'Does something.The system refused.',
-    );
-  });
-
-  it('shows a choice it cannot change here, and why', () => {
-    const field = {
-      id: 'general.example',
-      label: 'Example',
-      description: 'Where it goes.',
-      restart: false,
-      options: [
-        { value: 'left', label: 'Left' },
-        { value: 'right', label: 'Right' },
-      ],
-    } as const;
-    render(
-      <Field
-        field={field}
-        snapshot={snapshot({
-          values: { 'general.example': 'left' },
-          unavailable: { 'general.example': 'Your desktop decides.' },
-        })}
-        onChange={vi.fn()}
-      />,
-    );
-    expect(screen.getByRole<HTMLFieldSetElement>('group').disabled).toBe(true);
-    expect(document.getElementById('general.example-hint')?.textContent).toBe(
-      'Where it goes. Your desktop decides.',
     );
   });
 

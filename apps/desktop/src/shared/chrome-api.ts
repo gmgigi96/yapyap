@@ -78,8 +78,6 @@ export interface SettingsSnapshot {
   readonly restartPending: boolean;
   /** Why the last change of a field did not take effect, keyed by field ID. */
   readonly problems: Readonly<Record<string, string>>;
-  /** Fields shown but not changeable here, with the reason, keyed by field ID. */
-  readonly unavailable: Readonly<Record<string, string>>;
 }
 
 /** How an export or import ended, with what to tell the user. */

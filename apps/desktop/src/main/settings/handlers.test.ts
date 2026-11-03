@@ -181,7 +181,6 @@ describe('settingsHandlers', () => {
       },
       restartPending: false,
       problems: {},
-      unavailable: {},
     });
   });
 
@@ -199,7 +198,6 @@ describe('settingsHandlers', () => {
     expect(await set.handle(t.call, AUTOSTART, true)).toMatchObject({
       values: { [AUTOSTART]: true },
       problems: {},
-      unavailable: {},
     });
   });
 
@@ -265,7 +263,6 @@ describe('settingsHandlers', () => {
       },
       restartPending: true,
       problems: {},
-      unavailable: {},
     });
     expect(t.settings().reliability.hardwareAcceleration).toBe(false);
     expect(t.settings().reliability.memoryWatchdogMb).toBe(2048);

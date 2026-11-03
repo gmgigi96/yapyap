@@ -58,7 +58,6 @@ const snapshot = (on: boolean): SettingsSnapshot => ({
   values: { 'agents.enabled': on },
   restartPending: false,
   problems: {},
-  unavailable: {},
 });
 
 function setup(view: AgentsView = VIEW, on = true) {

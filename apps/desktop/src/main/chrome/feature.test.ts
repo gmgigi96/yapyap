@@ -473,7 +473,6 @@ describe('createChromeFeature', () => {
       },
       restartPending: false,
       problems: {},
-      unavailable: {},
     });
     t.call('settings:restart');
     expect(t.deps.restart).toHaveBeenCalledOnce();

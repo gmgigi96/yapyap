@@ -38,7 +38,6 @@ const SNAPSHOT: SettingsSnapshot = {
   },
   restartPending: false,
   problems: {},
-  unavailable: {},
 };
 
 function setup(view: AssistantView = VIEW, snapshot: SettingsSnapshot = SNAPSHOT) {
