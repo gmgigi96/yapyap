@@ -368,3 +368,14 @@ title, escape })` (`src/renderer/shared/mount.tsx`), which titles the
 - Install page button (#579): the download button carries its own styles,
   so it shows as a button on the install page too, not only on the home
   page.
+- SonarQube Cloud on forks (#591, ADR 0010): pull requests from forks get
+  no secrets, so `sonar-fork.yml` analyzes them on `workflow_run` with
+  master's dependencies and analysis settings, never running their code.
+  The ruleset requires SonarQube Cloud's own check, and a run without the
+  token fails instead of passing.
+- Codebase cleanup (#592): the same jobs are done the same way across
+  files, with shared helpers for environment variables, small JSON stores,
+  pauses and following a setting, and one fake settings service for tests.
+  Dead code and leftovers of the removed extensions and quick access panel
+  are gone, the MCP server's SonarQube Cloud issues are fixed, and mutation
+  testing covers the moved security and window modules again.
