@@ -47,13 +47,11 @@ function interpolate(text: string, params: Params, numbers: Intl.NumberFormat): 
 }
 
 interface Language {
-  readonly locale: string;
   readonly numbers: Intl.NumberFormat;
   readonly plurals: Intl.PluralRules;
 }
 
 const language = (locale: string): Language => ({
-  locale,
   numbers: new Intl.NumberFormat(locale),
   plurals: new Intl.PluralRules(locale),
 });

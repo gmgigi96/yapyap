@@ -8,6 +8,15 @@ export interface PreloadIpc {
   on(channel: string, listener: (event: unknown, ...args: unknown[]) => void): unknown;
 }
 
+/** Hands `listener` each ID the main process sends on `channel`, and nothing else. */
+function onId(ipc: PreloadIpc, channel: string, listener: (id: string) => void): void {
+  ipc.on(channel, (_event, id) => {
+    if (typeof id === 'string') {
+      listener(id);
+    }
+  });
+}
+
 /**
  * The page's side of WhatsApp notifications: three operations on fixed
  * channels, never `ipcRenderer` itself (ADR 0011).
@@ -21,11 +30,7 @@ export function createNotificationBridge(ipc: PreloadIpc): NotificationBridge {
       ipc.send(NOTIFICATION_CHANNELS.close, id);
     },
     onClick: (listener) => {
-      ipc.on(NOTIFICATION_CHANNELS.click, (_event, id) => {
-        if (typeof id === 'string') {
-          listener(id);
-        }
-      });
+      onId(ipc, NOTIFICATION_CHANNELS.click, listener);
     },
   };
 }
@@ -40,11 +45,7 @@ export function createShareBridge(ipc: PreloadIpc): ShareBridge {
       ipc.send(SHARE_CHANNELS.ended, id);
     },
     onStop: (listener) => {
-      ipc.on(SHARE_CHANNELS.stop, (_event, id) => {
-        if (typeof id === 'string') {
-          listener(id);
-        }
-      });
+      onId(ipc, SHARE_CHANNELS.stop, listener);
     },
   };
 }

@@ -1,34 +1,37 @@
 /** Modifiers in Electron's accelerator syntax; `CmdOrCtrl` is ⌘ on macOS and Ctrl elsewhere. */
 const MODIFIERS = new Set(['CmdOrCtrl', 'Cmd', 'Ctrl', 'Alt', 'Shift', 'Super']);
 
+/** Keys as `KeyboardEvent.code` names them, for the keys that are not letters or digits. */
+const CODES: Readonly<Record<string, string>> = {
+  Space: 'Space',
+  Tab: 'Tab',
+  Backspace: 'Backspace',
+  Delete: 'Delete',
+  Insert: 'Insert',
+  Enter: 'Enter',
+  ArrowUp: 'Up',
+  ArrowDown: 'Down',
+  ArrowLeft: 'Left',
+  ArrowRight: 'Right',
+  Home: 'Home',
+  End: 'End',
+  PageUp: 'PageUp',
+  PageDown: 'PageDown',
+  Backquote: '`',
+  Minus: '-',
+  Equal: '=',
+  BracketLeft: '[',
+  BracketRight: ']',
+  Semicolon: ';',
+  Quote: "'",
+  Comma: ',',
+  Period: '.',
+  Slash: '/',
+  Backslash: '\\',
+};
+
 /** Keys a shortcut may end in, besides letters, digits and function keys. */
-const NAMED_KEYS = new Set([
-  'Space',
-  'Tab',
-  'Backspace',
-  'Delete',
-  'Insert',
-  'Enter',
-  'Up',
-  'Down',
-  'Left',
-  'Right',
-  'Home',
-  'End',
-  'PageUp',
-  'PageDown',
-  '`',
-  '-',
-  '=',
-  '[',
-  ']',
-  ';',
-  "'",
-  ',',
-  '.',
-  '/',
-  '\\',
-]);
+const NAMED_KEYS = new Set(Object.values(CODES));
 
 /** F1 to F24. */
 const FUNCTION_KEYS = /^F(?:[1-9]|1\d|2[0-4])$/;
@@ -36,7 +39,7 @@ const FUNCTION_KEYS = /^F(?:[1-9]|1\d|2[0-4])$/;
 const isKey = (key: string): boolean =>
   /^[A-Z0-9]$/.test(key) || FUNCTION_KEYS.test(key) || NAMED_KEYS.has(key);
 
-/** Function keys may stand alone; any other key needs a modifier. */
+/** A function key, which may stand alone; any other key needs a modifier. */
 const FUNCTION_KEY = /^F\d+$/;
 
 interface Parsed {
@@ -102,42 +105,13 @@ export function conflictOf(
   )?.id;
 }
 
-/** Keys as `KeyboardEvent.code` names them, for the keys that are not letters or digits. */
-const CODES: Readonly<Record<string, string>> = {
-  Space: 'Space',
-  Tab: 'Tab',
-  Backspace: 'Backspace',
-  Delete: 'Delete',
-  Insert: 'Insert',
-  Enter: 'Enter',
-  ArrowUp: 'Up',
-  ArrowDown: 'Down',
-  ArrowLeft: 'Left',
-  ArrowRight: 'Right',
-  Home: 'Home',
-  End: 'End',
-  PageUp: 'PageUp',
-  PageDown: 'PageDown',
-  Backquote: '`',
-  Minus: '-',
-  Equal: '=',
-  BracketLeft: '[',
-  BracketRight: ']',
-  Semicolon: ';',
-  Quote: "'",
-  Comma: ',',
-  Period: '.',
-  Slash: '/',
-  Backslash: '\\',
-};
-
 /** The key of a `KeyboardEvent.code`, by position rather than by the character it types. */
 function keyOf(code: string): string | undefined {
   const letterOrDigit = /^(?:Key([A-Z])|Digit(\d))$/.exec(code);
   if (letterOrDigit !== null) {
     return letterOrDigit[1] ?? letterOrDigit[2];
   }
-  return /^F\d+$/.test(code) ? code : CODES[code];
+  return FUNCTION_KEY.test(code) ? code : CODES[code];
 }
 
 /** The part of a `KeyboardEvent` a shortcut is made of. */
