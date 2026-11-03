@@ -1,6 +1,7 @@
 import { Type } from 'typebox';
 import { Value } from 'typebox/value';
 import { cappedFetcher, type Fetcher, type StreamedResponse } from './capped-fetch.ts';
+import { MAX_MODELS } from './models.ts';
 
 const OLLAMA_PORT = 11_434;
 /** Alpaca runs an Ollama of its own, one port up, so both can run. */
@@ -23,7 +24,6 @@ export const PROBE_TIMEOUT_MS = 1500;
 export const LIST_MAX_BYTES = 256 * 1024;
 
 const MAX_SERVERS = 4;
-const MAX_MODELS = 20;
 
 /** A model's ID as Settings shows it: short text, without control characters. */
 const ModelId = Type.String({ minLength: 1, maxLength: 200, pattern: String.raw`^\P{Cc}+$` });
@@ -61,7 +61,10 @@ export const loopbackRequest =
       signal: AbortSignal.timeout(timeoutMs),
     });
 
-/** The IDs an OpenAI-style list of models names, the first 20 that fit; undefined when it is no such list. */
+/**
+ * The IDs an OpenAI-style list of models names, the first {@link MAX_MODELS}
+ * that fit; undefined when it is no such list.
+ */
 export function modelIds(body: unknown): string[] | undefined {
   const { data } = Object(body) as { data?: unknown };
   if (!Array.isArray(data)) {

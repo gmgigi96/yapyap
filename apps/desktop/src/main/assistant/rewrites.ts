@@ -25,7 +25,7 @@ export function rewriteInstructions({ style, language }: Rewrite): string {
   ].join(' ');
 }
 
-/** The rewritten draft, without the quotes a model may put around it. */
+/** A model's text without the quotes it may put around it, as around a rewritten draft. */
 export function cleanRewrite(answer: string): string {
   return answer
     .trim()
