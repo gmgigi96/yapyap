@@ -7,8 +7,6 @@ import { en } from '../../shared/messages/en.ts';
 import type { Settings } from '../settings/schema.ts';
 
 export interface DownloadItem extends TrackedItem {
-  getFilename(): string;
-  getSavePath(): string;
   setSavePath(path: string): void;
   setSaveDialogOptions(options: { readonly defaultPath: string }): void;
   once(event: 'done', listener: (event: unknown, state: string) => void): unknown;
