@@ -8,19 +8,15 @@ their reasons belong in the ADRs (`docs/adr/`), and released changes in
 ## Current state (2026-11-01)
 
 - **Latest stable release:** v0.2.0 (2026-10-29). **Latest beta:**
-  v0.2.1-beta.2 (2026-10-31). The release-please PR for 0.2.1 is open.
+  v0.3.0-beta.1 (2026-11-02). The release-please PR for 0.3.0 is open.
   Releases happen only by merging it, and a release needs a published beta
   of its version first (#184).
 - **On `master`, unreleased:** the AI assistant is part of YapYap itself
   (ADR 0017, #505). It is YapYap's main feature and no longer an extension.
-- **Next:** M7 (#210, the full packaging matrix and the up-to-date rule on
-  pull requests) and M8 (#119 Flathub, #118 the final audit and v1.0.0).
+- **Next:** M8 (#119 Flathub, #118 the final audit and v1.0.0).
 - **Waiting on the maintainer:** #24 (Windows code signing), #25 (AUR
-  credentials), #402 (renew the macOS certificate before 2027-11-25), #419
-  (where reviewed third-party extension archives are hosted).
-- **Open outside milestones:** #345 and #346 (winget, Scoop and Homebrew),
-  #477 (the SDK and signing CLI on npm), #507 (a slow welcome window in
-  Windows E2E).
+  credentials), #402 (renew the macOS certificate before 2027-11-25).
+- **Open outside milestones:** #345 and #346 (winget, Scoop and Homebrew).
   See `gh issue list` for the live list.
 
 | Milestone                                            | Status                           |
@@ -32,7 +28,7 @@ their reasons belong in the ADRs (`docs/adr/`), and released changes in
 | M4 · Remaining desktop features (v0.1.x)             | Done                             |
 | M5 · Extension platform                              | Done                             |
 | M6 · AI writing assistant (v0.2.0)                   | Done; made part of YapYap (#505) |
-| M7 · Hardening                                       | In progress (#210)               |
+| M7 · Hardening                                       | Done                             |
 | M8 · Docs and v1.0.0                                 | In progress (#118, #119)         |
 
 ## Conventions
@@ -145,6 +141,9 @@ their reasons belong in the ADRs (`docs/adr/`), and released changes in
 - CI cost and E2E stability (#188, #210, #223, #247, #296, #327, #394):
   docs-only changes skip code jobs (ADR 0007); E2E teardown kills hung apps
   and attaches diagnostics; local runs stay on the virtual X11 display.
+  Releases are the hard gate: the full matrix on every pull request and
+  the up-to-date rule stay off by design, with every push to `master`
+  running everything (#210).
 
 - Mutation (#275, #312): the nightly run is split into 16 shards.
 

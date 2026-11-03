@@ -117,8 +117,8 @@ Update this table in the PR that adds a command.
   Never skip, weaken or disable a check or test.
 - Merge once the required checks are green with
   `gh pr merge --merge --delete-branch`. Branches need not be up to date
-  until M7 (#210); rebase onto `master` and push with `--force-with-lease`
-  only when the PR conflicts. Squash and rebase merges are disabled.
+  (ADR 0007); rebase onto `master` and push with `--force-with-lease` only
+  when the PR conflicts. Squash and rebase merges are disabled.
 - Releases happen only by merging the release-please PR.
 
 ## Common pitfalls
