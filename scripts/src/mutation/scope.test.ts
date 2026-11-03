@@ -1,3 +1,5 @@
+import { globSync } from 'node:fs';
+import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { inMutationScope, MUTATION_SCOPE, mutationShard, mutationTargets } from './scope.ts';
 
@@ -23,6 +25,11 @@ describe('inMutationScope', () => {
     'README.md',
   ])('excludes %s', (path) => {
     expect(inMutationScope(path)).toBe(false);
+  });
+
+  it('names only modules that exist, so a moved one cannot leave the gate unnoticed', () => {
+    const root = join(import.meta.dirname, '..', '..', '..');
+    expect(MUTATION_SCOPE.filter((glob) => globSync(glob, { cwd: root }).length === 0)).toEqual([]);
   });
 
   it('covers every module family named in the test-strategy ADR', () => {
