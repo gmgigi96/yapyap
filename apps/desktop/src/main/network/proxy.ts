@@ -1,5 +1,6 @@
 import type { Settings } from '../settings/schema.ts';
 import type { SettingsService } from '../settings/service.ts';
+import { livePages } from '../support/live-pages.ts';
 
 /** Electron's proxy configuration, as far as YapYap uses it. */
 type ProxyConfig =
@@ -154,11 +155,7 @@ function refresh(state: ReturnType<typeof proxyState>, only?: string): void {
       state.refreshSession(session, account);
     }
   }
-  for (const [page, account] of state.pages) {
-    if (page.isDestroyed()) {
-      state.pages.delete(page);
-      continue;
-    }
+  for (const [page, account] of livePages(state.pages)) {
     if (matches(account, only)) {
       state.callPolicy(page, account);
     }

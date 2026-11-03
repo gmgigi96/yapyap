@@ -7,6 +7,7 @@ import {
   type CustomCode,
 } from '../../shared/custom-code.ts';
 import { readIfPresent, type TextFile } from '../support/atomic-write.ts';
+import { livePages } from '../support/live-pages.ts';
 
 /**
  * A world of its own: user scripts share the page's DOM but neither the
@@ -130,11 +131,7 @@ function run(state: CodeState, page: CodePage, entry: PageEntry): void {
 
 /** Restyles every page, or only those a scope's CSS applies to; forgets pages that are gone. */
 function restyleAll(state: CodeState, scope?: string): void {
-  for (const [page, entry] of state.pages) {
-    if (page.isDestroyed()) {
-      state.pages.delete(page);
-      continue;
-    }
+  for (const [page, entry] of livePages(state.pages)) {
     if (scope === undefined || scope === ALL_ACCOUNTS || scope === entry.account) {
       restyle(state, page, entry);
     }
