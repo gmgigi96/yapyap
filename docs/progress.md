@@ -368,6 +368,9 @@ title, escape })` (`src/renderer/shared/mount.tsx`), which titles the
 - Install page button (#579): the download button carries its own styles,
   so it shows as a button on the install page too, not only on the home
   page.
+- Dev chrome pages (#588): `pnpm dev` watch-builds the renderer into
+  `out/renderer`, which `app://chrome/` serves, and starts Electron only
+  after the first build, so the dev app never shows stale chrome pages.
 - SonarQube Cloud on forks (#591, ADR 0010): a run without the token, as
   for pull requests from forks, fails instead of passing, and the ruleset
   requires SonarQube Cloud's own check. A fork's branch is pushed here to

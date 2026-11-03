@@ -171,6 +171,10 @@ Update this table in the PR that adds a command.
   through YAML anchors. Add a new format or architecture to the right half.
 - Flatpak lint exceptions live in `packaging/flatpak/lint-exceptions.json`,
   each with its reason and issue. Remove an entry as soon as its issue lands.
+- `pnpm dev` serves chrome pages from `out/renderer` too, never from the
+  Vite dev server: `watchChromePages` in `electron.vite.config.ts`
+  watch-builds them there. They have no hot reload; reopen a window to see
+  an edit.
 - App chrome pages are served from `app://chrome/` on the in-memory
   `yapyap-chrome` partition. Add an operation by extending `ChromeApi` in
   `src/shared/api/chrome-api.ts`, the preload bridge, and a handler registered
