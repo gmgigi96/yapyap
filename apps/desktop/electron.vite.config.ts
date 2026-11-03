@@ -58,11 +58,11 @@ function watchChromePages(): Plugin {
       renderer = config;
     },
     async configureServer() {
-      await new Promise<void>((resolve, reject) => {
+      await new Promise<void>((built, reject) => {
         const firstBuild: Plugin = {
           name: 'yapyap-first-build',
           closeBundle: () => {
-            resolve();
+            built();
           },
         };
         // The production mode gives the pages the relative base of a real build.
