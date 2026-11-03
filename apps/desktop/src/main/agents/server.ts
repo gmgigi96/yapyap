@@ -65,11 +65,11 @@ function answering(
     counter: slidingCounter(deps.now),
     lock: failureLock(deps.now),
     queue: accountQueue(),
-    record,
     notifySent: (token: AgentToken, chat: string) => {
       deps.notify(en.agents.sent({ token: token.name, chat }));
     },
     version: deps.version,
+    record,
   };
   return (port) => (request) =>
     answerAgent(request, port, { ...handler, accounts: deps.accounts() ?? noAccounts });

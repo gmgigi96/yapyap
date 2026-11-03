@@ -11,12 +11,12 @@ import type { TextFile } from '../atomic-write.ts';
 import type { SecretStore } from '../secrets/secret-store.ts';
 import { parseInternationalNumber } from '../../shared/phone-number.ts';
 import { chatId } from '../assistant/chats.ts';
-import { LimitsSchema, ScopeSchema } from './token-spec.ts';
+import { DAY_MS } from './limits.ts';
+import { ACCOUNT_ID_LENGTH, LimitsSchema, ScopeSchema } from './token-spec.ts';
 
 const FORMAT_VERSION = 1;
 /** The most tokens YapYap keeps; each is a way in, so there are few. */
 export const MAX_TOKENS = 20;
-const DAY_MS = 86_400_000;
 
 const Hex = (length: number) => Type.String({ pattern: `^[0-9a-f]{${String(length)}}$` });
 
@@ -27,7 +27,10 @@ const TokenSchema = Type.Object(
     hash: Hex(64),
     name: Type.String({ minLength: 1, maxLength: 64 }),
     scopes: Type.Array(ScopeSchema, { minItems: 1, uniqueItems: true }),
-    accounts: Type.Array(Type.String({ maxLength: 36 }), { minItems: 1, uniqueItems: true }),
+    accounts: Type.Array(Type.String({ maxLength: ACCOUNT_ID_LENGTH }), {
+      minItems: 1,
+      uniqueItems: true,
+    }),
     // Chats by fingerprint (C42 in ADR 0008): the entry's, its name's and its
     // number's. The names and numbers are kept encrypted in the secrets.
     chats: Type.Union([

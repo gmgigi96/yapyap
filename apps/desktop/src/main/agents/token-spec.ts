@@ -14,10 +14,12 @@ import {
 
 /** As many accounts as `accounts.json` holds. */
 const MAX_ACCOUNTS = 32;
+/** An account's ID is a UUID. */
+export const ACCOUNT_ID_LENGTH = 36;
 /** The longest chat name WhatsApp shows in the chat list, as the adapter reads it. */
-const MAX_CHAT_NAME = 256;
+export const MAX_CHAT_NAME = 256;
 /** Longer than any number written with separators. */
-const MAX_PHONE = 64;
+export const MAX_PHONE = 64;
 
 const Limit = Type.Union([Type.Integer({ minimum: 1, maximum: MAX_AGENT_LIMIT }), Type.Null()]);
 
@@ -33,7 +35,7 @@ const SpecSchema = Type.Object(
   {
     name: Type.String({ minLength: 1, maxLength: MAX_TOKEN_NAME }),
     scopes: Type.Array(ScopeSchema, { minItems: 1, uniqueItems: true }),
-    accounts: Type.Array(Type.String({ maxLength: 36 }), {
+    accounts: Type.Array(Type.String({ maxLength: ACCOUNT_ID_LENGTH }), {
       minItems: 1,
       maxItems: MAX_ACCOUNTS,
       uniqueItems: true,

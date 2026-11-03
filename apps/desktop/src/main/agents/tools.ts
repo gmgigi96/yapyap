@@ -3,6 +3,7 @@ import { z } from 'zod';
 import type { AgentScope } from '../../shared/agents-api.ts';
 import { searchChats } from './chat-search.ts';
 import { DAY_MS, MINUTE_MS, type Counter } from './limits.ts';
+import { ACCOUNT_ID_LENGTH, MAX_CHAT_NAME, MAX_PHONE } from './token-spec.ts';
 import { reaches, type AgentToken, type ListedChats } from './tokens.ts';
 import {
   allowedOpenChat,
@@ -34,16 +35,20 @@ export interface ToolContext {
   readonly listed: () => Promise<ListedChats>;
 }
 
-const account = z.string().min(1).max(36).describe('The account’s ID, from list_accounts.');
+const account = z
+  .string()
+  .min(1)
+  .max(ACCOUNT_ID_LENGTH)
+  .describe('The account’s ID, from list_accounts.');
 const chat = z
   .string()
   .min(1)
-  .max(256)
+  .max(MAX_CHAT_NAME)
   .describe('A chat’s name, exactly as WhatsApp shows it and as list_chats gives it.');
 const phone = z
   .string()
   .min(1)
-  .max(64)
+  .max(MAX_PHONE)
   .describe(
     'Instead of chat: an international number from list_chats, such as +447700900123. ' +
       'It opens the chat wherever it is, but reloads WhatsApp, so it takes a few seconds.',
@@ -127,9 +132,10 @@ function readingTools(server: McpServer, ctx: ToolContext): void {
         inputSchema: z.object({ account }),
       },
       (args) =>
-        forAccount(ctx, 'list_unread', args.account, async (page) =>
-          (await page.readUnread()).filter((entry) => reaches(ctx.token, entry.name)),
-        ),
+        forAccount(ctx, 'list_unread', args.account, async (page) => {
+          const unread = await page.readUnread();
+          return unread.filter((entry) => reaches(ctx.token, entry.name));
+        }),
     );
   }
   if (has(ctx, 'chat:read-active')) {
@@ -174,7 +180,7 @@ function draftTools(server: McpServer, ctx: ToolContext): void {
       {
         description:
           'Puts text in the message box without sending it; with chat or phone, it opens that chat first.',
-        inputSchema: z.object({ account, chat: chat.optional(), phone: phone.optional(), text }),
+        inputSchema: z.object({ account, text, chat: chat.optional(), phone: phone.optional() }),
       },
       (args) =>
         forAccount(ctx, 'write_draft', args.account, async (page) => {
@@ -241,7 +247,7 @@ function sendingTool(server: McpServer, ctx: ToolContext): void {
     {
       description:
         'Sends a plain-text message to a chat this token lists, named by chat or by phone.',
-      inputSchema: z.object({ account, chat: chat.optional(), phone: phone.optional(), text }),
+      inputSchema: z.object({ account, text, chat: chat.optional(), phone: phone.optional() }),
     },
     (args) =>
       forAccount(ctx, 'send_message', args.account, (page) => send(ctx, page, args, args.text)),

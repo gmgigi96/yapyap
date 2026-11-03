@@ -40,7 +40,7 @@ describe('local endpoints', () => {
     const source = readFileSync(LISTENER, 'utf8');
     expect(AGENT_HOST).toBe('127.0.0.1');
     expect(source.match(/\.listen\(/g)).toHaveLength(1);
-    expect(source).toContain('server.listen({ host: AGENT_HOST, port, exclusive: true }');
+    expect(source).toContain('server.listen({ host: AGENT_HOST, exclusive: true, port }');
   });
 
   it('allow only connecting out over node:net, never listening', () => {
