@@ -58,6 +58,11 @@ export function channelsOf(version: string): readonly Channel[] {
   return version.includes('-') ? ['beta'] : ['stable', 'beta'];
 }
 
+/** The package's name in a channel: the beta channel's says so. */
+export function packageName(channel: Channel): string {
+  return channel === 'stable' ? ABOUT.name : `${ABOUT.name} Beta`;
+}
+
 /** The release file whose name ends in `suffix`, such as `mac-universal.dmg`. */
 export function download(release: DistributionRelease, suffix: string): Download {
   const file = `YapYap-${release.version}-${suffix}`;
