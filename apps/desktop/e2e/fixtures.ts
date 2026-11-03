@@ -351,6 +351,8 @@ export async function spawnHeadless(
   const env = appEnvironment(origin, profile);
   delete env['DISPLAY'];
   delete env['WAYLAND_DISPLAY'];
+  // Chromium's own errors reach standard error, for a test that fails to say why.
+  env['ELECTRON_ENABLE_LOGGING'] = '1';
   return spawn(executable, [MAIN, `--user-data-dir=${profile}`, '--headless'], {
     env,
     stdio: ['ignore', 'pipe', 'pipe'],
