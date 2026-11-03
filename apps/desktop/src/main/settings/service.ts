@@ -12,6 +12,15 @@ export interface SettingsService {
   readonly onChange: (listener: (settings: Settings) => void) => void;
 }
 
+/** Calls `apply` with the settings now and again after every change. */
+export function followSettings(
+  settings: Pick<SettingsService, 'current' | 'onChange'>,
+  apply: (settings: Settings) => void,
+): void {
+  apply(settings.current());
+  settings.onChange(apply);
+}
+
 export function openSettings(dir: string, now: number): SettingsService {
   const loaded = loadSettings(dir, now);
   let settings = loaded.settings;

@@ -1,4 +1,4 @@
-import type { SettingsService } from '../settings/service.ts';
+import { followSettings, type SettingsService } from '../settings/service.ts';
 import { trayIconChoice, type TrayIconChoice } from './icon-choice.ts';
 import { drawSymbolicIcon } from './symbolic-icon.ts';
 
@@ -64,7 +64,6 @@ export function followTrayIconSetting(
       deps.image(trayIconChoice(style, deps.platform, darkPanel(deps.scheme, deps.platform))),
     );
   };
-  apply();
-  deps.settings.onChange(apply);
+  followSettings(deps.settings, apply);
   deps.scheme.on('updated', apply);
 }

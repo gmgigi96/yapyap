@@ -1,8 +1,7 @@
 import { isValidShortcut } from '../../shared/shortcut-keys.ts';
 import { GLOBAL_SHORTCUTS, type GlobalShortcutId } from '../../shared/shortcuts.ts';
 import { bringToFront, type LinkWindow } from '../instances.ts';
-import type { Settings } from '../settings/schema.ts';
-import type { SettingsService } from '../settings/service.ts';
+import { followSettings, type SettingsService } from '../settings/service.ts';
 
 /** Electron's `globalShortcut`, as far as YapYap uses it. */
 export interface GlobalShortcutPort {
@@ -32,7 +31,7 @@ export function followGlobalShortcuts(
       port.register(keys, action);
     }
   };
-  const apply = (current: Settings): void => {
+  followSettings(settings, (current) => {
     for (const { id } of GLOBAL_SHORTCUTS) {
       const keys = current.shortcuts.global[id];
       const previous = held.get(id) ?? '';
@@ -41,9 +40,7 @@ export function followGlobalShortcuts(
         held.set(id, keys);
       }
     }
-  };
-  apply(settings.current());
-  settings.onChange(apply);
+  });
 }
 
 export interface ToggleWindow extends LinkWindow {

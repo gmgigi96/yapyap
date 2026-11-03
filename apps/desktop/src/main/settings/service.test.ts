@@ -3,7 +3,7 @@ import { join } from 'node:path';
 import { describe, expect, it, vi } from 'vitest';
 import { tempDir } from '../../../../../test/temp-dir.ts';
 import { defaultSettings } from './decode.ts';
-import { openSettings } from './service.ts';
+import { followSettings, openSettings } from './service.ts';
 
 const fresh = () => tempDir('yapyap-settings-');
 
@@ -40,5 +40,20 @@ describe('openSettings', () => {
     expect(first.firstRun).toBe(true);
     first.update((current) => current);
     expect(openSettings(dir, 2).firstRun).toBe(false);
+  });
+});
+
+describe('followSettings', () => {
+  it('applies the settings now and after every change', () => {
+    const settings = openSettings(fresh(), 1);
+    const apply = vi.fn();
+    followSettings(settings, apply);
+    expect(apply).toHaveBeenCalledExactlyOnceWith(defaultSettings());
+    settings.update((current) => ({
+      ...current,
+      general: { ...current.general, autostart: true },
+    }));
+    expect(apply).toHaveBeenCalledTimes(2);
+    expect(apply).toHaveBeenLastCalledWith(settings.current());
   });
 });
