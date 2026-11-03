@@ -1,7 +1,6 @@
 import { expect, test } from '@playwright/test';
-import { readFile, writeFile } from 'node:fs/promises';
-import { join } from 'node:path';
-import { measureOnce, median, type Sample } from './measure.ts';
+import { writeFile } from 'node:fs/promises';
+import { budgetHere, measureOnce, median, type Sample } from './measure.ts';
 
 const RUNS = 7;
 
@@ -20,20 +19,9 @@ function medianByProcess(samples: readonly Sample[]): Record<string, number> {
   return Object.fromEntries(medians.sort(([, a], [, b]) => b - a));
 }
 
-async function budgetHere(): Promise<Budget> {
-  const budgets = JSON.parse(
-    await readFile(join(import.meta.dirname, 'budgets.json'), 'utf8'),
-  ) as Record<string, Budget | undefined>;
-  const budget = budgets[process.platform];
-  if (budget === undefined) {
-    throw new Error(`No budget for ${process.platform}`);
-  }
-  return budget;
-}
-
 test('stays within the cold-start and idle-memory budgets', async ({}, testInfo) => {
   test.setTimeout((RUNS + 1) * 60_000);
-  const budget = await budgetHere();
+  const budget = await budgetHere<Budget>();
   // The first launch on a runner waits for the disk cache, which says nothing
   // about YapYap, so it warms up and is left out.
   await measureOnce();
