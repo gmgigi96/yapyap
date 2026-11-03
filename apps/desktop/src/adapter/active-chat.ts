@@ -77,20 +77,21 @@ export function readActiveChat(doc: ReadDocument, places: ChatPlaces, limits: Li
   };
 }
 
+const PLACES: ChatPlaces = {
+  conversation: LANDMARKS.conversation,
+  chatName: LANDMARKS.chatName,
+  message: LANDMARKS.message,
+  messageText: LANDMARKS.messageText,
+  messageBody: LANDMARKS.messageBody,
+  outgoing: LANDMARKS.outgoing,
+  author: LANDMARKS.author,
+  quoted: LANDMARKS.quoted,
+};
+
 /** The reader as code for `executeJavaScriptInIsolatedWorld`, for the last `messages` messages. */
 export function activeChatReader(messages: number): string {
-  const places: ChatPlaces = {
-    conversation: LANDMARKS.conversation,
-    chatName: LANDMARKS.chatName,
-    message: LANDMARKS.message,
-    messageText: LANDMARKS.messageText,
-    messageBody: LANDMARKS.messageBody,
-    outgoing: LANDMARKS.outgoing,
-    author: LANDMARKS.author,
-    quoted: LANDMARKS.quoted,
-  };
   const limits: Limits = { messages, text: MAX_TEXT, name: MAX_NAME };
-  return `(${readActiveChat.toString()})(document, ${JSON.stringify(places)}, ${JSON.stringify(limits)})`;
+  return `(${readActiveChat.toString()})(document, ${JSON.stringify(PLACES)}, ${JSON.stringify(limits)})`;
 }
 
 const ActiveChatSchema = Type.Object(

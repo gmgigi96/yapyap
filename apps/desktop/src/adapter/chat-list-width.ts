@@ -121,7 +121,7 @@ type Styles = (node: ListNode) => {
 };
 
 /** The divider's helpers, passed in because each runs as its own source text. */
-export interface ListKit {
+interface ListKit {
   readonly build: (
     doc: ListDocument,
     scope: Scope,

@@ -47,8 +47,9 @@ interface SummaryLimits {
  * opens a chat, since opening one marks it read and tells the people who
  * wrote that it was. So the preview is all it has of a chat's messages. Like
  * the open chat's reader, it returns page text, so it runs only when the
- * assistant asks, and its result is never logged. It runs inside the page as source text, so it must
- * stay self-contained. A row without a badge of digits is not unread.
+ * assistant asks, and its result is never logged. It runs inside the page
+ * as source text, so it must stay self-contained. A row without a badge of
+ * digits is not unread.
  */
 export function readUnreadSummary(
   doc: SummaryDocument,

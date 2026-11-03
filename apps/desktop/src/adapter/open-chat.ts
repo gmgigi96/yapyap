@@ -28,7 +28,7 @@ interface OpenPlaces {
  * What one step of looking for a chat did: opened it, loaded more of the
  * list to look again, or reached the list's end without it.
  */
-export type OpenStep = 'opened' | 'scrolled' | 'end';
+type OpenStep = 'opened' | 'scrolled' | 'end';
 
 /**
  * The element that scrolls the chat list: the nearest one around a chat
