@@ -27,3 +27,18 @@ overrides:
   # Remove once @electron/get (through electron-builder) depends on
   # global-agent 4 or later.
   global-agent@3: 4.1.3
+  # minimatch has a denial-of-service advisory fixed only in 11.0.1
+  # (GHSA-g3hv-75wg-m249), and electron-builder still pulls in majors 3, 5
+  # and 9 through packages whose newer releases use the modern API. asar 4
+  # and universal 3 are what electron-builder loads with import(); filelist 2
+  # keeps jake's FileList; minimatch 11 keeps 10's exports. Remove each once
+  # electron-builder and ejs depend on these versions themselves.
+  app-builder-lib>@electron/asar: 4.3.1
+  app-builder-lib>@electron/universal: 3.0.6
+  # asar 4's glob 13 has its own advisory (GHSA-3g3m-2fjr-6pw4), fixed in 14.
+  '@electron/asar>glob': 14.0.3
+  filelist@1: 2.0.2
+  minimatch@<11.0.1: 11.0.4
+  # YapYap builds no Squirrel.Windows installer (NSIS instead), and this
+  # optional peer of electron-builder only brings an old glob and rimraf.
+  electron-builder-squirrel-windows: '-'
