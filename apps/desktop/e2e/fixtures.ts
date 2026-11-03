@@ -232,6 +232,36 @@ export async function mainWindow(
   }, contents);
 }
 
+/** What `promise` resolves to, or 'timeout' if `ms` pass first. */
+export async function within<T>(promise: Promise<T>, ms: number): Promise<T | 'timeout'> {
+  let timer: NodeJS.Timeout | undefined;
+  const timedOut = new Promise<'timeout'>((resolve) => {
+    timer = setTimeout(() => {
+      resolve('timeout');
+    }, ms);
+  });
+  try {
+    return await Promise.race([promise, timedOut]);
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
+/**
+ * Quits as a user does, through Electron's quit events that Playwright's own
+ * close skips, and waits for the process to exit. The quit comes after the
+ * evaluation answers, so the call returns before the app goes away.
+ */
+export async function quitApp(app: ElectronApplication): Promise<void> {
+  const exited = new Promise((resolve) => app.process().once('exit', resolve));
+  await app.evaluate(({ app: electronApp }) => {
+    setTimeout(() => {
+      electronApp.quit();
+    });
+  });
+  await exited;
+}
+
 /**
  * Quits the app, and if it hangs, kills it and fails with the windows it had
  * and its last log lines rather than an unexplained teardown timeout (#223).
@@ -247,14 +277,7 @@ export async function closeApp(app: ElectronApplication): Promise<void> {
       }),
     )
     .catch(() => ['(could not list windows)']);
-  let timer: NodeJS.Timeout | undefined;
-  const timedOut = new Promise<'timeout'>((resolve) => {
-    timer = setTimeout(() => {
-      resolve('timeout');
-    }, QUIT_TIMEOUT_MS);
-  });
-  const result = await Promise.race([app.close().then(() => 'closed' as const), timedOut]);
-  clearTimeout(timer);
+  const result = await within(app.close(), QUIT_TIMEOUT_MS);
   if (result === 'timeout') {
     await attachHungState(app);
     app.process().kill('SIGKILL');
@@ -273,14 +296,17 @@ export async function closeApp(app: ElectronApplication): Promise<void> {
 /**
  * Writes `settings` as the profile's settings file, at the current schema
  * version, before YapYap starts there. What it leaves out takes its default.
+ * With the `wx` flag, it fails rather than replace a file already there.
  */
 export async function seedSettings(
   profile: string,
   settings: Readonly<Record<string, unknown>>,
+  flag: 'w' | 'wx' = 'w',
 ): Promise<void> {
   await writeFile(
     join(profile, 'settings.json'),
     JSON.stringify({ schemaVersion: SETTINGS_VERSION, ...settings }),
+    { flag },
   );
 }
 
@@ -300,13 +326,7 @@ export async function launchApp(
   // Every test profile is new, which YapYap would greet with its welcome
   // window (#84); a settings file marks it as used, unless the test wants that.
   if (!firstRun) {
-    await writeFile(
-      join(profile, 'settings.json'),
-      JSON.stringify({ schemaVersion: SETTINGS_VERSION }),
-      {
-        flag: 'wx',
-      },
-    ).catch(() => undefined);
+    await seedSettings(profile, {}, 'wx').catch(() => undefined);
   }
   const started = Date.now();
   const app = await electron.launch({
@@ -363,14 +383,7 @@ export async function launchAgain(
       resolve({ code, signal });
     });
   });
-  let timer: NodeJS.Timeout | undefined;
-  const timedOut = new Promise<'timeout'>((resolve) => {
-    timer = setTimeout(() => {
-      resolve('timeout');
-    }, HANDOVER_TIMEOUT_MS);
-  });
-  const result = await Promise.race([exited, timedOut]);
-  clearTimeout(timer);
+  const result = await within(exited, HANDOVER_TIMEOUT_MS);
   if (result === 'timeout') {
     second.kill('SIGKILL');
     await exited;

@@ -1,5 +1,5 @@
 import { clickMenu } from './chrome-helpers.ts';
-import { expect, launchApp, test, whatsAppPage } from './fixtures.ts';
+import { expect, launchApp, test, whatsAppPage, within } from './fixtures.ts';
 
 /** Well within the test's timeout, and far longer than a healthy quit takes. */
 const QUIT_WITHIN_MS = 15_000;
@@ -26,11 +26,6 @@ test('quits promptly as a user does, with every kind of window open (#223)', asy
       resolve('exited');
     });
   });
-  const timedOut = new Promise<'hung'>((resolve) => {
-    setTimeout(() => {
-      resolve('hung');
-    }, QUIT_WITHIN_MS);
-  });
   // Quit as a user does; Playwright's own close skips Electron's quit events.
   // The app exits before it can answer, so the evaluation itself may fail.
   await app
@@ -38,8 +33,8 @@ test('quits promptly as a user does, with every kind of window open (#223)', asy
       electronApp.quit();
     })
     .catch(() => undefined);
-  const result = await Promise.race([exited, timedOut]);
-  if (result === 'hung') {
+  const result = await within(exited, QUIT_WITHIN_MS);
+  if (result === 'timeout') {
     app.process().kill('SIGKILL');
   }
   expect(result).toBe('exited');

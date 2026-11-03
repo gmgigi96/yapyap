@@ -3,6 +3,7 @@ import { openFromMenu } from './chrome-helpers.ts';
 import {
   expect,
   launchApp,
+  quitApp,
   seedSettings,
   test,
   whatsAppContents,
@@ -21,16 +22,6 @@ async function clickView(app: ElectronApplication, label: string): Promise<void>
   }, label);
 }
 
-async function quit(app: ElectronApplication): Promise<void> {
-  const exited = new Promise((resolve) => app.process().once('exit', resolve));
-  await app.evaluate(({ app: electronApp }) => {
-    setTimeout(() => {
-      electronApp.quit();
-    });
-  });
-  await exited;
-}
-
 test('zooms in 5% steps and keeps the level for the next launch', async ({
   app,
   window,
@@ -43,7 +34,7 @@ test('zooms in 5% steps and keeps the level for the next launch', async ({
   await expect.poll(() => whatsAppZoom(app)).toBeCloseTo(1.1);
   await clickView(app, 'Zoom Out');
   await expect.poll(() => whatsAppZoom(app)).toBeCloseTo(1.05);
-  await quit(app);
+  await quitApp(app);
   const again = await launchApp(fakeWhatsApp.origin, profile);
   try {
     await expect((await whatsAppPage(again)).getByTestId('fake-whatsapp')).toBeVisible();
@@ -51,7 +42,7 @@ test('zooms in 5% steps and keeps the level for the next launch', async ({
     await clickView(again, 'Actual Size');
     await expect.poll(() => whatsAppZoom(again)).toBeCloseTo(1);
   } finally {
-    await quit(again);
+    await quitApp(again);
   }
 });
 
@@ -62,7 +53,7 @@ test('starts at 100% when the stored zoom is invalid', async ({ fakeWhatsApp, pr
     await expect((await whatsAppPage(app)).getByTestId('fake-whatsapp')).toBeVisible();
     await expect.poll(() => whatsAppZoom(app)).toBeCloseTo(1);
   } finally {
-    await quit(app);
+    await quitApp(app);
   }
 });
 
