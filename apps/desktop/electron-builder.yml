@@ -48,7 +48,7 @@ linux:
       GenericName: Messaging client
       Keywords: whatsapp;chat;messaging;
       StartupWMClass: org.guita.YapYap
-      MimeType: x-scheme-handler/whatsapp;x-scheme-handler/yapyap;
+      MimeType: x-scheme-handler/whatsapp;
       Actions: SafeMode;
     # Reachable from the launcher when graphics problems stop YapYap from starting.
     desktopActions:
