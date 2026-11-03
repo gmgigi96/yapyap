@@ -1,6 +1,6 @@
 import type { AccountAvatars, AvatarPage } from '../accounts/avatars.ts';
 import type { ChromeFeature, ChromeRuntime, WhatsAppContents } from '../chrome/feature.ts';
-import type { SidebarPort } from '../chrome/sidebar.ts';
+import type { SidebarPort } from '../accounts/sidebar-handlers.ts';
 import type { InPageChatList } from '../chat-list/chat-list-page.ts';
 import type { ChatListWidths } from '../chat-list/widths.ts';
 import type {

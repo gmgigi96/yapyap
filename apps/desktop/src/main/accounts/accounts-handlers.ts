@@ -1,6 +1,6 @@
 import { CHROME_CHANNELS, type AccountList, type AccountSummary } from '../../shared/chrome-api.ts';
-import { ACCOUNT_COLORS, isAccountColor, MAX_ACCOUNT_NAME } from '../accounts/accounts.ts';
-import type { AccountChange } from '../accounts/running.ts';
+import { ACCOUNT_COLORS, isAccountColor, MAX_ACCOUNT_NAME } from './accounts.ts';
+import type { AccountChange } from './running.ts';
 import { isProxyAddress } from '../../shared/proxy-address.ts';
 import { argumentsOf, isString, noArguments } from '../ipc/arguments.ts';
 import type { ChromeHandler } from '../ipc/chrome.ts';

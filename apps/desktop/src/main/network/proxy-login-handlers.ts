@@ -6,7 +6,7 @@ import {
 import { en } from '../../shared/messages/en.ts';
 import { noArguments } from '../ipc/arguments.ts';
 import type { ChromeCall, ChromeHandler } from '../ipc/chrome.ts';
-import type { ChromePage, PromptWindow } from './window-opener.ts';
+import type { ChromePage, PromptWindow } from '../chrome/window-opener.ts';
 
 export const PROXY_LOGIN_PAGE: ChromePage = {
   path: 'proxy-login.html',

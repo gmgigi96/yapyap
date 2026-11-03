@@ -5,7 +5,7 @@ import {
 } from '../../shared/chrome-api.ts';
 import type { Settings } from '../settings/schema.ts';
 import type { SettingsService } from '../settings/service.ts';
-import { spellingLanguagesOf } from '../spelling/spelling.ts';
+import { spellingLanguagesOf } from './spelling.ts';
 import { argumentsOf, noArguments } from '../ipc/arguments.ts';
 import type { ChromeHandler } from '../ipc/chrome.ts';
 

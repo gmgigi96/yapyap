@@ -1,6 +1,6 @@
 import { CHROME_CHANNELS } from '../../shared/chrome-api.ts';
 import { en } from '../../shared/messages/en.ts';
-import { bugReportUrl } from '../crash/crash-report.ts';
+import { bugReportUrl } from './crash-report.ts';
 import { argumentsOf, noArguments } from '../ipc/arguments.ts';
 import type { ChromeHandler } from '../ipc/chrome.ts';
 

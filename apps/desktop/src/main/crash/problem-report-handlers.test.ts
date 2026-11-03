@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
-import { problemReportHandlers } from './problem-report.ts';
+import { problemReportHandlers } from './problem-report-handlers.ts';
 
 function setup() {
   const deps = {

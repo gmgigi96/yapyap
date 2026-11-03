@@ -9,7 +9,7 @@ import type { AccountMenu } from '../chrome/feature.ts';
 import type { CaptureChoice } from '../permissions/session-guard.ts';
 import { defaultSettings } from '../settings/decode.ts';
 import type { Settings } from '../settings/schema.ts';
-import type { SidebarSource } from '../chrome/sidebar.ts';
+import type { SidebarSource } from '../accounts/sidebar-handlers.ts';
 import type { ContextMenuItem, ContextMenuParams } from '../spelling/context-menu.ts';
 import type { ProxyLoginAnswer } from '../../shared/chrome-api.ts';
 import { WHATSAPP_ORIGIN } from '../whatsapp-origin.ts';

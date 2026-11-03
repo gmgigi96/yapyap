@@ -1,9 +1,9 @@
 import { CHROME_CHANNELS, DOWNLOAD_ACTIONS, type DownloadAction } from '../../shared/chrome-api.ts';
 import { en } from '../../shared/messages/en.ts';
-import type { DownloadList } from '../downloads/download-list.ts';
+import type { DownloadList } from './download-list.ts';
 import { argumentsOf, noArguments } from '../ipc/arguments.ts';
 import type { ChromeHandler } from '../ipc/chrome.ts';
-import type { ChromePage } from './window-opener.ts';
+import type { ChromePage } from '../chrome/window-opener.ts';
 
 export const DOWNLOADS_PAGE: ChromePage = {
   path: 'downloads.html',

@@ -12,15 +12,19 @@ import { readPageState } from '../about/page-state.ts';
 import type { AdapterPage } from '../../adapter/world.ts';
 import type { ReadChat } from '../../adapter/active-chat.ts';
 import type { UnreadSummaryChat } from '../../adapter/unread-summary.ts';
-import { newChatHandlers, type ChatTarget } from './new-chat.ts';
+import { newChatHandlers, type ChatTarget } from '../navigation/new-chat-handlers.ts';
 import { folderChoiceHandlers } from '../settings/folder-choice.ts';
-import { shortcutHandlers } from './shortcut-settings.ts';
-import { CUSTOM_CODE_PAGE, customCodeHandlers } from './custom-code.ts';
+import { shortcutHandlers } from '../shortcuts/shortcuts-handlers.ts';
+import { CUSTOM_CODE_PAGE, customCodeHandlers } from '../custom-code/custom-code-handlers.ts';
 import type { CustomCodeController } from '../custom-code/custom-code.ts';
-import { spellingHandlers, type SpellingSources } from './spelling-languages.ts';
-import { DOWNLOADS_PAGE, downloadsHandlers } from './downloads.ts';
+import { spellingHandlers, type SpellingSources } from '../spelling/spelling-languages-handlers.ts';
+import { DOWNLOADS_PAGE, downloadsHandlers } from '../downloads/downloads-handlers.ts';
 import type { DownloadList } from '../downloads/download-list.ts';
-import { createProxyLoginPrompt, PROXY_LOGIN_PAGE, type ProxyLoginPrompt } from './proxy-login.ts';
+import {
+  createProxyLoginPrompt,
+  PROXY_LOGIN_PAGE,
+  type ProxyLoginPrompt,
+} from '../network/proxy-login-handlers.ts';
 import {
   decideUpdatePolicy,
   describeUpdatePolicy,
@@ -35,15 +39,15 @@ import {
 import { changeZoom } from '../appearance/zoom.ts';
 import { buildMenuTemplate, type MenuActions } from '../menu.ts';
 import { pause } from '../pause.ts';
-import { accountsHandlers, type AccountManager } from './accounts.ts';
-import { problemReportHandlers } from './problem-report.ts';
+import { accountsHandlers, type AccountManager } from '../accounts/accounts-handlers.ts';
+import { problemReportHandlers } from '../crash/problem-report-handlers.ts';
 import {
   attachSidebar,
   sidebarHandlers,
   type SidebarPort,
   type SidebarSlot,
   type SidebarSource,
-} from './sidebar.ts';
+} from '../accounts/sidebar-handlers.ts';
 import {
   createRecovery,
   type Overlay,

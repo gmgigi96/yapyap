@@ -1,10 +1,10 @@
 import { CHROME_CHANNELS, type CustomCodeView } from '../../shared/chrome-api.ts';
 import { ALL_ACCOUNTS, isSnippetText, type CustomCode } from '../../shared/custom-code.ts';
 import { en } from '../../shared/messages/en.ts';
-import { isCustomCode, type CustomCodeController } from '../custom-code/custom-code.ts';
+import { isCustomCode, type CustomCodeController } from './custom-code.ts';
 import { argumentsOf, isString, noArguments } from '../ipc/arguments.ts';
 import type { ChromeHandler } from '../ipc/chrome.ts';
-import type { ChromePage } from './window-opener.ts';
+import type { ChromePage } from '../chrome/window-opener.ts';
 
 /** Where the user edits their own CSS and JavaScript (#72). */
 export const CUSTOM_CODE_PAGE: ChromePage = {

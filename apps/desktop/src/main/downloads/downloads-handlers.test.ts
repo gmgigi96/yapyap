@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
 import { CHROME_CHANNELS } from '../../shared/chrome-api.ts';
-import { downloadsHandlers } from './downloads.ts';
+import { downloadsHandlers } from './downloads-handlers.ts';
 
 function setup() {
   const list = { add: vi.fn(), entries: vi.fn(() => []), act: vi.fn(() => true), clear: vi.fn() };

@@ -2,7 +2,7 @@ import { describe, expect, it, vi } from 'vitest';
 import { CHROME_CHANNELS, type ShortcutChange } from '../../shared/chrome-api.ts';
 import { defaultSettings } from '../settings/decode.ts';
 import type { Settings } from '../settings/schema.ts';
-import { shortcutHandlers } from './shortcut-settings.ts';
+import { shortcutHandlers } from './shortcuts-handlers.ts';
 
 function setup(platform = 'linux', registered = true) {
   let settings: Settings = defaultSettings();

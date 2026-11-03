@@ -5,7 +5,7 @@ import {
 } from '../../shared/chrome-api.ts';
 import type { SettingsService } from '../settings/service.ts';
 import type { ViewRegistry } from '../security/views.ts';
-import { CHROME_ORIGIN, CHROME_VIEW } from './assets.ts';
+import { CHROME_ORIGIN, CHROME_VIEW } from '../chrome/assets.ts';
 import { argumentsOf, isBoolean, noArguments } from '../ipc/arguments.ts';
 import type { ChromeHandler } from '../ipc/chrome.ts';
 

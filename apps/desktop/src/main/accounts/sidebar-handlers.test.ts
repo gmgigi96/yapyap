@@ -3,7 +3,7 @@ import type { SidebarAccount } from '../../shared/chrome-api.ts';
 import { defaultSettings } from '../settings/decode.ts';
 import type { Settings } from '../settings/schema.ts';
 import type { ViewRegistry } from '../security/views.ts';
-import { attachSidebar, sidebarHandlers, type SidebarSlot } from './sidebar.ts';
+import { attachSidebar, sidebarHandlers, type SidebarSlot } from './sidebar-handlers.ts';
 
 const account = (id: string): SidebarAccount => ({
   id,

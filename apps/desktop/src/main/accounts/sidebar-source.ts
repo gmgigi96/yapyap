@@ -1,5 +1,5 @@
 import type { ScreenShares } from '../capture/shares.ts';
-import type { SidebarSource } from '../chrome/sidebar.ts';
+import type { SidebarSource } from './sidebar-handlers.ts';
 import type { Settings } from '../settings/schema.ts';
 import type { AccountSignals } from './account-signals.ts';
 import type { AccountAvatars } from './avatars.ts';

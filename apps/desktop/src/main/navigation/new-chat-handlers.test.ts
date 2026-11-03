@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
-import { newChatHandlers } from './new-chat.ts';
+import { newChatHandlers } from './new-chat-handlers.ts';
 
 function handler(open?: (phone: string) => void) {
   const [found] = newChatHandlers(open === undefined ? {} : { open });

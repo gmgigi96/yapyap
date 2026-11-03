@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
-import { accountsHandlers, type AccountManager } from './accounts.ts';
+import { accountsHandlers, type AccountManager } from './accounts-handlers.ts';
 
 const WORK = {
   id: 'b',
