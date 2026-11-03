@@ -5,6 +5,7 @@ import {
   CHAT_LIST_TO_TOP,
   chatListToTop,
   chatOpenerStep,
+  chatScroller,
   openChatStep,
   parseOpenStep,
 } from './open-chat.ts';
@@ -33,8 +34,8 @@ afterEach(() => {
 
 const mouse = (type: string) => new MouseEvent(type, { bubbles: true, cancelable: true });
 
-/** A chat list that scrolls, as far as the step reads and moves it, up to `height` at most. */
-function scrolling(clientHeight: number, height: number, rows: unknown[] = []) {
+/** A list box that scrolls up to `height`, as far as the step reads and moves it. */
+function box(clientHeight: number, height: number) {
   const list = {
     top: 0,
     clientHeight,
@@ -45,12 +46,10 @@ function scrolling(clientHeight: number, height: number, rows: unknown[] = []) {
       list.top = Math.min(value, height);
     },
   };
-  const doc = {
-    querySelector: vi.fn((selector: string) => (selector === PLACES.chatList ? list : null)),
-    querySelectorAll: () => rows,
-  };
-  return { list, doc };
+  return list;
 }
+
+const noRows = { querySelectorAll: () => [] };
 
 describe('openChatStep', () => {
   it('presses the row of the chat named exactly that, as a click would', () => {
@@ -62,38 +61,39 @@ describe('openChatStep', () => {
     }
     const other = vi.fn();
     document.querySelector('[data-testid="list-item-1"]')?.addEventListener('mousedown', other);
-    expect(openChatStep(document, PLACES, 'Ana', mouse)).toBe('opened');
+    const list = box(500, 1000);
+    expect(openChatStep(document, PLACES, 'Ana', mouse, list)).toBe('opened');
     expect(events).toEqual(['mousedown', 'mouseup', 'click']);
     expect(other).not.toHaveBeenCalled();
+    expect(list.scrollTop).toBe(0);
   });
 
   it('loads the next rows of the virtualized list when the chat is not among them', () => {
-    const { list, doc } = scrolling(500, 1000);
-    expect(openChatStep(doc, PLACES, 'Rui', mouse)).toBe('scrolled');
+    const list = box(500, 1000);
+    expect(openChatStep(noRows, PLACES, 'Rui', mouse, list)).toBe('scrolled');
     // Most of a screen, so a row cut at the edge is whole in the next look.
     expect(list.scrollTop).toBe(400);
-    expect(openChatStep(doc, PLACES, 'Rui', mouse)).toBe('scrolled');
+    expect(openChatStep(noRows, PLACES, 'Rui', mouse, list)).toBe('scrolled');
     expect(list.scrollTop).toBe(800);
-    expect(openChatStep(doc, PLACES, 'Rui', mouse)).toBe('scrolled');
+    expect(openChatStep(noRows, PLACES, 'Rui', mouse, list)).toBe('scrolled');
     expect(list.scrollTop).toBe(1000);
-    expect(openChatStep(doc, PLACES, 'Rui', mouse)).toBe('end');
+    expect(openChatStep(noRows, PLACES, 'Rui', mouse, list)).toBe('end');
   });
 
   it('still moves a list with no height yet, a row at a time', () => {
-    const { list, doc } = scrolling(0, 10);
-    expect(openChatStep(doc, PLACES, 'Rui', mouse)).toBe('scrolled');
+    const list = box(0, 10);
+    expect(openChatStep(noRows, PLACES, 'Rui', mouse, list)).toBe('scrolled');
     expect(list.scrollTop).toBe(1);
   });
 
   it('ends where there is no chat list', () => {
-    document.body.innerHTML = '<div id="app"></div>';
-    expect(openChatStep(document, PLACES, 'Ana', mouse)).toBe('end');
+    expect(openChatStep(noRows, PLACES, 'Ana', mouse, null)).toBe('end');
   });
 
   it('skips a row whose title has no text', () => {
     const empty = { querySelector: () => ({ textContent: null }), dispatchEvent: vi.fn() };
-    const { doc } = scrolling(500, 0, [empty]);
-    expect(openChatStep(doc, PLACES, 'Ana', mouse)).toBe('end');
+    const rows = { querySelectorAll: () => [empty] };
+    expect(openChatStep(rows, PLACES, 'Ana', mouse, null)).toBe('end');
     expect(empty.dispatchEvent).not.toHaveBeenCalled();
   });
 
@@ -103,17 +103,24 @@ describe('openChatStep', () => {
     document.body.innerHTML = LIST;
     const pressed = vi.fn();
     document.querySelector('[data-testid="list-item-1"]')?.addEventListener('mousedown', pressed);
-    // Only `document` and the page's own MouseEvent are in scope, as in the isolated world.
-    const result: unknown = runInNewContext(chatOpenerStep('Ana Maria'), { document, MouseEvent });
+    // Only the page's own globals are in scope, as in the isolated world.
+    const result: unknown = runInNewContext(chatOpenerStep('Ana Maria'), {
+      document,
+      MouseEvent,
+      getComputedStyle,
+    });
     expect(result).toBe('opened');
     expect(pressed).toHaveBeenCalledOnce();
   });
 
-  it('carries the chat list’s landmarks and a real left click into the page', () => {
+  it('carries the chat list’s landmarks, the scroll test and a real left click into the page', () => {
     const code = chatOpenerStep('Ana');
     expect(code).toContain(JSON.stringify(PLACES));
     expect(code).toContain(
       '(type) => new MouseEvent(type, { bubbles: true, cancelable: true, button: 0 })',
+    );
+    expect(code).toContain(
+      '(element) => /(auto|scroll|overlay)/.test(getComputedStyle(element).overflowY)',
     );
   });
 
@@ -122,20 +129,61 @@ describe('openChatStep', () => {
   });
 });
 
+/** A box in the page, around `inner`, that may overflow and may be allowed to scroll. */
+function element(scrollHeight: number, clientHeight: number, parentElement: unknown = null) {
+  return { scrollTop: 0, scrollHeight, clientHeight, parentElement, scrolls: true };
+}
+
+describe('chatScroller', () => {
+  const docWith = (row: unknown, pane: unknown) => ({
+    querySelector: (selector: string) => (selector === PLACES.chatRow ? row : pane),
+  });
+  const scrolls = (node: unknown) => (node as { scrolls: boolean }).scrolls;
+
+  it('finds the nearest box around a chat row that overflows and may scroll', () => {
+    const page = element(5000, 800);
+    const pane = element(5000, 800, page);
+    pane.scrolls = false;
+    const row = element(72, 72, element(5000, 5000, pane));
+    expect(chatScroller(docWith(row, 'pane-side'), PLACES, scrolls)).toBe(page);
+  });
+
+  it('takes the first that scrolls, even inside the named list', () => {
+    const inner = element(5000, 800, element(800, 800));
+    const row = element(72, 72, inner);
+    expect(chatScroller(docWith(row, 'pane-side'), PLACES, scrolls)).toBe(inner);
+  });
+
+  it('falls back to the named list when no row is there, or none scrolls', () => {
+    expect(chatScroller(docWith(null, 'pane-side'), PLACES, scrolls)).toBe('pane-side');
+    const row = element(72, 72, element(800, 800));
+    expect(chatScroller(docWith(row, 'pane-side'), PLACES, scrolls)).toBe('pane-side');
+  });
+
+  it('runs in the page, where the named list stands in for a box with no layout', () => {
+    document.body.innerHTML = LIST;
+    const found: unknown = runInNewContext(
+      `(${chatScroller.toString()})(document, ${JSON.stringify(PLACES)}, (element) => /(auto|scroll|overlay)/.test(getComputedStyle(element).overflowY))`,
+      { document, getComputedStyle },
+    );
+    expect(found).toBe(document.querySelector('#pane-side'));
+  });
+});
+
 describe('chatListToTop', () => {
   it('puts the chat list back at its top, and says when there is none', () => {
-    const { list, doc } = scrolling(500, 1000);
+    const list = box(500, 1000);
     list.scrollTop = 700;
-    expect(chatListToTop(doc, PLACES.chatList)).toBe(true);
+    expect(chatListToTop(list)).toBe(true);
     expect(list.scrollTop).toBe(0);
-    expect(chatListToTop(doc, '#missing')).toBe(false);
+    expect(chatListToTop(null)).toBe(false);
   });
 
   it.skipIf(CHAT_LIST_TO_TOP.includes('stryMutAct'))('runs as standalone source text', () => {
     document.body.innerHTML = LIST;
-    const result: unknown = runInNewContext(CHAT_LIST_TO_TOP, { document });
+    const result: unknown = runInNewContext(CHAT_LIST_TO_TOP, { document, getComputedStyle });
     expect(result).toBe(true);
-    expect(CHAT_LIST_TO_TOP).toContain(JSON.stringify(LANDMARKS.chatList));
+    expect(CHAT_LIST_TO_TOP).toContain(JSON.stringify(PLACES));
   });
 });
 

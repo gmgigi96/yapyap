@@ -247,7 +247,9 @@ refuses its next request.
   chat list is virtualized, holding only the rows near what is on screen,
   so YapYap looks from the top of the list and, while the chat is not
   there, scrolls down most of a screen to load the next rows, for at most
-  60 screens; it then puts the list back at its top. It reuses the
+  60 screens; it then puts the list back at its top. It scrolls the
+  nearest box around a chat row that overflows and may scroll, since
+  which box that is is a layout detail, falling back to `#pane-side`. It reuses the
   `chatList`, `chatRow` and `chatTitle` landmarks, so `LANDMARKS_VERSION`
   stays. The
   fake page opens a chat when its row is pressed. Sending reuses the
