@@ -1,6 +1,6 @@
 {
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
-  "description": "Weekly updates for every pinned version (ADR 0019). The workflow runs daily, so open pull requests are rebased and merged in between.",
+  "description": "Weekly updates for every pinned version (ADR 0020). The workflow runs daily, so open pull requests are rebased and merged in between.",
   "timezone": "UTC",
   "schedule": ["* * * * 1"],
   "minimumReleaseAge": "3 days",
