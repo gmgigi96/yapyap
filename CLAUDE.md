@@ -61,7 +61,7 @@ Update this table in the PR that adds a command.
 | AI assistant     | `apps/desktop/src/main/assistant/`, `src/renderer/engine/`, `src/preload/engine/` | Setup, providers, bar, private model and its engine window (ADR 0017)                   |
 | MCP server       | `apps/desktop/src/main/agents/`                                                   | Opt-in server for AI agents on 127.0.0.1, its tokens and tools (ADR 0019)               |
 | Docs             | `docs/`                                                                           | VitePress site, ADRs in `docs/adr/`                                                     |
-| Repo automation  | `scripts/`                                                                        | Tested automation such as pinned-version checks; entries in `scripts/src/bin/`          |
+| Repo automation  | `scripts/`                                                                        | Tested automation such as catalog and license checks; entries in `scripts/src/bin/`     |
 | Packaging        | `apps/desktop/electron-builder.yml`, `packaging/`                                 | electron-builder targets, fuses, desktop entry, AppStream metainfo                      |
 | Release pipeline | `.github/workflows/{package,smoke,release}.yml`                                   | CI and releases share packaging and smoke tests; releases add signing, SBOM, provenance |
 
@@ -140,8 +140,8 @@ Update this table in the PR that adds a command.
   `vitest.projects.ts`.
 - Terminals inside VS Code export `ELECTRON_RUN_AS_NODE=1`. The E2E fixture
   strips it; strip it yourself before running `electron` by hand.
-- Electron (44 and later) has no postinstall step. It downloads its binary on first use, so
-  no `allowBuilds` entry is needed.
+- Electron (44 and later) has no postinstall step. It downloads its binary
+  on first use, so no `allowBuilds` entry is needed.
 - Never use top-level `await` in the main entry. Playwright holds back the
   `ready` event until the entry module finishes evaluating, so the app hangs.
 - Stryker's Vitest runner silently tests nothing under Vitest 5. We use the
@@ -206,9 +206,11 @@ Update this table in the PR that adds a command.
   through the session bus and would appear on the developer's desktop.
 - E2E runs drop `WAYLAND_DISPLAY` and set `XDG_SESSION_TYPE=x11` so local
   runs use the virtual X11 display like CI; Chromium otherwise reaches a
-  desktop's Wayland compositor through its default socket. `YAPYAP_E2E_WAYLAND_DISPLAY` passes a compositor socket through
-  instead; CI runs `display.spec.ts` that way on a headless Weston. Under it no window manager focuses windows, so tests that need a
-  focused window focus it and poll `isFocused()`.
+  desktop's Wayland compositor through its default socket.
+  `YAPYAP_E2E_WAYLAND_DISPLAY` passes a compositor socket through instead;
+  CI runs `display.spec.ts` that way on a headless Weston. Under it no
+  window manager focuses windows, so tests that need a focused window focus
+  it and poll `isFocused()`.
 - WhatsApp runs in an account view inside the main window, a `BaseWindow`
   with no page of its own, so no renderer runs for it (ADR 0009). In E2E
   tests, get its page with `whatsAppPage(app)` from `e2e/fixtures.ts` and
@@ -247,9 +249,10 @@ Update this table in the PR that adds a command.
   the recovery monitor (`src/main/recovery/`), which shows the recovery
   screen.
 - Create windows only with `createSecureWindow` (or `createMainWindow`, for
-  the page-less main window) in `apps/desktop/src/main/window/windows.ts`. Lint rejects `new BrowserWindow`,
-  `BaseWindow`, `BrowserView` and `WebContentsView` anywhere else, and new
-  per-web-contents guards go in `security/web-contents-guards.ts`.
+  the page-less main window) in `apps/desktop/src/main/window/windows.ts`.
+  Lint rejects `new BrowserWindow`, `BaseWindow`, `BrowserView` and
+  `WebContentsView` anywhere else, and new per-web-contents guards go in
+  `security/web-contents-guards.ts`.
 - Import wllama from `@wllama/wllama/esm/index.js`: the package's `main`
   names a file it does not ship, and its TypeScript sources do not pass our
   checks. Keep `setCompat(null)`, or wllama fetches a build from a CDN.
@@ -265,7 +268,8 @@ Update this table in the PR that adds a command.
   idle. Never open it at startup: the startup bench budgets renderer
   processes (ADR 0009). It runs on `app://engine` under its own CSP; serve
   nothing else there.
-- The `assistant` and `agents` settings sections are local: never exported or imported (`LOCAL_SECTIONS` in `settings/transfer.ts`). The
+- The `assistant` and `agents` settings sections are local: never exported
+  or imported (`LOCAL_SECTIONS` in `settings/transfer.ts`). The
   assistant's state that is no preference lives in `assistant.json` and
   `assistant-chats.json`, its keys and chat names in `secrets.json`.
 - The assistant never sends a message: it puts drafts in the message box.

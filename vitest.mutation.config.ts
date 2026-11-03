@@ -9,7 +9,7 @@ export default defineConfig({
     include: TEST_INCLUDE,
     environment: 'node',
     setupFiles: ['vitest.mutation.setup.ts'],
-    // Stryker already runs one suite per CPU; a worker pool inside each suite
+    // Stryker already runs several suites at once; a worker pool inside each suite
     // oversubscribes the machine until mutants time out instead of failing.
     maxWorkers: 1,
   },
