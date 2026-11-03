@@ -10,7 +10,7 @@ computer: nothing on the network can connect to it.
 
 ## Turn it on
 
-1. Open **Settings › Agents**.
+1. Open **Settings → Agents**.
 2. Turn on **Let AI agents connect**. YapYap shows the address agents
    connect to, such as `http://127.0.0.1:51234/mcp`. It keeps the same
    port from then on. If another program uses it, choose **Pick Another
@@ -88,7 +88,7 @@ By default YapYap notifies you each time an agent sends.
 
 ## Stay in control
 
-- **Recent activity** in Settings › Agents lists what agents did since
+- **Recent activity** in Settings → Agents lists what agents did since
   YapYap started: when, which token, which tool, in which account, and how
   it went. It never keeps what they read or wrote.
 - Take a scope, account or chat away from a token with its **×**, or
