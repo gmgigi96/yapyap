@@ -288,14 +288,6 @@ PR open on `master` and updates it from Conventional Commits. Merging that PR
 tags `vX.Y.Z`, updates `CHANGELOG.md` and creates the GitHub Release, which
 starts the release build. Never tag by hand.
 
-The release-please job runs only while the repository variable
-`RELEASES_ENABLED` is `true`, as it is now. Every update of the release PR
-runs the full check suite, which holds runners that feature PRs wait for, so
-setting it to `false` pauses the release PR during busy stretches. Setting it
-back to `true` (`gh variable set RELEASES_ENABLED --body true --repo
-vascoguita/yapyap`) makes the next push to `master` open the release PR again
-with every change since the last release.
-
 Release notes are generated from commit subjects, and only `feat`, `fix`,
 `perf` and `revert` commits appear in them. Each change appears once: the
 release workflow merges the entry release-please writes for a commit with

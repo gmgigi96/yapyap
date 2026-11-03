@@ -49,11 +49,9 @@ their reasons belong in the ADRs (`docs/adr/`), and released changes in
 - **Test-only switches.** `YAPYAP_TEST_*` variables (marketplace origin and
   anchor, model ports, the built-in model) point E2E tests at local fakes.
   Packaged builds ignore them.
-- **Releases.** release-please runs only while the `RELEASES_ENABLED`
-  variable is `true`. The release workflow merges each change's commit and
-  merge-commit entries into one changelog entry (`merge-changelog.ts`,
-  #358). Extensions have their own release-please components and
-  `<name>-vX.Y.Z` tags (#474).
+- **Releases.** release-please keeps the release PR on `master`, and the
+  release workflow merges each change's commit and merge-commit entries
+  into one changelog entry (`merge-changelog.ts`, #358).
 - **Identity.** The site is https://yapyap.guita.org (a GitHub Pages custom
   domain), and the app ID is `org.guita.YapYap`. Ensita supports YapYap's
   development and is credited in the README, the site footer and the About
