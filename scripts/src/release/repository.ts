@@ -13,6 +13,9 @@ export type Channel = 'stable' | 'beta';
 
 export const CHANNELS: readonly Channel[] = ['stable', 'beta'];
 
+/** The releases each channel lists, newest first. */
+type Listed = Readonly<Record<Channel, readonly RepositoryRelease[]>>;
+
 /** Where the repositories are served, and where their packages really live. */
 const REPOSITORY_URL = 'https://packages.guita.org';
 
@@ -36,10 +39,7 @@ export interface PoolFile {
  * lists them. Drafts, releases without Linux packages, and tags or file
  * names that could reach outside the pool are left out.
  */
-export function channels(
-  releases: readonly RepositoryRelease[],
-  kept = KEPT_VERSIONS,
-): Readonly<Record<Channel, readonly RepositoryRelease[]>> {
+export function channels(releases: readonly RepositoryRelease[], kept = KEPT_VERSIONS): Listed {
   const usable = releases
     .filter((release) => !release.draft && TAG.test(release.tag))
     .map((release) => ({ ...release, assets: release.assets.filter((name) => PACKAGE.test(name)) }))
@@ -51,9 +51,7 @@ export function channels(
 }
 
 /** Every package file either channel lists, once each. */
-export function poolFiles(
-  listed: Readonly<Record<Channel, readonly RepositoryRelease[]>>,
-): PoolFile[] {
+export function poolFiles(listed: Listed): PoolFile[] {
   const seen = new Map<string, PoolFile>();
   for (const release of [...listed.stable, ...listed.beta]) {
     for (const file of release.assets) {
@@ -69,7 +67,7 @@ export function poolFiles(
  * Pages applies redirects before its own files, so pacman packages, which
  * share a folder with the database and signatures, get a rule each (#350).
  */
-export function redirects(listed: Readonly<Record<Channel, readonly RepositoryRelease[]>>): string {
+export function redirects(listed: Listed): string {
   const target = `${RELEASE_DOWNLOADS}/:tag/:file 302`;
   const pacman = CHANNELS.flatMap((channel) =>
     listed[channel].flatMap(({ tag, assets }) =>
