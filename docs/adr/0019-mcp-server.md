@@ -56,9 +56,10 @@ trusted: every rule below is enforced by YapYap, on every call.
 - **Transport.** MCP's Streamable HTTP, stateless (no session, one
   answer per request), at `http://127.0.0.1:<port>/mcp`. The protocol
   versions are the ones the pinned SDK supports.
-- **Address.** `127.0.0.1` only, never `0.0.0.0` or `::`. The port is
-  chosen at random from 49152–65535 the first time and kept, so agents'
-  configs stay valid; Settings can pick a new one. If it is taken, YapYap
+- **Address.** `127.0.0.1` only, never `0.0.0.0` or `::`. The system
+  gives a free port the first time, and YapYap keeps it, so agents'
+  configs stay valid; Settings can ask for a new one. A port picked at
+  random could fall in a range Windows keeps for itself, which refuses it. If it is taken, YapYap
   does not listen and Settings says so with **Pick another port**.
 - **Lifetime.** Listening starts when the user turns on **Let AI agents
   connect** in Settings › Agents, and stops when they turn it off or

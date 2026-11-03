@@ -160,7 +160,6 @@ function setup() {
         listed: vi.fn(() => Promise.resolve('all' as const)),
       },
       serve: vi.fn(() => Promise.reject(new Error('Not in this test.'))),
-      random: () => 0,
       now: () => 0,
       version: '1.0.0',
     },

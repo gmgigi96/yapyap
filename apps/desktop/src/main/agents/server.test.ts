@@ -64,15 +64,16 @@ function setup(initial: Partial<Settings['agents']> = {}) {
     accounts: vi.fn<AgentServerDependencies['accounts']>(() => undefined),
     serve: vi.fn((port: number, answer: (request: AgentRequest) => unknown) => {
       answers.push(answer);
+      // As the system does, port 0 gets the next free one.
+      const given = port === 0 ? 57_344 + answers.length : port;
       return Promise.resolve({
-        port,
+        port: given,
         close: () => {
-          closed.push(port);
+          closed.push(given);
           return Promise.resolve();
         },
       });
     }),
-    random: vi.fn(() => 0.5),
     now: () => 42,
     notify: vi.fn(),
     warn: vi.fn(),
@@ -103,19 +104,31 @@ describe('agentServer', () => {
     expect(t.server.problem()).toBe('');
   });
 
-  it('picks a port in the dynamic range the first time, keeps it, and listens there', async () => {
+  it('takes the free port the system gives the first time, keeps it, and stays there', async () => {
     const t = setup();
     t.deps.settings.update((settings) => ({ ...settings, agents: { enabled: true, port: 0 } }));
     await settle();
-    expect(t.deps.settings.current().agents.port).toBe(57_344);
-    expect(t.deps.serve).toHaveBeenCalledExactlyOnceWith(57_344, expect.any(Function));
-    expect(t.server.address()).toBe('http://127.0.0.1:57344/mcp');
-    t.deps.random.mockReturnValue(0);
+    expect(t.deps.settings.current().agents.port).toBe(57_345);
+    expect(t.deps.serve).toHaveBeenCalledExactlyOnceWith(0, expect.any(Function));
+    expect(t.server.address()).toBe('http://127.0.0.1:57345/mcp');
+    // Requests are checked against the port it got, not the 0 it asked for.
+    const answered = await t.answers[0]?.(
+      request(57_345, { jsonrpc: '2.0', id: 1, method: 'ping' }),
+    );
+    expect(answered).toMatchObject({ status: 200 });
     t.server.newPort();
-    expect(t.deps.settings.current().agents.port).toBe(49_152);
-    t.deps.random.mockReturnValue(0.999_999_99);
+    await settle();
+    expect(t.closed).toEqual([57_345]);
+    expect(t.deps.settings.current().agents.port).toBe(57_346);
+    expect(t.server.address()).toBe('http://127.0.0.1:57346/mcp');
+  });
+
+  it('asks the system for a port even while it is off, for when it is turned on', async () => {
+    const t = setup({ enabled: false, port: 50_000 });
     t.server.newPort();
-    expect(t.deps.settings.current().agents.port).toBe(65_535);
+    await settle();
+    expect(t.deps.settings.current().agents).toEqual({ enabled: false, port: 0 });
+    expect(t.deps.serve).not.toHaveBeenCalled();
   });
 
   it('stops listening the moment it is turned off, and moves when the port changes', async () => {
@@ -156,7 +169,7 @@ describe('agentServer', () => {
     t.server.newPort();
     await settle();
     expect(t.server.problem()).toBe('');
-    expect(t.server.address()).toBe('http://127.0.0.1:57344/mcp');
+    expect(t.server.address()).toBe('http://127.0.0.1:57345/mcp');
   });
 
   it('answers agents with the accounts open at that moment, recording each call', async () => {

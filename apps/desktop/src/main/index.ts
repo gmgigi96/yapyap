@@ -322,7 +322,6 @@ const chrome = createChromeFeature({
       warn,
     }),
     serve: (port, answer) => listenForAgents(port, answer, warn),
-    random: Math.random,
     now: Date.now,
     version: app.getVersion(),
   },
