@@ -46,6 +46,11 @@ pnpm build              # build every package
 pnpm package            # build installers for the current OS
 ```
 
+YapYap's own windows (Settings and the others) load their pages over `app://`
+from `apps/desktop/out/renderer`, as in a packaged build, never from the Vite
+dev server. `pnpm dev` rebuilds that folder before the app starts and whenever
+the renderer changes; close and reopen a window to see your edit.
+
 `CLAUDE.md` has the full command list and an architecture map.
 
 ## Workflow

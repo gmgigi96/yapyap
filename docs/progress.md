@@ -320,3 +320,6 @@ title, escape })` (`src/renderer/shared/mount.tsx`), which titles the
 - Stale suggestions (#582): when WhatsApp draws a chat again, the bar
   checks the open chat and takes away suggestions, a summary or a consent
   question made for another one. The key links in Settings have an E2E test.
+- Dev chrome pages (#588): `pnpm dev` watch-builds the renderer into
+  `out/renderer`, which `app://chrome/` serves, and starts Electron only
+  after the first build, so the dev app never shows stale chrome pages.
