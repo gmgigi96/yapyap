@@ -1,11 +1,14 @@
 import { describe, expect, it, vi } from 'vitest';
 import { ADAPTER_WORLD_ID } from '../../adapter/world.ts';
+import { CHAT_LIST_TO_TOP, chatOpenerStep } from '../../adapter/open-chat.ts';
 import { agentPageOf } from './agent-page.ts';
 
 /** A WhatsApp page whose adapter world answers `answer`, whatever runs there. */
 function contents(answer: unknown) {
   return {
-    executeJavaScriptInIsolatedWorld: vi.fn(() => Promise.resolve(answer)),
+    executeJavaScriptInIsolatedWorld: vi.fn<
+      (world: number, scripts: { readonly code: string }[]) => Promise<unknown>
+    >(() => Promise.resolve(answer)),
     insertText: vi.fn(() => Promise.resolve()),
     focus: vi.fn(),
     sendInputEvent: vi.fn(),
@@ -13,29 +16,56 @@ function contents(answer: unknown) {
 }
 
 describe('agentPageOf', () => {
-  it('opens a chat by clicking its row in the adapter’s world, then lets WhatsApp show it', async () => {
-    const page = contents(true);
+  /** A page whose list answers each step in turn, scrolling the list to the top on its own code. */
+  function listOf(...steps: unknown[]) {
+    const page = contents(undefined);
+    const codes: string[] = [];
+    page.executeJavaScriptInIsolatedWorld.mockImplementation(
+      (_world: number, [script]: { readonly code: string }[]) => {
+        codes.push(script?.code ?? '');
+        return Promise.resolve(script?.code === CHAT_LIST_TO_TOP ? true : steps.shift());
+      },
+    );
+    return { page, codes };
+  }
+
+  it('opens a chat from the top of the list, in the adapter’s world, then lets WhatsApp show it', async () => {
+    const { page, codes } = listOf('opened');
     const wait = vi.fn(() => Promise.resolve());
     expect(await agentPageOf(page, wait).openChat('Ana')).toBe(true);
-    const [[world, [script]]] = page.executeJavaScriptInIsolatedWorld.mock.calls as unknown as [
-      [number, [{ code: string }]],
-    ];
-    expect(world).toBe(ADAPTER_WORLD_ID);
-    expect(script.code).toContain('"Ana"');
-    expect(wait).toHaveBeenCalledWith(300);
+    expect(page.executeJavaScriptInIsolatedWorld.mock.calls[0]?.[0]).toBe(ADAPTER_WORLD_ID);
+    expect(codes).toEqual([CHAT_LIST_TO_TOP, chatOpenerStep('Ana'), CHAT_LIST_TO_TOP]);
+    expect(wait.mock.calls).toEqual([[150], [300]]);
   });
 
-  it('reports a chat the list does not show, without waiting', async () => {
-    const page = contents(false);
+  it('loads more of the list until the chat is there', async () => {
+    const { page, codes } = listOf('scrolled', 'scrolled', 'opened');
+    const wait = vi.fn(() => Promise.resolve());
+    expect(await agentPageOf(page, wait).openChat('Rui')).toBe(true);
+    expect(codes.filter((code) => code === chatOpenerStep('Rui'))).toHaveLength(3);
+    expect(codes.at(-1)).toBe(CHAT_LIST_TO_TOP);
+    expect(wait.mock.calls).toEqual([[150], [150], [150], [300]]);
+  });
+
+  it('reports a chat the whole list does not have, and leaves the list at its top', async () => {
+    const { page, codes } = listOf('scrolled', 'end');
     const wait = vi.fn(() => Promise.resolve());
     expect(await agentPageOf(page, wait).openChat('Eva')).toBe(false);
-    expect(wait).not.toHaveBeenCalled();
+    expect(codes.at(-1)).toBe(CHAT_LIST_TO_TOP);
+    expect(wait).not.toHaveBeenCalledWith(300);
+  });
+
+  it('gives up after looking through a long list a screen at a time', async () => {
+    const { page, codes } = listOf(...Array.from({ length: 100 }, () => 'scrolled'));
+    const wait = vi.fn(() => Promise.resolve());
+    expect(await agentPageOf(page, wait).openChat('Eva')).toBe(false);
+    expect(codes.filter((code) => code === chatOpenerStep('Eva'))).toHaveLength(60);
   });
 
   it('waits a moment of real time by default', async () => {
     vi.useFakeTimers();
-    const opening = agentPageOf(contents(true)).openChat('Ana');
-    await vi.advanceTimersByTimeAsync(300);
+    const opening = agentPageOf(listOf('opened').page).openChat('Ana');
+    await vi.advanceTimersByTimeAsync(450);
     expect(await opening).toBe(true);
     vi.useRealTimers();
   });

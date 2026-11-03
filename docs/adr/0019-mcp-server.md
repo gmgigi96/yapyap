@@ -184,8 +184,8 @@ message box holds anything** (it never overwrites or sends what the user
 is typing); counts the send against the limits; puts the text in; and
 presses Enter. A send that fails leaves its text in the box, so the next
 one waits for the user. Text only, at most 4096 characters, to chats
-that already exist and that the chat list shows (it is virtualized): no
-new numbers, no attachments, no broadcasts.
+that already exist in the chat list: no new numbers, no attachments, no
+broadcasts.
 
 ### 6. The UI
 
@@ -243,8 +243,13 @@ refuses its next request.
   MCP server for a token with `messages:send`. ADR 0013 and ADR 0017 do
   not change: the assistant never sends.
 - The adapter gains opening a chat by name (`adapter/open-chat.ts`),
-  which presses the chat list row whose title is that name. It reuses the
-  `chatRow` and `chatTitle` landmarks, so `LANDMARKS_VERSION` stays. The
+  which presses the chat list row whose title is that name. WhatsApp's
+  chat list is virtualized, holding only the rows near what is on screen,
+  so YapYap looks from the top of the list and, while the chat is not
+  there, scrolls down most of a screen to load the next rows, for at most
+  60 screens; it then puts the list back at its top. It reuses the
+  `chatList`, `chatRow` and `chatTitle` landmarks, so `LANDMARKS_VERSION`
+  stays. The
   fake page opens a chat when its row is pressed. Sending reuses the
   assistant bar's Enter. Tests never touch a real account (rule 3).
 - ADR 0008 logs C47.
