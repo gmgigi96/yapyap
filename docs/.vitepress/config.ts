@@ -134,6 +134,7 @@ export default defineConfig({
             { text: '0017 Assistant built in', link: '/adr/0017-assistant-is-part-of-yapyap' },
             { text: '0018 No extensions', link: '/adr/0018-no-extensions' },
             { text: '0019 MCP server for agents', link: '/adr/0019-mcp-server' },
+            { text: '0020 Renovate', link: '/adr/0020-renovate' },
           ],
         },
       ],

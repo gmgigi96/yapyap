@@ -54,6 +54,21 @@ jobs:
           HEAD_SHA: ${{ github.event.pull_request.head.sha }}
         run: pnpm exec commitlint --from "$BASE_SHA" --to "$HEAD_SHA" --verbose
 
+  renovate:
+    name: Renovate config
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      # Renovate reports a broken config only once it runs on master; this
+      # catches it here, with the same Renovate the workflow runs.
+      - name: Validate .github/renovate.json
+        run: >-
+          docker run --rm -v "$PWD:/repo:ro" -w /repo
+          ghcr.io/renovatebot/renovate:44.206.2
+          renovate-config-validator --strict --no-global .github/renovate.json
+
   test:
     name: Test (${{ matrix.os }})
     needs: changes
@@ -257,6 +272,7 @@ jobs:
     needs:
       - changes
       - lint
+      - renovate
       - test
       - sonar
       - e2e
