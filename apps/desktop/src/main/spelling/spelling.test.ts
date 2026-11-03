@@ -1,6 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
-import { defaultSettings } from '../settings/decode.ts';
-import type { Settings } from '../settings/schema.ts';
+import { fakeSettings } from '../../../test/fake-settings.ts';
 import { followSpellingSetting, spellingLanguagesOf } from './spelling.ts';
 
 const AVAILABLE = ['de-DE', 'en-GB', 'en-US', 'pt-BR', 'pt-PT', 'sv'];
@@ -30,24 +29,6 @@ describe('spellingLanguagesOf', () => {
   });
 });
 
-function settingsHolder(spelling: Partial<Settings['spelling']>) {
-  const base = defaultSettings();
-  let settings: Settings = { ...base, spelling: { ...base.spelling, ...spelling } };
-  const listeners: ((settings: Settings) => void)[] = [];
-  return {
-    current: () => settings,
-    onChange: (listener: (settings: Settings) => void) => {
-      listeners.push(listener);
-    },
-    change: (next: Partial<Settings['spelling']>) => {
-      settings = { ...settings, spelling: { ...settings.spelling, ...next } };
-      for (const listener of listeners) {
-        listener(settings);
-      }
-    },
-  };
-}
-
 const session = (available = AVAILABLE) => ({
   setSpellCheckerEnabled: vi.fn(),
   setSpellCheckerLanguages: vi.fn(),
@@ -56,7 +37,7 @@ const session = (available = AVAILABLE) => ({
 
 describe('followSpellingSetting', () => {
   it('lists no language while spelling is off, so no dictionary is fetched', () => {
-    const settings = settingsHolder({ languages: ['pt-PT'] });
+    const settings = fakeSettings({ spelling: { languages: ['pt-PT'] } });
     const page = session();
     followSpellingSetting(settings, () => ['en-GB']).guard(page);
     expect(page.setSpellCheckerLanguages).toHaveBeenCalledExactlyOnceWith([]);
@@ -64,18 +45,18 @@ describe('followSpellingSetting', () => {
   });
 
   it('checks the system language once turned on, and the chosen ones when there are', () => {
-    const settings = settingsHolder({});
+    const settings = fakeSettings();
     const page = session();
     followSpellingSetting(settings, () => ['en-GB']).guard(page);
-    settings.change({ enabled: true });
+    settings.change({ spelling: { enabled: true } });
     expect(page.setSpellCheckerLanguages).toHaveBeenLastCalledWith(['en-GB']);
     expect(page.setSpellCheckerEnabled).toHaveBeenLastCalledWith(true);
-    settings.change({ languages: ['pt-PT', 'de-DE'] });
+    settings.change({ spelling: { languages: ['pt-PT', 'de-DE'] } });
     expect(page.setSpellCheckerLanguages).toHaveBeenLastCalledWith(['pt-PT', 'de-DE']);
   });
 
   it('leaves languages to macOS, whose spell checker lists none', () => {
-    const settings = settingsHolder({ enabled: true });
+    const settings = fakeSettings({ spelling: { enabled: true } });
     const page = session([]);
     followSpellingSetting(settings, () => ['en-GB']).guard(page);
     expect(page.setSpellCheckerLanguages).not.toHaveBeenCalled();

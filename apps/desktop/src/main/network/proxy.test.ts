@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
-import { defaultSettings } from '../settings/decode.ts';
+import { fakeSettings } from '../../../test/fake-settings.ts';
 import type { Settings } from '../settings/schema.ts';
 import { followProxySetting, launchProxyOf, proxyConfigOf, webRtcPolicyOf } from './proxy.ts';
 
@@ -10,23 +10,6 @@ const network = (proxyMode: Settings['network']['proxyMode'], proxyServer = '') 
 
 const BLOCKED = { mode: 'fixed_servers', proxyRules: 'http://127.0.0.1:1' };
 const SYSTEM = { mode: 'system' } as const;
-
-function settingsHolder(initial: Settings['network']) {
-  let settings: Settings = { ...defaultSettings(), network: initial };
-  const listeners: ((settings: Settings) => void)[] = [];
-  return {
-    current: () => settings,
-    onChange: (listener: (settings: Settings) => void) => {
-      listeners.push(listener);
-    },
-    change: (next: Settings['network']) => {
-      settings = { ...settings, network: next };
-      for (const listener of listeners) {
-        listener(settings);
-      }
-    },
-  };
-}
 
 const session = () => ({
   setProxy: vi.fn<(config: unknown) => Promise<void>>(() => Promise.resolve()),
@@ -100,12 +83,12 @@ describe('webRtcPolicyOf', () => {
 
 describe('followProxySetting', () => {
   it('applies the setting to each session before it loads, and again on every change', async () => {
-    const settings = settingsHolder(network('system'));
+    const settings = fakeSettings({ network: network('system') });
     const proxy = followProxySetting(settings, vi.fn(), SYSTEM);
     const first = session();
     await proxy.guard(first);
     expect(first.setProxy).toHaveBeenCalledWith({ mode: 'system' });
-    settings.change(network('manual', 'http://proxy.example.org:3128'));
+    settings.change({ network: network('manual', 'http://proxy.example.org:3128') });
     await settle();
     expect(first.setProxy).toHaveBeenLastCalledWith({
       mode: 'fixed_servers',
@@ -115,7 +98,7 @@ describe('followProxySetting', () => {
   });
 
   it('blocks a session whose proxy could not be applied, saying so without the address', async () => {
-    const settings = settingsHolder(network('manual', 'socks5://10.0.0.2:1080'));
+    const settings = fakeSettings({ network: network('manual', 'socks5://10.0.0.2:1080') });
     const warn = vi.fn();
     const proxy = followProxySetting(settings, warn, SYSTEM);
     const broken = session();
@@ -135,11 +118,11 @@ describe('calls and accounts with their own proxy', () => {
   const page = () => ({ setWebRTCIPHandlingPolicy: vi.fn(), isDestroyed: vi.fn(() => false) });
 
   it('keeps a page’s WebRTC policy in step with the proxy it uses', () => {
-    const settings = settingsHolder(network('system'));
+    const settings = fakeSettings({ network: network('system') });
     const proxy = followProxySetting(settings, vi.fn(), SYSTEM);
     const work = page();
     proxy.guardCalls(work, 'work');
-    settings.change(network('manual', 'http://p:8080'));
+    settings.change({ network: network('manual', 'http://p:8080') });
     expect(work.setWebRTCIPHandlingPolicy.mock.calls).toEqual([
       ['default_public_interface_only'],
       ['disable_non_proxied_udp'],
@@ -147,7 +130,7 @@ describe('calls and accounts with their own proxy', () => {
   });
 
   it('puts an account with its own proxy on it, and the others on the setting', async () => {
-    const settings = settingsHolder(network('direct'));
+    const settings = fakeSettings({ network: network('direct') });
     const proxy = followProxySetting(settings, vi.fn(), SYSTEM);
     proxy.useAccounts([{ id: 'work', proxy: 'socks5://10.0.0.2:1080' }, { id: 'home' }]);
     const work = session();
@@ -168,7 +151,7 @@ describe('calls and accounts with their own proxy', () => {
   });
 
   it('applies a changed account proxy to that account alone, and skips pages that are gone', async () => {
-    const settings = settingsHolder(network('system'));
+    const settings = fakeSettings({ network: network('system') });
     const proxy = followProxySetting(settings, vi.fn(), SYSTEM);
     proxy.useAccounts([{ id: 'work' }, { id: 'home' }]);
     const work = session();
