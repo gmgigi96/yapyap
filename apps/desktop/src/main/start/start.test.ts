@@ -86,6 +86,7 @@ function fakes(env: Record<string, string | undefined> = {}, argv: readonly stri
       );
     }),
     quit: vi.fn(),
+    exit: vi.fn(),
     requestSingleInstanceLock: vi.fn(() => true),
   } satisfies AppPort;
   const window = {
@@ -1740,8 +1741,8 @@ describe('startApp headless', () => {
   });
 
   /** A first launch with an unclean exit and a release out, all of which would ask the user. */
-  function headless() {
-    const f = fakes({ WAYLAND_DISPLAY: 'wayland-0', DISPLAY: ':0' }, ['yapyap', '--headless']);
+  function headless(argv = ['yapyap', '--headless', '--ozone-platform=headless']) {
+    const f = fakes({}, argv);
     f.settings.firstRun = true;
     f.releases.policy = 'self-update';
     f.stored.set('running.json', '{"version":"0.0.9","startedAt":1000}');
@@ -1754,13 +1755,31 @@ describe('startApp headless', () => {
     return f;
   }
 
-  it('runs on Chromium’s headless backend, whatever display backend is chosen', async () => {
+  it('runs on Chromium’s headless backend without a GPU, whatever backend settings choose', async () => {
     const f = headless();
     await startApp(f);
-    expect(f.app.commandLine.appendSwitch).toHaveBeenCalledWith('ozone-platform', 'headless');
-    expect(f.app.commandLine.appendSwitch).toHaveBeenCalledWith('disable-gpu');
-    expect(f.app.commandLine.appendSwitch).not.toHaveBeenCalledWith('ozone-platform', 'x11');
+    expect(f.app.commandLine.appendSwitch.mock.calls).toEqual([['disable-gpu']]);
     expect(f.capture).toHaveBeenCalledExactlyOnceWith(expect.any(Function), false);
+    expect(f.createWindow).toHaveBeenCalledOnce();
+  });
+
+  it('says how to start, and ends at once, with neither that backend nor a display', async () => {
+    const f = headless(['yapyap', '--headless']);
+    await startApp(f);
+    expect(f.logError).toHaveBeenCalledExactlyOnceWith(en.headless.needsBackend);
+    expect(f.app.exit).toHaveBeenCalledExactlyOnceWith(1);
+    expect(f.app.whenReady).not.toHaveBeenCalled();
+    expect(f.app.commandLine.appendSwitch).not.toHaveBeenCalled();
+  });
+
+  it('keeps a display it has, with the window hidden and the GPU on', async () => {
+    const f = fakes({ DISPLAY: ':0' }, ['yapyap', '--headless']);
+    await startApp(f);
+    f.web.fire('dom-ready');
+    await vi.advanceTimersByTimeAsync(5000);
+    expect(f.app.exit).not.toHaveBeenCalled();
+    expect(f.app.commandLine.appendSwitch).not.toHaveBeenCalledWith('disable-gpu');
+    expect(f.window.show).not.toHaveBeenCalled();
   });
 
   it('shows no window, tray, welcome, update or crash review, and takes no shortcut', async () => {
@@ -1815,7 +1834,6 @@ describe('startApp headless', () => {
   it('refuses to start without the sandbox with no dialog, only the logged reason', async () => {
     const f = { ...headless(), sandboxDisabled: true };
     await startApp(f);
-    expect(f.app.commandLine.appendSwitch).toHaveBeenCalledWith('ozone-platform', 'headless');
     expect(f.logError).toHaveBeenCalledExactlyOnceWith(
       expect.stringMatching(/cannot start safely/),
     );

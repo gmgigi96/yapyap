@@ -104,6 +104,8 @@ export interface AppPort {
   ): unknown;
   requestSingleInstanceLock(): boolean;
   quit(): void;
+  /** Ends at once, before Chromium starts on a display that is not there. */
+  exit(code: number): void;
 }
 
 /** An account's WhatsApp, in its own view and partition (ADR 0001). */

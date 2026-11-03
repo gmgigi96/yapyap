@@ -14,7 +14,7 @@ import { en } from '../../shared/messages/en.ts';
 import { followGlobalShortcuts, toggleWindow } from '../shortcuts/global-shortcuts.ts';
 import { createProxyLogin } from '../network/proxy-login.ts';
 import { useCameraPortal } from '../permissions/camera-portal.ts';
-import { headlessRequested, useHeadlessDisplay } from '../headless/headless.ts';
+import { headlessCanStart, headlessRequested, useHeadlessDisplay } from '../headless/headless.ts';
 import type { StartDependencies, WindowPort } from './types.ts';
 
 /** Starts without hardware acceleration, for when graphics problems stop YapYap from starting. */
@@ -69,8 +69,11 @@ export function beforeReady<Window extends WindowPort>(
 export function applyDisplayBackend<Window extends WindowPort>(
   deps: StartDependencies<Window>,
 ): DisplayBackend {
-  if (headlessRequested(deps.argv)) {
-    return useHeadlessDisplay(deps.app.commandLine, deps.platform);
+  const headless = headlessRequested(deps.argv)
+    ? useHeadlessDisplay(deps.app.commandLine, deps.argv)
+    : undefined;
+  if (headless !== undefined) {
+    return headless;
   }
   const display = chooseDisplayBackend({
     platform: deps.platform,
@@ -197,7 +200,7 @@ export function openMainWindow<Window extends WindowPort>(deps: StartDependencie
  * Never runs unsandboxed: explains why YapYap will not start, then quits.
  * Headless, the logged reason is all there is, since nobody sees a dialog.
  */
-export function refuseWithoutSandbox<Window extends WindowPort>(
+function refuseWithoutSandbox<Window extends WindowPort>(
   deps: StartDependencies<Window>,
 ): Promise<void> {
   return refuseUnsafeStart({
@@ -209,4 +212,20 @@ export function refuseWithoutSandbox<Window extends WindowPort>(
       deps.app.quit();
     },
   });
+}
+
+/**
+ * Why YapYap must not start, as the work of saying so, or nothing when it may.
+ * A headless start with no display to run on ends at once, saying how to
+ * start it, before Chromium looks for one and crashes (ADR 0020).
+ */
+export function refusal<Window extends WindowPort>(
+  deps: StartDependencies<Window>,
+): Promise<void> | undefined {
+  if (headlessRequested(deps.argv) && !headlessCanStart(deps.argv, deps.platform, deps.env)) {
+    deps.logError(en.headless.needsBackend);
+    deps.app.exit(1);
+    return Promise.resolve();
+  }
+  return deps.sandboxDisabled ? refuseWithoutSandbox(deps) : undefined;
 }

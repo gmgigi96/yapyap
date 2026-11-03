@@ -7,9 +7,16 @@ container. Scripts and AI agents use it through the
 
 ## Start it
 
+On a Linux computer with no X11 or Wayland, such as a server:
+
 ```bash
-yapyap --headless
+yapyap --headless --ozone-platform=headless
 ```
+
+`--ozone-platform=headless` tells Chromium itself to need no display, and
+only the command line can choose it. Without it and without a display,
+YapYap says so and exits. On a desktop, or on macOS and Windows,
+`yapyap --headless` is enough: YapYap runs with its window hidden.
 
 YapYap uses the same profile, accounts and settings as when it runs on the
 desktop, and only one YapYap runs per profile: a headless launch while
@@ -30,7 +37,7 @@ Agents** says, and the setting is left as it was.
 
 An account that is not linked shows WhatsApp's QR code in the terminal:
 
-1. Start `yapyap --headless` in a terminal.
+1. Start `yapyap --headless --ozone-platform=headless` in a terminal.
 2. On your phone, open WhatsApp and go to **Settings › Linked devices ›
    Link a device**.
 3. Scan the code in the terminal. WhatsApp changes it about every 20

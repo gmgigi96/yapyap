@@ -647,6 +647,7 @@ export interface Messages {
     readonly scan: (params: { readonly account: string | number }) => string;
     readonly linked: (params: { readonly account: string | number }) => string;
     readonly notTerminal: (params: { readonly account: string | number }) => string;
+    readonly needsBackend: string;
   };
   readonly chatList: { readonly label: string; readonly hint: string };
   readonly notifications: {

@@ -18,6 +18,11 @@ Electron 45 found, with `DISPLAY` and `WAYLAND_DISPLAY` unset:
   sandbox on, and loads WhatsApp Web in a hidden window.
 - Without `--disable-gpu`, the GPU process looks for an X display and quits;
   SwiftShader works too, but needs `--enable-unsafe-swiftshader`.
+- Chromium takes that backend only from its real command line. On Ubuntu
+  it picks its display before the app's code runs, so a switch appended
+  with `app.commandLine.appendSwitch` comes too late: Chromium looks for
+  X11 and crashes or quits. Passed on the command line, it starts every
+  time; `--disable-gpu` can still be appended.
 - `capturePage` gives no picture under this backend: a hidden window
   captures as 1×1, and a shown one never answers.
 - WhatsApp draws its login QR code on a `<canvas>` inside the `loginCode`
@@ -34,10 +39,14 @@ a screen the only place to show it is the terminal that started YapYap.
 is the same app: the same profile, accounts, settings, single-instance lock
 and security settings (ADR 0001). The sandbox is still required.
 
-- **Display.** On Linux, YapYap sets `--ozone-platform=headless` and
-  `--disable-gpu`, which override the display backend from settings or the
-  command line. It needs no X11, Wayland or GPU. Elsewhere, the main window
-  is simply never shown. Unsafe SwiftShader is never turned on.
+- **Display.** On Linux with no display server, the user starts
+  `yapyap --headless --ozone-platform=headless`, since only the command line
+  can choose that backend, and YapYap adds `--disable-gpu` to it. It needs
+  no X11, Wayland or GPU. Unsafe SwiftShader is never turned on. Given
+  `--headless` with neither that backend nor `DISPLAY` or `WAYLAND_DISPLAY`,
+  YapYap says how to start it and exits with status 1 before Chromium looks
+  for a display. With a display, and on macOS and Windows, YapYap uses the
+  usual display and simply never shows the main window.
 - **Nothing on screen.** The main window opens hidden and stays hidden, as
   with **Start minimized**. There is no tray, welcome, update check or crash
   review: each would show a window or dialog nobody can answer. Updates

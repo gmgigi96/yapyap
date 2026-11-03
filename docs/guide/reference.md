@@ -91,13 +91,13 @@ YapYap is closed resets YapYap completely and logs you out of WhatsApp.
 
 ## Command line
 
-| Option                                                                                                | Effect                                                                                                                           |
-| ----------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------- |
-| `--headless`                                                                                          | Runs with no window, tray or dialog, and on Linux with no display, with the MCP server on (see [headless mode](/guide/headless)) |
-| `--safe-mode`                                                                                         | Starts without hardware acceleration, for this launch only (see [graphics problems](/guide/#graphics-problems))                  |
-| `--ozone-platform=wayland` or `=x11`                                                                  | Linux: uses that display backend for this launch, over the setting and `ELECTRON_OZONE_PLATFORM_HINT`                            |
-| `--proxy-server=<proxy>`, `--proxy-bypass-list=<hosts>`, `--proxy-pac-url=<url>`, `--no-proxy-server` | Chromium's proxy options: used for this launch while Settings → Network → Proxy follows the system                               |
-| A chat link                                                                                           | Opens that chat, for example `yapyap "https://wa.me/15551234567?text=Hi"` (see [chat links](#chat-links))                        |
+| Option                                                                                                | Effect                                                                                                                                                        |
+| ----------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `--headless`                                                                                          | Runs with no window, tray or dialog, with the MCP server on. On Linux with no display, add `--ozone-platform=headless` (see [headless mode](/guide/headless)) |
+| `--safe-mode`                                                                                         | Starts without hardware acceleration, for this launch only (see [graphics problems](/guide/#graphics-problems))                                               |
+| `--ozone-platform=wayland` or `=x11`                                                                  | Linux: uses that display backend for this launch, over the setting and `ELECTRON_OZONE_PLATFORM_HINT`                                                         |
+| `--proxy-server=<proxy>`, `--proxy-bypass-list=<hosts>`, `--proxy-pac-url=<url>`, `--no-proxy-server` | Chromium's proxy options: used for this launch while Settings → Network → Proxy follows the system                                                            |
+| A chat link                                                                                           | Opens that chat, for example `yapyap "https://wa.me/15551234567?text=Hi"` (see [chat links](#chat-links))                                                     |
 
 The executable is `yapyap` on Linux and `YapYap.exe` on Windows. On macOS,
 pass options with `open -a YapYap --args <options>`.

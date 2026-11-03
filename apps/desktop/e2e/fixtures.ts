@@ -346,6 +346,7 @@ export async function spawnApp(
 export async function spawnHeadless(
   origin: string,
   profile: string,
+  { backend = true }: { readonly backend?: boolean } = {},
 ): Promise<ChildProcessByStdio<null, Readable, Readable>> {
   const { default: executable } = (await import('electron')) as unknown as { default: string };
   const env = appEnvironment(origin, profile);
@@ -353,7 +354,9 @@ export async function spawnHeadless(
   delete env['WAYLAND_DISPLAY'];
   // Chromium's own errors reach standard error, for a test that fails to say why.
   env['ELECTRON_ENABLE_LOGGING'] = '1';
-  return spawn(executable, [MAIN, `--user-data-dir=${profile}`, '--headless'], {
+  // Chromium reads its headless backend only from its own command line (ADR 0020).
+  const display = backend ? ['--ozone-platform=headless'] : [];
+  return spawn(executable, [...display, MAIN, `--user-data-dir=${profile}`, '--headless'], {
     env,
     stdio: ['ignore', 'pipe', 'pipe'],
   });

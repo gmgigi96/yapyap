@@ -1,5 +1,10 @@
 import { describe, expect, it, vi } from 'vitest';
-import { headlessRequested, headlessSay, useHeadlessDisplay } from './headless.ts';
+import {
+  headlessCanStart,
+  headlessRequested,
+  headlessSay,
+  useHeadlessDisplay,
+} from './headless.ts';
 
 describe('headlessRequested', () => {
   it('is on only with the flag itself', () => {
@@ -9,14 +14,27 @@ describe('headlessRequested', () => {
   });
 });
 
+describe('headlessCanStart', () => {
+  it('needs Chromium’s headless backend or a display server on Linux', () => {
+    const backend = ['yapyap', '--headless', '--ozone-platform=headless'];
+    expect(headlessCanStart(backend, 'linux', {})).toBe(true);
+    expect(headlessCanStart(['yapyap', '--headless'], 'linux', {})).toBe(false);
+    expect(headlessCanStart(['yapyap'], 'linux', { DISPLAY: '', WAYLAND_DISPLAY: '' })).toBe(false);
+    expect(headlessCanStart(['yapyap'], 'linux', { DISPLAY: ':99' })).toBe(true);
+    expect(headlessCanStart(['yapyap'], 'linux', { WAYLAND_DISPLAY: 'wayland-0' })).toBe(true);
+  });
+
+  it('always has a display elsewhere', () => {
+    expect(headlessCanStart(['yapyap', '--headless'], 'darwin', {})).toBe(true);
+    expect(headlessCanStart(['yapyap', '--headless'], 'win32', {})).toBe(true);
+  });
+});
+
 describe('useHeadlessDisplay', () => {
-  it('puts Chromium on its headless backend without a GPU on Linux', () => {
+  it('turns the GPU off on Chromium’s headless backend', () => {
     const commandLine = { appendSwitch: vi.fn() };
-    const display = useHeadlessDisplay(commandLine, 'linux');
-    expect(commandLine.appendSwitch.mock.calls).toEqual([
-      ['ozone-platform', 'headless'],
-      ['disable-gpu'],
-    ]);
+    const display = useHeadlessDisplay(commandLine, ['yapyap', '--ozone-platform=headless']);
+    expect(commandLine.appendSwitch.mock.calls).toEqual([['disable-gpu']]);
     expect(display).toEqual({
       ozonePlatform: undefined,
       active: undefined,
@@ -25,12 +43,10 @@ describe('useHeadlessDisplay', () => {
     });
   });
 
-  it('leaves the display alone elsewhere, where only the window stays hidden', () => {
-    for (const platform of ['darwin', 'win32']) {
-      const commandLine = { appendSwitch: vi.fn() };
-      expect(useHeadlessDisplay(commandLine, platform).active).toBeUndefined();
-      expect(commandLine.appendSwitch).not.toHaveBeenCalled();
-    }
+  it('leaves any other display alone, where only the window stays hidden', () => {
+    const commandLine = { appendSwitch: vi.fn() };
+    expect(useHeadlessDisplay(commandLine, ['yapyap', '--ozone-platform=x11'])).toBeUndefined();
+    expect(commandLine.appendSwitch).not.toHaveBeenCalled();
   });
 });
 

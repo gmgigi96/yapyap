@@ -12,7 +12,7 @@ import { PRODUCT_NAME } from '../identity/product.ts';
 import { followThemeSetting } from '../appearance/theme.ts';
 import { followZoomSetting } from '../appearance/zoom.ts';
 import { chromeUserAgent } from '../identity/user-agent.ts';
-import { describeGraphics } from '../recovery/gpu-safe-mode.ts';
+import { describeGraphics, type Graphics } from '../recovery/gpu-safe-mode.ts';
 import { trackVisibility, type Visibility } from '../window/visibility.ts';
 import { type ProxyController } from '../network/proxy.ts';
 import { trackShares, type ScreenShares } from '../capture/shares.ts';
@@ -66,7 +66,7 @@ import {
   signInToProxies,
   takeGlobalShortcuts,
   openMainWindow,
-  refuseWithoutSandbox,
+  refusal,
 } from './startup.ts';
 import type {
   AccountContents,
@@ -789,14 +789,26 @@ function browserIdentity<Window extends WindowPort>(
   };
 }
 
+/** Tells the user about startup and a past crash; headless, nobody could answer the dialogs. */
+function announceUnlessHeadless<Window extends WindowPort>(
+  deps: StartDependencies<Window>,
+  graphics: Graphics,
+  reportCrash: () => void,
+): void {
+  if (headlessRequested(deps.argv)) {
+    return;
+  }
+  announceStartup(deps, graphics);
+  reportCrash();
+}
+
 export async function startApp<Window extends WindowPort>(
   deps: StartDependencies<Window>,
 ): Promise<void> {
   const { app, warn } = deps;
-  // First, so that even the sandbox refusal starts on a display that exists.
-  const display = applyDisplayBackend(deps);
-  if (deps.sandboxDisabled) {
-    await refuseWithoutSandbox(deps);
+  const refused = refusal(deps);
+  if (refused !== undefined) {
+    await refused;
     return;
   }
   const origin = whatsAppOrigin(deps.env, warn);
@@ -811,6 +823,7 @@ export async function startApp<Window extends WindowPort>(
   const views: ViewRegistry = new WeakMap();
   const identity = browserIdentity(deps);
   const picker = latePicker();
+  const display = applyDisplayBackend(deps);
   const capture = deps.capture(picker.pick, display.active === 'wayland');
   const security = { ...deps, capture, views, identity };
   const graphics = beforeReady(deps, security);
@@ -824,11 +837,9 @@ export async function startApp<Window extends WindowPort>(
   const chrome = deps.chrome.afterReady(views, warn, rendering);
   signInToProxies(deps, chrome);
   picker.bind(chrome.pickCaptureSource);
-  // Headless, nobody could answer an update or crash report dialog.
-  if (!headlessRequested(deps.argv)) {
-    announceStartup(deps, graphics);
+  announceUnlessHeadless(deps, graphics, () => {
     reportCrash(chrome.technicalDetails);
-  }
+  });
   await openWindow(deps, chrome, security, instances, origin, proxy);
   welcomeOnFirstRun(deps, chrome);
 }

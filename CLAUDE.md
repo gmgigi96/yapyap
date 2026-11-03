@@ -17,36 +17,36 @@ under `docs/adr/`.
 
 Use pnpm (version pinned in `package.json`) on Node.js 26 LTS.
 
-| Task                              | Command                                                                                             |
-| --------------------------------- | --------------------------------------------------------------------------------------------------- |
-| Install                           | `pnpm install` (CI: `pnpm install --frozen-lockfile`)                                               |
-| Run the app (hot reload)          | `pnpm dev`                                                                                          |
-| Build all packages                | `pnpm build`                                                                                        |
-| Lint (ESLint + Prettier + knip)   | `pnpm lint`                                                                                         |
-| Format                            | `pnpm format`                                                                                       |
-| Typecheck                         | `pnpm typecheck`                                                                                    |
-| Unit + integration tests          | `pnpm test`                                                                                         |
-| Coverage (100% gate)              | `pnpm test:coverage`                                                                                |
-| E2E tests                         | `dbus-run-session -- xvfb-run -a pnpm test:e2e` on Linux, else `pnpm test:e2e`                      |
-| Mutation tests (≥ 90%)            | `pnpm test:mutation` (PR CI mutates changed in-scope files only)                                    |
-| Performance benchmark             | `xvfb-run -a pnpm test:bench` (nightly; budgets in `apps/desktop/e2e/bench/`, ADR 0009)             |
-| Website screenshots (Linux)       | `dbus-run-session -- xvfb-run -a -s "-screen 0 3840x2400x24" pnpm screenshots`                      |
-| Commit messages                   | `pnpm commitlint`                                                                                   |
-| Regenerate the message types      | `node scripts/src/bin/i18n-types.ts` (after changing `locales/en.json`)                             |
-| Check translation catalogs        | `node scripts/src/bin/check-catalogs.ts` (part of `pnpm lint`)                                      |
-| Check chrome CSS is logical       | `node scripts/src/bin/check-logical-css.ts` (part of `pnpm lint`; no physical left/right, ADR 0012) |
-| License compatibility             | `pnpm check:licenses`                                                                               |
-| Vulnerability audit               | `pnpm audit --audit-level high`                                                                     |
-| Docs site (dev / build)           | `pnpm docs:dev` / `pnpm docs:build`                                                                 |
-| Package installers for this OS    | `pnpm package` (output in `apps/desktop/release/`)                                                  |
-| Run headless (no display)         | `pnpm --filter @yapyap/desktop exec electron out/main/index.js --headless` after `pnpm build`       |
-| Smoke-test an installed package   | `YAPYAP_PACKAGED_EXECUTABLE=<path> pnpm test:smoke`                                                 |
-| Verify hardened fuses             | `node scripts/src/bin/verify-fuses.ts <executable or .app>`                                         |
-| AUR PKGBUILD and .SRCINFO         | `node scripts/src/bin/aur.ts <version> <amd64 .deb> <arm64 .deb> <output dir>`                      |
-| Homebrew, winget, Scoop manifests | `node scripts/src/bin/distribution.ts <version> <SHA256SUMS> <output dir>`                          |
-| Check those manifests             | `bash packaging/distribution/test.sh` (needs podman or docker; runs `brew style` and `brew audit`)  |
-| Test the apt/dnf/pacman repos     | `bash packaging/repository/test.sh` (needs podman or docker)                                        |
-| Flatpak bundle (Linux)            | See the `flatpak` job in `.github/workflows/package.yml`; it runs in Flathub's container            |
+| Task                              | Command                                                                                                                 |
+| --------------------------------- | ----------------------------------------------------------------------------------------------------------------------- |
+| Install                           | `pnpm install` (CI: `pnpm install --frozen-lockfile`)                                                                   |
+| Run the app (hot reload)          | `pnpm dev`                                                                                                              |
+| Build all packages                | `pnpm build`                                                                                                            |
+| Lint (ESLint + Prettier + knip)   | `pnpm lint`                                                                                                             |
+| Format                            | `pnpm format`                                                                                                           |
+| Typecheck                         | `pnpm typecheck`                                                                                                        |
+| Unit + integration tests          | `pnpm test`                                                                                                             |
+| Coverage (100% gate)              | `pnpm test:coverage`                                                                                                    |
+| E2E tests                         | `dbus-run-session -- xvfb-run -a pnpm test:e2e` on Linux, else `pnpm test:e2e`                                          |
+| Mutation tests (≥ 90%)            | `pnpm test:mutation` (PR CI mutates changed in-scope files only)                                                        |
+| Performance benchmark             | `xvfb-run -a pnpm test:bench` (nightly; budgets in `apps/desktop/e2e/bench/`, ADR 0009)                                 |
+| Website screenshots (Linux)       | `dbus-run-session -- xvfb-run -a -s "-screen 0 3840x2400x24" pnpm screenshots`                                          |
+| Commit messages                   | `pnpm commitlint`                                                                                                       |
+| Regenerate the message types      | `node scripts/src/bin/i18n-types.ts` (after changing `locales/en.json`)                                                 |
+| Check translation catalogs        | `node scripts/src/bin/check-catalogs.ts` (part of `pnpm lint`)                                                          |
+| Check chrome CSS is logical       | `node scripts/src/bin/check-logical-css.ts` (part of `pnpm lint`; no physical left/right, ADR 0012)                     |
+| License compatibility             | `pnpm check:licenses`                                                                                                   |
+| Vulnerability audit               | `pnpm audit --audit-level high`                                                                                         |
+| Docs site (dev / build)           | `pnpm docs:dev` / `pnpm docs:build`                                                                                     |
+| Package installers for this OS    | `pnpm package` (output in `apps/desktop/release/`)                                                                      |
+| Run headless (no display)         | `pnpm --filter @yapyap/desktop exec electron --ozone-platform=headless out/main/index.js --headless` after `pnpm build` |
+| Smoke-test an installed package   | `YAPYAP_PACKAGED_EXECUTABLE=<path> pnpm test:smoke`                                                                     |
+| Verify hardened fuses             | `node scripts/src/bin/verify-fuses.ts <executable or .app>`                                                             |
+| AUR PKGBUILD and .SRCINFO         | `node scripts/src/bin/aur.ts <version> <amd64 .deb> <arm64 .deb> <output dir>`                                          |
+| Homebrew, winget, Scoop manifests | `node scripts/src/bin/distribution.ts <version> <SHA256SUMS> <output dir>`                                              |
+| Check those manifests             | `bash packaging/distribution/test.sh` (needs podman or docker; runs `brew style` and `brew audit`)                      |
+| Test the apt/dnf/pacman repos     | `bash packaging/repository/test.sh` (needs podman or docker)                                                            |
+| Flatpak bundle (Linux)            | See the `flatpak` job in `.github/workflows/package.yml`; it runs in Flathub's container                                |
 
 Update this table in the PR that adds a command.
 
@@ -285,8 +285,10 @@ Update this table in the PR that adds a command.
   launcher cannot drive them. The smoke test connects over CDP through the
   `DevToolsActivePort` file in the profile directory instead.
 - `--headless` (ADR 0020) runs with no window, tray or dialog: anything
-  that shows one checks `headlessRequested(deps.argv)` first. On Linux it
-  puts Chromium on `--ozone-platform=headless --disable-gpu`; never turn on
-  unsafe SwiftShader instead. The login QR code goes only to a terminal
+  that shows one checks `headlessRequested(deps.argv)` first. Chromium's
+  headless backend works only from the real command line
+  (`--ozone-platform=headless`): appended with `appendSwitch`, Ubuntu's
+  Chromium has already looked for X11 and crashes. YapYap then appends
+  `--disable-gpu`; never turn on unsafe SwiftShader instead. The login QR code goes only to a terminal
   (`Terminal.isTTY`), never to the log. E2E tests start it with
   `spawnHeadless`, which drops the display.

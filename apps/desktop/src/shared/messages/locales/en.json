@@ -724,7 +724,8 @@
     "agents": "AI agents connect to {{address}}",
     "scan": "To link the account “{{account}}”, open WhatsApp on your phone, go to Settings › Linked devices › Link a device, and scan this code:",
     "linked": "The account “{{account}}” is linked.",
-    "notTerminal": "The account “{{account}}” is not linked. To see the code to scan, start YapYap with --headless in a terminal."
+    "notTerminal": "The account “{{account}}” is not linked. To see the code to scan, start YapYap with --headless in a terminal.",
+    "needsBackend": "YapYap found no display to run on. Without X11 or Wayland, start headless mode with: yapyap --headless --ozone-platform=headless"
   },
   "chatList": {
     "label": "Chat list width",

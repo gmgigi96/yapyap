@@ -19,16 +19,45 @@ export function headlessRequested(argv: readonly string[]): boolean {
 }
 
 /**
- * Puts Chromium on its own headless backend on Linux, which needs no X11 or
- * Wayland, overriding any backend from settings or the command line. The GPU
- * process would otherwise look for an X display and quit; unsafe SwiftShader,
- * the other way around that, stays off.
+ * Chromium's own headless backend, which needs no X11 or Wayland. Chromium
+ * takes it only from its real command line: on Ubuntu it picks its display
+ * before YapYap's code runs, so a switch YapYap appends comes too late and
+ * Chromium crashes looking for X11 (#587).
  */
-export function useHeadlessDisplay(commandLine: SwitchLine, platform: string): DisplayBackend {
-  if (platform === 'linux') {
-    commandLine.appendSwitch('ozone-platform', 'headless');
-    commandLine.appendSwitch('disable-gpu');
+const HEADLESS_BACKEND = '--ozone-platform=headless';
+
+function present(env: Readonly<Record<string, string | undefined>>, name: string): boolean {
+  return (env[name] ?? '') !== '';
+}
+
+/** Whether Chromium has a display to start on: its headless backend, or a display server. */
+export function headlessCanStart(
+  argv: readonly string[],
+  platform: string,
+  env: Readonly<Record<string, string | undefined>>,
+): boolean {
+  return (
+    platform !== 'linux' ||
+    argv.includes(HEADLESS_BACKEND) ||
+    present(env, 'DISPLAY') ||
+    present(env, 'WAYLAND_DISPLAY')
+  );
+}
+
+/**
+ * On Chromium's headless backend, turns the GPU off, or the GPU process would
+ * look for an X display and quit; unsafe SwiftShader, the other way around
+ * that, stays off. Anywhere else the display is the usual one, with the
+ * window hidden, and this returns nothing.
+ */
+export function useHeadlessDisplay(
+  commandLine: SwitchLine,
+  argv: readonly string[],
+): DisplayBackend | undefined {
+  if (!argv.includes(HEADLESS_BACKEND)) {
+    return undefined;
   }
+  commandLine.appendSwitch('disable-gpu');
   return {
     ozonePlatform: undefined,
     active: undefined,
