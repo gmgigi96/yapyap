@@ -1,7 +1,8 @@
 import type { JSX } from 'preact';
-import { useEffect, useState } from 'preact/hooks';
+import { useState } from 'preact/hooks';
 import type { ChromeApi, PickerOffer, PickerSource } from '../../shared/chrome-api.ts';
 import { en } from '../../shared/messages/en.ts';
+import { useLoaded } from '../shared/hooks.ts';
 
 const text = en.picker;
 
@@ -69,16 +70,6 @@ function Sources(props: {
   });
 }
 
-function useOffer(api: ChromeApi): PickerOffer | null | undefined {
-  const [offer, setOffer] = useState<PickerOffer | null | undefined>(undefined);
-  useEffect(() => {
-    api.picker.offer().then(setOffer, () => {
-      setOffer(null);
-    });
-  }, [api]);
-  return offer;
-}
-
 function AudioOption(props: {
   readonly checked: boolean;
   readonly onChange: (checked: boolean) => void;
@@ -130,7 +121,7 @@ function Choices(props: { readonly api: ChromeApi; readonly offer: PickerOffer }
 }
 
 export function Picker({ api }: { readonly api: ChromeApi }): JSX.Element {
-  const offer = useOffer(api);
+  const offer = useLoaded(api.picker.offer);
   return (
     <main class="picker">
       <h1>{text.title}</h1>

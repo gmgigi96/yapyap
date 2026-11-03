@@ -98,18 +98,6 @@ function Buttons(props: {
   );
 }
 
-function RowActions({ shortcut, onChange, onReset }: RowProps): JSX.Element {
-  return (
-    <Buttons
-      id={shortcut.id}
-      label={shortcut.label}
-      second={shortcut.custom ? text.reset : undefined}
-      onChange={onChange}
-      onSecond={onReset}
-    />
-  );
-}
-
 function Row(props: RowProps): JSX.Element {
   return (
     <tr>
@@ -121,7 +109,13 @@ function Row(props: RowProps): JSX.Element {
           <Keys accelerator={props.shortcut.accelerator} platform={props.platform} />
         )}
       </td>
-      <RowActions {...props} />
+      <Buttons
+        id={props.shortcut.id}
+        label={props.shortcut.label}
+        second={props.shortcut.custom ? text.reset : undefined}
+        onChange={props.onChange}
+        onSecond={props.onReset}
+      />
     </tr>
   );
 }

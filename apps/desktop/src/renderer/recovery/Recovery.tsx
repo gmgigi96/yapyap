@@ -1,38 +1,13 @@
 import type { JSX } from 'preact';
-import { useEffect, useState } from 'preact/hooks';
-import type { ChromeApi, RecoveryProblem } from '../../shared/chrome-api.ts';
+import type { ChromeApi } from '../../shared/chrome-api.ts';
 import { en } from '../../shared/messages/en.ts';
+import { useActionStatus, useLoaded } from '../shared/hooks.ts';
 
 const text = en.recovery;
 
-function useProblem(api: ChromeApi): RecoveryProblem | null | undefined {
-  const [problem, setProblem] = useState<RecoveryProblem | null | undefined>(undefined);
-  useEffect(() => {
-    api.recovery.problem().then(setProblem, () => {
-      setProblem(null);
-    });
-  }, [api]);
-  return problem;
-}
-
-function useAction(): readonly [string, (action: () => Promise<void>, done: string) => void] {
-  const [status, setStatus] = useState('');
-  const run = (action: () => Promise<void>, done: string): void => {
-    action().then(
-      () => {
-        setStatus(done);
-      },
-      () => {
-        setStatus(text.failed);
-      },
-    );
-  };
-  return [status, run];
-}
-
 export function Recovery({ api }: { readonly api: ChromeApi }): JSX.Element {
-  const problem = useProblem(api);
-  const [status, run] = useAction();
+  const problem = useLoaded(api.recovery.problem);
+  const [status, run] = useActionStatus(text.failed);
   const kind = problem?.kind ?? 'blank';
   return (
     <main>
