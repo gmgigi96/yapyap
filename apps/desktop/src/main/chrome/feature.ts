@@ -34,6 +34,7 @@ import {
 } from '../capture/picker.ts';
 import { changeZoom } from '../appearance/zoom.ts';
 import { buildMenuTemplate, type MenuActions } from '../menu.ts';
+import { pause } from '../pause.ts';
 import { accountsHandlers, type AccountManager } from './accounts.ts';
 import { problemReportHandlers } from './problem-report.ts';
 import {
@@ -432,10 +433,7 @@ function sourcePicker(
   return createSourcePicker({
     getSources: deps.captureSources,
     offerAudio: deps.platform === 'win32',
-    wait: (ms) =>
-      new Promise((resolve) => {
-        setTimeout(resolve, ms);
-      }),
+    wait: pause,
     openPicker: (owner) => {
       const parent = deps.windowOf(owner);
       return openPromptWindow(windows, PICKER_PAGE, parent == null ? {} : { parent });

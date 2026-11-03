@@ -57,6 +57,7 @@ import trayIcon from '../../build/icons/32x32.png?asset';
 import { PRODUCT_NAME } from './identity/product.ts';
 import { createLogger } from './logging/logger.ts';
 import { logProcessErrors } from './process-errors.ts';
+import { pause } from './pause.ts';
 import { readInstallEvidence } from './updates/install-evidence.ts';
 import { releaseFetcher } from './updates/update-notice.ts';
 import { decideUpdatePolicy, settingsIgnoredBy } from './updates/update-policy.ts';
@@ -253,7 +254,7 @@ const chrome = createChromeFeature({
       start: (categories) =>
         contentTracing.startRecording({ included_categories: [...categories] }),
       stop: (path) => contentTracing.stopRecording(path),
-      wait: (ms) => new Promise((resolve) => setTimeout(resolve, ms)),
+      wait: pause,
       tell: (message) => {
         void dialog.showMessageBox(message);
       },

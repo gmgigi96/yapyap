@@ -47,6 +47,7 @@ import { agentPageOf } from '../agents/agent-page.ts';
 import { bringToFront, claimSingleInstance, type Instances, type LinkPage } from '../instances.ts';
 import { chatLinkInArguments } from '../navigation/deep-link.ts';
 import { quitOnShutdown } from '../shutdown.ts';
+import { pause } from '../pause.ts';
 import { showWhenPageReady } from '../window/show-when-ready.ts';
 import { focusPageWithWindow } from '../window/focus-page.ts';
 import { unreadBadge } from '../badge/unread-badge.ts';
@@ -91,11 +92,6 @@ function latePicker(): { readonly pick: PickInApp; readonly bind: (pick: PickInA
     },
   };
 }
-
-const pause = (ms: number): Promise<void> =>
-  new Promise((resolve) => {
-    setTimeout(resolve, ms);
-  });
 
 /** The account's name, to head its notifications when several accounts run. */
 function headingOf(running: RunningAccounts<OpenedAccount>, id: string): string | undefined {
