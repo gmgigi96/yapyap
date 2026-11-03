@@ -37,8 +37,8 @@ import {
   type SourcePicker,
 } from '../capture/picker.ts';
 import { changeZoom } from '../appearance/zoom.ts';
-import { buildMenuTemplate, type MenuActions } from '../menu.ts';
-import { pause } from '../pause.ts';
+import { buildMenuTemplate, type MenuActions } from '../app/menu.ts';
+import { pause } from '../support/pause.ts';
 import { accountsHandlers, type AccountManager } from '../accounts/accounts-handlers.ts';
 import { problemReportHandlers } from '../crash/problem-report-handlers.ts';
 import {

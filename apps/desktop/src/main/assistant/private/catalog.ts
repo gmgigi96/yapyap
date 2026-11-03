@@ -1,4 +1,4 @@
-import type { Environment } from '../../environment.ts';
+import type { Environment } from '../../support/environment.ts';
 
 /**
  * A model the assistant can run on this computer (#457): a GGUF file pinned

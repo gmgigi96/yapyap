@@ -244,7 +244,7 @@ title, escape })` (`src/renderer/shared/mount.tsx`), which titles the
   preload hears its events through one typed `listen`.
 
 - State files (#527): every small state file is a `TextFile` from
-  `textFileAt` (`main/atomic-write.ts`), written atomically; the extension
+  `textFileAt` (`main/support/atomic-write.ts`), written atomically; the extension
   records use `writeTextAtomicallyAsync`.
 
 - UI wording (#528): buttons in YapYap's windows use title case, like its

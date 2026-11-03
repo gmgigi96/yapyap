@@ -2,7 +2,7 @@ import { createHash } from 'node:crypto';
 import { Type } from 'typebox';
 import { Value } from 'typebox/value';
 import type { SecretStore } from '../secrets/secret-store.ts';
-import { readChecked, type TextFile } from '../atomic-write.ts';
+import { readChecked, type TextFile } from '../support/atomic-write.ts';
 
 const UUID = '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$';
 const FORMAT_VERSION = 1;

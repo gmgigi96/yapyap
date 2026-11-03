@@ -12,7 +12,7 @@ import type { Settings } from '../settings/schema.ts';
 import type { SidebarSource } from '../accounts/sidebar-handlers.ts';
 import type { ContextMenuItem, ContextMenuParams } from '../spelling/context-menu.ts';
 import type { ProxyLoginAnswer } from '../../shared/chrome-api.ts';
-import { WHATSAPP_ORIGIN } from '../whatsapp-origin.ts';
+import { WHATSAPP_ORIGIN } from '../app/whatsapp-origin.ts';
 import type { WindowOptions } from '../window/windows.ts';
 import type { AssistantBar } from '../assistant/bar.ts';
 import type { AssistantBarView } from '../assistant/bar-page.ts';

@@ -1,4 +1,4 @@
-import { chatLinkInArguments, chatLinkTarget } from './navigation/deep-link.ts';
+import { chatLinkInArguments, chatLinkTarget } from '../navigation/deep-link.ts';
 
 export interface InstanceApp {
   requestSingleInstanceLock(): boolean;

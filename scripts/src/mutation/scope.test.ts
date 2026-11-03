@@ -9,7 +9,7 @@ describe('inMutationScope', () => {
     'apps/desktop/src/main/permissions/session-guard.ts',
     'apps/desktop/src/main/settings/decode.ts',
     'apps/desktop/src/main/settings/store.ts',
-    'apps/desktop/src/main/whatsapp-origin.ts',
+    'apps/desktop/src/main/app/whatsapp-origin.ts',
     'scripts/src/release/aur.ts',
     'apps/desktop/src/main/assistant/providers/anthropic.ts',
     'apps\\desktop\\src\\adapter\\unread.ts',
@@ -49,12 +49,12 @@ describe('mutationTargets', () => {
     expect(
       mutationTargets([
         'scripts/src/licenses/check.ts',
-        ' apps/desktop/src/main/whatsapp-origin.ts ',
+        ' apps/desktop/src/main/app/whatsapp-origin.ts ',
         '',
         'docs/index.md',
         'scripts/src/licenses/check.ts',
       ]),
-    ).toEqual(['scripts/src/licenses/check.ts', 'apps/desktop/src/main/whatsapp-origin.ts']);
+    ).toEqual(['scripts/src/licenses/check.ts', 'apps/desktop/src/main/app/whatsapp-origin.ts']);
   });
 });
 

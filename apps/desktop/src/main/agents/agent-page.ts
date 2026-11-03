@@ -1,6 +1,6 @@
 import { CHAT_LIST_TO_TOP, chatOpenerStep, parseOpenStep } from '../../adapter/open-chat.ts';
 import { runInAdapterWorld } from '../../adapter/world.ts';
-import { pause } from '../pause.ts';
+import { pause } from '../support/pause.ts';
 import { readOpenChat, readUnreadChats } from '../assistant/chat-reading.ts';
 import {
   pressEnter,

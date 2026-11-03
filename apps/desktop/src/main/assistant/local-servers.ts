@@ -2,7 +2,7 @@ import { Type } from 'typebox';
 import { Value } from 'typebox/value';
 import { cappedFetcher, type Fetcher, type StreamedResponse } from './capped-fetch.ts';
 import { MAX_MODELS } from './models.ts';
-import type { Environment } from '../environment.ts';
+import type { Environment } from '../support/environment.ts';
 
 const OLLAMA_PORT = 11_434;
 /** Alpaca runs an Ollama of its own, one port up, so both can run. */

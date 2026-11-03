@@ -1,5 +1,5 @@
 import { Type } from 'typebox';
-import { readChecked, type TextFile } from '../atomic-write.ts';
+import { readChecked, type TextFile } from '../support/atomic-write.ts';
 
 const FileSchema = Type.Object({ lastFolder: Type.String() });
 

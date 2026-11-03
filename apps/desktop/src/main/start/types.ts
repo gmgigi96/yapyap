@@ -37,10 +37,10 @@ import type { WhatsAppIpc } from '../ipc/whatsapp.ts';
 import type { AccountNotifier, NotifierDependencies } from '../notifications/notifier.ts';
 import type { KeyContents, ReplyContents } from '../notifications/reply.ts';
 import type { MainWindowOptions } from '../window/windows.ts';
-import type { LinkWindow } from '../instances.ts';
+import type { LinkWindow } from '../app/instances.ts';
 import type { UnsafeStartDependencies } from '../security/sandbox-check.ts';
 import type { DownloadDependencies, DownloadingSession } from '../downloads/downloads.ts';
-import type { ShutdownSources } from '../shutdown.ts';
+import type { ShutdownSources } from '../app/shutdown.ts';
 import type { ReadyPage } from '../window/show-when-ready.ts';
 import type { FocusablePage, FocusableWindow } from '../window/focus-page.ts';
 import type { BadgeDrawing } from '../badge/badge-image.ts';
@@ -55,8 +55,8 @@ import type { SpellingController, SpellingSession } from '../spelling/spelling.t
 import type { AuthInfo, LoginCallback } from '../network/proxy-login.ts';
 import type { SecretStore } from '../secrets/secret-store.ts';
 import type { CodePage, CustomCodeController } from '../custom-code/custom-code.ts';
-import type { TextFile } from '../atomic-write.ts';
-import type { Environment } from '../environment.ts';
+import type { TextFile } from '../support/atomic-write.ts';
+import type { Environment } from '../support/environment.ts';
 
 export interface AppPort {
   disableHardwareAcceleration(): void;

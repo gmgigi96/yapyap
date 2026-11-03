@@ -25,7 +25,7 @@ export const MUTATION_SCOPE: readonly string[] = [
   'apps/desktop/src/main/updates/**/*.ts',
   'apps/desktop/src/main/security/security.ts',
   'apps/desktop/src/main/security/web-contents-guards.ts',
-  'apps/desktop/src/main/whatsapp-origin.ts',
+  'apps/desktop/src/main/app/whatsapp-origin.ts',
   'apps/desktop/src/main/window/windows.ts',
   'apps/desktop/src/main/assistant/net.ts',
   'apps/desktop/src/main/assistant/providers/**/*.ts',

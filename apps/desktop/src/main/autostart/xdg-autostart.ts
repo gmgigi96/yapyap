@@ -1,5 +1,5 @@
 import { isAbsolute, join } from 'node:path';
-import type { Environment } from '../environment.ts';
+import type { Environment } from '../support/environment.ts';
 import { APP_ID, PRODUCT_NAME } from '../identity/product.ts';
 import type { AutostartPort } from './autostart.ts';
 

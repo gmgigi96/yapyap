@@ -1,7 +1,7 @@
 import { randomBytes } from 'node:crypto';
 import { createConnection } from 'node:net';
 import { variant, type DBusValue, type Variant } from './dbus-codec.ts';
-import type { Environment } from '../environment.ts';
+import type { Environment } from '../support/environment.ts';
 import { BUS, connectBus, type Bus } from './dbus-client.ts';
 
 const PORTAL = {

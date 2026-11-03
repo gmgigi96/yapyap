@@ -1,4 +1,4 @@
-import { readIfPresent, textFileAt } from '../atomic-write.ts';
+import { readIfPresent, textFileAt } from '../support/atomic-write.ts';
 
 /** Electron's `safeStorage`, as far as YapYap uses it. */
 export interface EncryptionPort {

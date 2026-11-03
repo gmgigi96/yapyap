@@ -1,9 +1,9 @@
 import type { MenuItemConstructorOptions } from 'electron';
-import type { ZoomStep } from './appearance/zoom.ts';
-import { PRODUCT_NAME } from './identity/product.ts';
-import type { AccountSummary } from '../shared/chrome-api.ts';
-import { en } from '../shared/messages/en.ts';
-import { acceleratorOf, type CustomShortcuts, type ShortcutId } from '../shared/shortcuts.ts';
+import type { ZoomStep } from '../appearance/zoom.ts';
+import { PRODUCT_NAME } from '../identity/product.ts';
+import type { AccountSummary } from '../../shared/chrome-api.ts';
+import { en } from '../../shared/messages/en.ts';
+import { acceleratorOf, type CustomShortcuts, type ShortcutId } from '../../shared/shortcuts.ts';
 
 /** The platform the menu is for, and the keys the user chose instead of YapYap's. */
 interface Keys {

@@ -6,7 +6,7 @@ import type {
   AgentTokenSpec,
   AgentTokenView,
 } from '../../shared/agents-api.ts';
-import { readChecked, type TextFile } from '../atomic-write.ts';
+import { readChecked, type TextFile } from '../support/atomic-write.ts';
 import type { SecretStore } from '../secrets/secret-store.ts';
 import { parseInternationalNumber } from '../../shared/phone-number.ts';
 import { chatId } from '../assistant/chats.ts';

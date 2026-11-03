@@ -1,4 +1,4 @@
-import { isSet, type Environment } from '../environment.ts';
+import { isSet, type Environment } from '../support/environment.ts';
 
 /**
  * How YapYap may update itself (ADR 0003):

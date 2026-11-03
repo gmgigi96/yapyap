@@ -9,14 +9,14 @@ import { installSecurity, type SecurityDependencies } from '../security/security
 import type { MainWindowOptions } from '../window/windows.ts';
 import { refuseUnsafeStart } from '../security/sandbox-check.ts';
 import { manageMainWindow, restoreWindowState } from '../window/main-window.ts';
-import { resolveWhatsAppOrigin } from '../whatsapp-origin.ts';
+import { resolveWhatsAppOrigin } from '../app/whatsapp-origin.ts';
 import { en } from '../../shared/messages/en.ts';
 import { followGlobalShortcuts, toggleWindow } from '../shortcuts/global-shortcuts.ts';
 import { createProxyLogin } from '../network/proxy-login.ts';
 import { useCameraPortal } from '../permissions/camera-portal.ts';
 import type { ChromeRuntime } from '../chrome/feature.ts';
 import type { StartDependencies, WindowPort } from './types.ts';
-import type { Environment } from '../environment.ts';
+import type { Environment } from '../support/environment.ts';
 
 /** Starts without hardware acceleration, for when graphics problems stop YapYap from starting. */
 const SAFE_MODE_FLAG = '--safe-mode';

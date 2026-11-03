@@ -6,7 +6,7 @@ import {
   NO_CUSTOM_CODE,
   type CustomCode,
 } from '../../shared/custom-code.ts';
-import { readIfPresent, type TextFile } from '../atomic-write.ts';
+import { readIfPresent, type TextFile } from '../support/atomic-write.ts';
 
 /**
  * A world of its own: user scripts share the page's DOM but neither the

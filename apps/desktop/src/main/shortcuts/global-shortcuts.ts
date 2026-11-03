@@ -1,6 +1,6 @@
 import { isValidShortcut } from '../../shared/shortcut-keys.ts';
 import { GLOBAL_SHORTCUTS, type GlobalShortcutId } from '../../shared/shortcuts.ts';
-import { bringToFront, type LinkWindow } from '../instances.ts';
+import { bringToFront, type LinkWindow } from '../app/instances.ts';
 import { followSettings, type SettingsService } from '../settings/service.ts';
 
 /** Electron's `globalShortcut`, as far as YapYap uses it. */

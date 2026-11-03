@@ -35,7 +35,7 @@ import {
   statSync,
 } from 'node:fs';
 import { readFile } from 'node:fs/promises';
-import { textFileAt, writeTextAtomically } from './atomic-write.ts';
+import { textFileAt, writeTextAtomically } from './support/atomic-write.ts';
 import { chatListWidths } from './chat-list/widths.ts';
 import { createCustomCode } from './custom-code/custom-code.ts';
 import { availableParallelism, homedir, release, totalmem } from 'node:os';
@@ -56,8 +56,8 @@ import { recordTrace } from './crash/trace.ts';
 import trayIcon from '../../build/icons/32x32.png?asset';
 import { PRODUCT_NAME } from './identity/product.ts';
 import { createLogger } from './logging/logger.ts';
-import { logProcessErrors } from './process-errors.ts';
-import { pause } from './pause.ts';
+import { logProcessErrors } from './app/process-errors.ts';
+import { pause } from './support/pause.ts';
 import { readInstallEvidence } from './updates/install-evidence.ts';
 import { releaseFetcher } from './updates/update-notice.ts';
 import { decideUpdatePolicy, settingsIgnoredBy } from './updates/update-policy.ts';

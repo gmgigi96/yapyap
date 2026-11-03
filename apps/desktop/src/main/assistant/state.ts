@@ -1,5 +1,5 @@
 import { Type, type Static } from 'typebox';
-import { readChecked, type TextFile } from '../atomic-write.ts';
+import { readChecked, type TextFile } from '../support/atomic-write.ts';
 
 const FORMAT_VERSION = 1;
 

@@ -1,11 +1,11 @@
 import { readdirSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
-import { AGENT_HOST } from './agents/listener.ts';
+import { AGENT_HOST } from '../agents/listener.ts';
 
-const SOURCE = join(import.meta.dirname, '..');
+const SOURCE = join(import.meta.dirname, '..', '..');
 /** The one file that listens: the MCP server for agents, on 127.0.0.1, while the user has it on (ADR 0019). */
-const LISTENER = join(import.meta.dirname, 'agents', 'listener.ts');
+const LISTENER = join(import.meta.dirname, '..', 'agents', 'listener.ts');
 
 /** Every TypeScript source file of the app, tests aside. */
 function sources(folder: string): string[] {

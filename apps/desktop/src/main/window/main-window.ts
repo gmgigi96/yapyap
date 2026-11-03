@@ -1,7 +1,7 @@
 import type { Settings } from '../settings/schema.ts';
 import type { SettingsService } from '../settings/service.ts';
 import { boundsOnScreen, parseWindowState, type Rect, type WindowState } from './window-state.ts';
-import { readIfPresent, type TextFile } from '../atomic-write.ts';
+import { readIfPresent, type TextFile } from '../support/atomic-write.ts';
 
 export interface ManagedWindow {
   getNormalBounds(): Rect;

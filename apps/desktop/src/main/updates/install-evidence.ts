@@ -1,4 +1,4 @@
-import type { Environment } from '../environment.ts';
+import type { Environment } from '../support/environment.ts';
 import { isDeveloperIdSigned, type InstallEvidence } from './update-policy.ts';
 
 export interface EvidenceSources {

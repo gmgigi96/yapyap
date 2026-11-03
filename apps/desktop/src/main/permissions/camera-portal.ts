@@ -1,4 +1,4 @@
-import { isSet, type Environment } from '../environment.ts';
+import { isSet, type Environment } from '../support/environment.ts';
 
 /** Chromium's command line, as far as features go. */
 export interface FeatureSwitches {
