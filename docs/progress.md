@@ -317,3 +317,6 @@ title, escape })` (`src/renderer/shared/mount.tsx`), which titles the
 - Install page button (#579): the download button carries its own styles,
   so it shows as a button on the install page too, not only on the home
   page.
+- Stale suggestions (#582): when WhatsApp draws a chat again, the bar
+  checks the open chat and takes away suggestions, a summary or a consent
+  question made for another one. The key links in Settings have an E2E test.

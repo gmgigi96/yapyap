@@ -14,6 +14,7 @@ import {
   wireAssistantBar,
   wireAssistantFields,
   type BarContent,
+  type BarPlacement,
 } from './assistant-bar.ts';
 import { LANDMARKS } from './page-state.ts';
 
@@ -101,7 +102,7 @@ function setup() {
     settings: vi.fn(),
   };
   const scope: Record<string, unknown> = { bridge, getComputedStyle };
-  const render = (content: BarContent = CONTENT): boolean =>
+  const render = (content: BarContent = CONTENT): BarPlacement =>
     renderAssistantBar(document, scope, content, PLACES, KIT);
   const stored = (): Stored => scope['bar'] as Stored;
   // The test reaches into the closed shadow root through the parts the adapter keeps.
@@ -124,10 +125,11 @@ afterEach(() => {
 describe('renderAssistantBar', () => {
   it('puts the bar right above the message box, in a closed shadow root', () => {
     const t = setup();
-    expect(t.render()).toBe(true);
+    expect(t.render()).toBe('placed');
     const { host } = t.stored();
     expect(footer()?.previousElementSibling).toBe(host);
     expect(host.shadowRoot).toBeNull();
+    expect(t.render()).toBe('kept');
     const shadow = t.shadow();
     expect(shadow.querySelector('style')?.textContent).toBe('.bar { display: flex; }');
     expect(shadow.querySelector('.bar')?.getAttribute('aria-label')).toBe('AI assistant');
@@ -151,6 +153,40 @@ describe('renderAssistantBar', () => {
     expect(gear?.getAttribute('aria-label')).toBe('Assistant settings');
     expect(shadow.querySelector('.bar > .row')).not.toBeNull();
     expect(t.stored().parts.input.getAttribute('type')).toBe('text');
+  });
+
+  it('gives every part the class its styles use, and names the parts that need a name', () => {
+    const t = setup();
+    t.render();
+    const { parts } = t.stored();
+    const classes = Object.fromEntries(
+      Object.entries(parts).map(([part, node]) => [part, node.getAttribute('class')]),
+    );
+    expect(classes).toEqual({
+      bar: 'bar',
+      name: 'name',
+      choice: 'choice',
+      suggest: 'button primary',
+      summarize: 'button',
+      rewrite: 'button',
+      catchUp: 'button',
+      settings: 'button gear',
+      rewrites: 'row rewrites',
+      status: 'status',
+      buttons: 'buttons',
+      result: 'result',
+      list: 'suggestions',
+      input: 'input',
+    });
+    expect(t.shadow().querySelector('style')?.getAttribute('class')).toBe('style');
+    expect(t.shadow().querySelectorAll('.bar > .row:not(.line, .rewrites)')).toHaveLength(1);
+    expect(parts.status.parentElement?.getAttribute('class')).toBe('row line');
+    expect(parts.result.getAttribute('tabindex')).toBe('0');
+    expect(parts.input.getAttribute('aria-label')).toBe('Write a message');
+    const icon = t.shadow().querySelector('.send svg');
+    expect(icon?.namespaceURI).toBe('http://www.w3.org/2000/svg');
+    expect(icon?.getAttribute('viewBox')).toBe('0 0 16 16');
+    expect(icon?.getAttribute('aria-hidden')).toBe('true');
   });
 
   it('takes the message box’s place in WhatsApp’s layout, above its wallpaper, render after render', () => {
@@ -235,21 +271,21 @@ describe('renderAssistantBar', () => {
     t.stored().parts.input.value = 'half typed';
     document.querySelector('#main')?.replaceChildren();
     document.querySelector('#main')?.insertAdjacentHTML('beforeend', '<footer></footer>');
-    expect(t.render()).toBe(true);
+    expect(t.render()).toBe('placed');
     expect(footer()?.previousElementSibling).toBe(host);
     expect(t.stored().parts.input.value).toBe('half typed');
   });
 
   it('takes the bar away when it is hidden or no chat is open, and reports it', () => {
     const t = setup();
-    expect(t.render({ ...CONTENT, visible: false })).toBe(false);
+    expect(t.render({ ...CONTENT, visible: false })).toBe('away');
     expect(t.scope['bar']).toBeUndefined();
     t.render();
-    expect(t.render({ ...CONTENT, visible: false })).toBe(false);
+    expect(t.render({ ...CONTENT, visible: false })).toBe('away');
     expect(t.stored().host.isConnected).toBe(false);
     t.render();
     footer()?.remove();
-    expect(t.render()).toBe(false);
+    expect(t.render()).toBe('away');
     expect(t.stored().host.isConnected).toBe(false);
   });
 });
@@ -414,7 +450,7 @@ describe('assistantBarRender', () => {
       expect(code).toContain(JSON.stringify(LANDMARKS.composerFooter));
       // Only the page's document and the window's own functions are in scope, as in the adapter's isolated world.
       const world: Record<string, unknown> = { document, getComputedStyle };
-      expect(runInNewContext(code, world)).toBe(true);
+      expect(runInNewContext(code, world)).toBe('placed');
       expect(footer()?.previousElementSibling?.tagName).toBe('DIV');
       expect(Object.keys(world)).toEqual([
         'document',

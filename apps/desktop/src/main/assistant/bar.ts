@@ -82,6 +82,8 @@ interface BarContext {
   blocked: boolean;
   /** A request runs; the next waits for it. */
   busy: boolean;
+  /** WhatsApp drew the chat again while a request ran, so the chat is checked once it ends. */
+  redrawn: boolean;
 }
 
 const text = en.assistant;
@@ -453,6 +455,8 @@ export interface AssistantBar {
   readonly button: (id: string) => Promise<void>;
   /** The private model changed; its download's progress shows while the bar has nothing else to. */
   readonly privateModelChanged: () => Promise<void>;
+  /** WhatsApp drew the open chat again, which it does when the user opens another. */
+  readonly chatRedrawn: () => Promise<void>;
 }
 
 /** Rewrites the draft in one of the offered ways; anything else is dropped. */
@@ -494,6 +498,43 @@ async function once(bar: BarContext, work: () => Promise<unknown>): Promise<void
   } finally {
     bar.busy = false;
   }
+  if (bar.redrawn) {
+    bar.redrawn = false;
+    await once(bar, () => forgetOtherChat(bar));
+  }
+}
+
+/** Whether the bar shows something made for, or asked about, its chat. */
+const aboutItsChat = (bar: BarContext): boolean =>
+  bar.chat !== null &&
+  (bar.state.suggestions.length > 0 || bar.state.result !== null || bar.state.buttons.length > 0);
+
+/**
+ * Takes away what the bar shows for its chat once another chat is open, so
+ * suggestions never sit above the wrong chat. The open chat is read only
+ * then, and a chat that cannot be read leaves the bar as it is.
+ */
+async function forgetOtherChat(bar: BarContext): Promise<void> {
+  if (!aboutItsChat(bar)) {
+    return;
+  }
+  const chat = await bar.deps.accounts.readActiveChat(1).catch(() => undefined);
+  if (chat === undefined || chat?.name === bar.chat) {
+    return;
+  }
+  bar.chat = null;
+  bar.kept = '';
+  say(bar, { status: '' });
+  await refresh(bar);
+}
+
+/** WhatsApp drew the chat again; a request that runs is let finish first. */
+function chatRedrawn(bar: BarContext): Promise<void> {
+  if (bar.busy) {
+    bar.redrawn = true;
+    return Promise.resolve();
+  }
+  return once(bar, () => forgetOtherChat(bar));
 }
 
 /** Download progress shows while the bar has nothing else to; a ready model clears it. */
@@ -528,6 +569,7 @@ export function createAssistantBar(deps: BarDependencies): AssistantBar {
     fix: 'settings',
     blocked: false,
     busy: false,
+    redrawn: false,
   };
   const chatRequest = (request: ChatRequest) => once(bar, () => aboutChat(bar, request));
   return {
@@ -549,5 +591,6 @@ export function createAssistantBar(deps: BarDependencies): AssistantBar {
     choose: (value) => once(bar, () => choose(bar, value)),
     button: (id) => press(bar, id),
     privateModelChanged: () => followDownload(bar),
+    chatRedrawn: () => chatRedrawn(bar),
   };
 }

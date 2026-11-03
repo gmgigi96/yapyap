@@ -239,3 +239,51 @@ test('offers the model server it finds in the Welcome, and uses it on one click'
     server.close();
   }
 });
+
+test('opens the page to get a key in the default browser', async ({ app }) => {
+  await app.evaluate(({ shell }) => {
+    const opened: string[] = [];
+    Object.assign(globalThis, { openedLinks: opened });
+    shell.openExternal = (url: string) => {
+      opened.push(url);
+      return Promise.resolve();
+    };
+  });
+  const settings = await openAssistantSettings(app);
+  await settings.getByRole('link', { name: 'Get a key from Anthropic' }).click();
+  await expect
+    .poll(() =>
+      app.evaluate(() => (globalThis as unknown as { openedLinks: string[] }).openedLinks),
+    )
+    .toEqual(['https://console.anthropic.com/settings/keys']);
+});
+
+test('takes suggestions away when another chat opens', async ({ app, window }) => {
+  await expect(window.getByTestId('fake-whatsapp')).toBeVisible();
+  await readyClaude(app, CLAUDE_ANSWER);
+  await clickInBar(app, window, 'Suggest replies');
+  await clickInBar(app, window, 'Allow here');
+  await expect.poll(() => barNames(app)).toContain('Can we do 9?');
+  // A virtual display without a window manager focuses nothing on its own.
+  const main = await mainWindow(app);
+  await expect
+    .poll(() =>
+      main.evaluate((owner) => {
+        owner.focus();
+        return owner.isFocused();
+      }),
+    )
+    .toBe(true);
+  // WhatsApp draws the conversation anew for another chat, dropping the bar.
+  await window.evaluate(() => {
+    const parts = [
+      ...document.querySelectorAll(
+        '#main > [data-testid="wallpaper"], #main > header, #main > footer',
+      ),
+    ].map((part) => part.cloneNode(true) as Element);
+    parts.find((part) => part.matches('header'))?.replaceChildren('Test Chat Three');
+    document.querySelector('#main')?.replaceChildren(...parts);
+  });
+  await expect.poll(() => barNames(app), { timeout: 10_000 }).not.toContain('Can we do 9?');
+  expect(await barNames(app)).toContain('Suggest replies');
+});

@@ -468,6 +468,67 @@ describe('createAssistantBar', () => {
     expect(t.last().suggestions).toHaveLength(2);
   });
 
+  it('takes suggestions away once another chat is open, and keeps them in their own chat', async () => {
+    const t = harness();
+    t.allow();
+    await t.bar.suggest();
+    await t.bar.chatRedrawn();
+    expect(t.deps.accounts.readActiveChat).toHaveBeenLastCalledWith(1);
+    expect(t.last().suggestions).toEqual(['Yes, 8 works!', 'Can we do 9?']);
+    t.setChat({ ...CHAT, name: 'Bo' });
+    await t.bar.chatRedrawn();
+    expect(t.last().suggestions).toEqual([]);
+    expect(t.last().status).toBe('');
+    vi.mocked(t.deps.accounts.readActiveChat).mockClear();
+    await t.bar.chatRedrawn();
+    expect(t.deps.accounts.readActiveChat).not.toHaveBeenCalled();
+  });
+
+  it('takes a summary or a consent question away when its chat closes, but not the bar', async () => {
+    const t = harness('- Dinner at 8.');
+    t.allow();
+    await t.bar.summarize();
+    t.setChat(null);
+    await t.bar.chatRedrawn();
+    expect(t.last().result).toBeNull();
+    t.setChat({ ...CHAT, name: 'Bo' });
+    await t.bar.suggest();
+    expect(ids(t.last())).toEqual(['allow', 'what-sent']);
+    t.setChat(CHAT);
+    await t.bar.chatRedrawn();
+    expect(ids(t.last())).toEqual([]);
+    await t.bar.send(0);
+    vi.mocked(t.deps.accounts.readActiveChat).mockClear();
+    await t.bar.chatRedrawn();
+    expect(t.deps.accounts.readActiveChat).not.toHaveBeenCalled();
+  });
+
+  it('checks the chat once the request that runs ends, and leaves a chat it cannot read', async () => {
+    const t = harness();
+    t.allow();
+    let finish: (answer: string) => void = () => undefined;
+    vi.mocked(t.deps.core.ask).mockImplementationOnce(
+      () =>
+        new Promise((resolve) => {
+          finish = resolve;
+        }),
+    );
+    const asking = t.bar.suggest();
+    await vi.waitFor(() => {
+      expect(t.deps.core.ask).toHaveBeenCalledOnce();
+    });
+    await t.bar.chatRedrawn();
+    t.setChat({ ...CHAT, name: 'Bo' });
+    finish('One');
+    await asking;
+    expect(t.last().suggestions).toEqual([]);
+    t.setChat(CHAT);
+    await t.bar.suggest();
+    vi.mocked(t.deps.accounts.readActiveChat).mockRejectedValueOnce(new Error('unreadable'));
+    await t.bar.chatRedrawn();
+    expect(t.last().suggestions).toEqual(['Yes, 8 works!', 'Can we do 9?']);
+  });
+
   it('runs one request at a time, and accepts only the buttons it shows', async () => {
     const t = harness();
     t.allow();
