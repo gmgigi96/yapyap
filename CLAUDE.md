@@ -133,7 +133,10 @@ Update this table in the PR that adds a command.
   only matters for code or packaging gets `needs: changes` and a condition on
   `needs.changes.outputs` (ADR 0007). Required checks of other workflows
   live in `.github/rulesets/master.json`; re-apply it after changing it (see
-  CONTRIBUTING).
+  CONTRIBUTING). SonarQube Cloud's own check is required too, so the
+  `SonarQube Cloud` job analyzes every pull request; forks get no secrets,
+  and `sonar-fork.yml` analyzes them on `workflow_run` without ever running
+  their code (ADR 0010).
 - CI jobs set up pnpm, Node.js and the install with the local
   `.github/actions/setup` action after checkout; bump its action pins there.
   Vitest projects and the mutation config's test files both come from

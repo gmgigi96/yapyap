@@ -1,0 +1,94 @@
+name: SonarQube Cloud for forks
+
+# Pull requests from forks get no secrets, so CI cannot analyze them. This
+# runs once their CI ends, in this repository and with the token, so it must
+# never run their code: dependencies and the analysis settings come from
+# master, installed before their files arrive, and nothing after that runs a
+# script of theirs. SonarQube Cloud then posts its check on the pull request,
+# which the ruleset requires (ADR 0010).
+on:
+  workflow_run:
+    workflows: [CI]
+    types: [completed]
+
+permissions:
+  contents: read
+
+jobs:
+  analyze:
+    name: SonarQube Cloud (fork)
+    if: >-
+      github.event.workflow_run.event == 'pull_request' &&
+      github.event.workflow_run.head_repository.full_name != github.repository &&
+      github.event.workflow_run.conclusion != 'cancelled'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      actions: read
+      pull-requests: read
+    env:
+      GH_TOKEN: ${{ github.token }}
+      HEAD_REPO: ${{ github.event.workflow_run.head_repository.full_name }}
+      HEAD_OWNER: ${{ github.event.workflow_run.head_repository.owner.login }}
+      HEAD_BRANCH: ${{ github.event.workflow_run.head_branch }}
+      HEAD_SHA: ${{ github.event.workflow_run.head_sha }}
+      RUN_ID: ${{ github.event.workflow_run.id }}
+    steps:
+      # The branch name is the fork's to choose, so it is checked before it
+      # reaches the scanner's arguments, and the pull request must still
+      # point at the commit CI ran on.
+      - name: Find the pull request
+        id: pr
+        run: |
+          if ! [[ "$HEAD_BRANCH" =~ ^[A-Za-z0-9._/-]+$ ]]; then
+            echo "::error::Unexpected branch name; not analyzing."
+            exit 1
+          fi
+          number=$(gh api "repos/$GITHUB_REPOSITORY/pulls?state=open&head=$HEAD_OWNER:$HEAD_BRANCH" \
+            --jq "[.[] | select(.head.sha == \"$HEAD_SHA\")][0].number // empty")
+          if [ -z "$number" ]; then
+            echo "::notice::No open pull request is at $HEAD_SHA any more; nothing to analyze."
+          fi
+          echo "number=$number" >> "$GITHUB_OUTPUT"
+          coverage=$(gh api "repos/$GITHUB_REPOSITORY/actions/runs/$RUN_ID/artifacts" \
+            --jq '[.artifacts[] | select(.name == "coverage")] | length')
+          echo "coverage=$coverage" >> "$GITHUB_OUTPUT"
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        if: steps.pr.outputs.number != ''
+        with:
+          ref: master
+          # Full history, so new code and blame are attributed correctly.
+          fetch-depth: 0
+          persist-credentials: false
+      # master's lockfile and install scripts, before any file of the fork's
+      # is on disk; the analyzer resolves types through node_modules.
+      - uses: ./.github/actions/setup
+        if: steps.pr.outputs.number != ''
+      # node_modules is ignored, so switching to the fork's commit keeps
+      # master's. sonar-project.properties can name programs the scanner
+      # runs, so master's copy replaces the fork's.
+      - name: Check out the pull request's files
+        if: steps.pr.outputs.number != ''
+        run: |
+          git fetch --no-tags "https://github.com/$HEAD_REPO.git" "$HEAD_SHA"
+          git checkout --detach "$HEAD_SHA"
+          git checkout origin/master -- sonar-project.properties
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        if: steps.pr.outputs.number != '' && steps.pr.outputs.coverage != '0'
+        with:
+          name: coverage
+          path: coverage
+          run-id: ${{ github.event.workflow_run.id }}
+          github-token: ${{ github.token }}
+      - name: Analyze
+        if: steps.pr.outputs.number != ''
+        uses: SonarSource/sonarqube-scan-action@4d1dc0c91ee400dcf8a6dddf2f705ac36542e304 # v8.4.0
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+        with:
+          args: >-
+            -Dsonar.qualitygate.wait=true
+            -Dsonar.scm.revision=${{ env.HEAD_SHA }}
+            -Dsonar.pullrequest.key=${{ steps.pr.outputs.number }}
+            -Dsonar.pullrequest.branch=${{ env.HEAD_BRANCH }}
+            -Dsonar.pullrequest.base=master

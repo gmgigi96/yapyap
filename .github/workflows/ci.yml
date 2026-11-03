@@ -95,32 +95,45 @@ jobs:
   sonar:
     name: SonarQube Cloud
     needs: [changes, test]
-    if: needs.changes.outputs.code == 'true'
+    # Every pull request is analyzed, even one that changes no code, because
+    # the ruleset requires SonarQube Cloud's own check on each of them.
+    if: ${{ !cancelled() && needs.changes.result == 'success' && needs.test.result != 'failure' }}
     runs-on: ubuntu-latest
     steps:
+      # Pull requests from forks get no secrets: sonar-fork.yml analyzes them
+      # once this run ends, and their merge waits for that analysis's check.
+      - name: Leave forks to their own analysis
+        id: fork
+        if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name != github.repository
+        run: |
+          echo "fork=true" >> "$GITHUB_OUTPUT"
+          echo "::notice::This pull request comes from a fork: the SonarQube Cloud for forks workflow analyzes it after this run."
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        if: steps.fork.outputs.fork != 'true'
         with:
           # Full history, so new code and blame are attributed correctly.
           fetch-depth: 0
           persist-credentials: false
       # The analyzer resolves types through node_modules.
       - uses: ./.github/actions/setup
+        if: steps.fork.outputs.fork != 'true'
       - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        if: steps.fork.outputs.fork != 'true' && needs.test.result == 'success'
         with:
           name: coverage
           path: coverage
+      # A run that cannot analyze must not pass as if it had.
       - name: Check for the analysis token
-        id: token
+        if: steps.fork.outputs.fork != 'true'
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
         run: |
-          if [ -n "$SONAR_TOKEN" ]; then
-            echo "present=true" >> "$GITHUB_OUTPUT"
-          else
-            echo "::notice::SONAR_TOKEN is missing (pull requests from forks get no secrets): skipping SonarQube Cloud analysis (see CONTRIBUTING)."
+          if [ -z "$SONAR_TOKEN" ]; then
+            echo "::error::SONAR_TOKEN is missing, so SonarQube Cloud cannot analyze this change (see CONTRIBUTING)."
+            exit 1
           fi
       - name: Analyze and wait for the quality gate
-        if: steps.token.outputs.present == 'true'
+        if: steps.fork.outputs.fork != 'true'
         uses: SonarSource/sonarqube-scan-action@4d1dc0c91ee400dcf8a6dddf2f705ac36542e304 # v8.4.0
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
