@@ -44,7 +44,11 @@ function engineWasm(): Plugin {
 }
 
 export default defineConfig({
-  main: {},
+  // The main process's dependencies are bundled like YapYap's own code rather
+  // than shipped as node_modules: the package then holds only the code that
+  // runs, not the SDKs' sources, type definitions and source maps. Bundled
+  // code keeps its licenses in a notice file next to it.
+  main: { build: { externalizeDeps: false, license: { fileName: 'licenses.md' } } },
   preload: {
     build: {
       rolldownOptions: {
@@ -62,6 +66,7 @@ export default defineConfig({
     root: RENDERER,
     plugins: [appIcon(), engineWasm()],
     build: {
+      license: { fileName: 'licenses.md' },
       // Every HTML shell in the renderer folder is a chrome page.
       rolldownOptions: {
         input: Object.fromEntries(

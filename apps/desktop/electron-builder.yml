@@ -4,9 +4,12 @@ copyright: Copyright © Vasco Guita
 directories:
   output: release
   buildResources: build
+# electron-vite bundles every dependency into out/, so node_modules would
+# only add sources nothing loads.
 files:
   - out/**
   - package.json
+  - '!**/node_modules/**'
 asar: true
 artifactName: ${productName}-${version}-${os}-${arch}.${ext}
 protocols:
