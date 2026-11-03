@@ -17,4 +17,4 @@ const release: AurRelease = {
 };
 writeFileSync(join(String(output), 'PKGBUILD'), pkgbuild(release));
 writeFileSync(join(String(output), '.SRCINFO'), srcinfo(release));
-console.log(`Wrote PKGBUILD and .SRCINFO for yapyap-bin ${release.version}.`);
+console.info(`Wrote PKGBUILD and .SRCINFO for yapyap-bin ${release.version}.`);

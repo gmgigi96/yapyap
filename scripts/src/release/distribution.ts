@@ -1,6 +1,7 @@
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import Schema from 'typebox/schema';
+import { RELEASE_DOWNLOADS, RELEASE_PAGES } from './releases.ts';
 import type { Channel } from './repository.ts';
 
 /** A YapYap release, with the SHA-256 of each file its `SHA256SUMS` lists. */
@@ -24,7 +25,6 @@ export const ABOUT = {
   license: 'MIT',
 } as const;
 
-const DOWNLOADS = 'https://github.com/vascoguita/yapyap/releases/download';
 // Betas are numbered by the Beta release workflow, and nothing else is published.
 const VERSION = /^\d+\.\d+\.\d+(-beta\.\d+)?$/;
 const SUM_LINE = /^([0-9a-f]{64}) [ *]([\w.@-]+)$/;
@@ -65,12 +65,12 @@ export function download(release: DistributionRelease, suffix: string): Download
   if (sha256 === undefined) {
     throw new Error(`SHA256SUMS lists no ${file}`);
   }
-  return { url: `${DOWNLOADS}/v${release.version}/${file}`, sha256 };
+  return { url: `${RELEASE_DOWNLOADS}/v${release.version}/${file}`, sha256 };
 }
 
 /** The release notes of a version. */
 export function releaseNotesUrl(version: string): string {
-  return `https://github.com/vascoguita/yapyap/releases/tag/v${version}`;
+  return `${RELEASE_PAGES}/v${version}`;
 }
 
 /** Throws unless `value` matches the vendored JSON Schema in `schemaFile`. */
