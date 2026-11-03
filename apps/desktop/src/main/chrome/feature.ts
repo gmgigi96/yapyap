@@ -79,8 +79,7 @@ import {
   type IpcMainPort,
 } from '../ipc/chrome.ts';
 import {
-  createChromeWindowSlot,
-  openChromeWindow,
+  chromeWindowOpener,
   openPromptWindow,
   type ChromePage,
   type ChromeWindowDependencies,
@@ -355,11 +354,12 @@ export interface ChromeFeature {
   ) => ChromeRuntime;
 }
 
-type FactsSource = Pick<ChromeFeatureDependencies, 'writeClipboard'> & {
+/** The dependencies, with the facts completed by the graphics mode startup settled on. */
+type ChromeDependencies = Omit<ChromeFeatureDependencies, 'facts'> & {
   readonly facts: () => RuntimeFacts;
 };
 
-function aboutHandlers(deps: FactsSource): ChromeHandler[] {
+function aboutHandlers(deps: ChromeDependencies): ChromeHandler[] {
   const info = () => buildAboutInfo(deps.facts());
   return [
     { channel: CHROME_CHANNELS.aboutInfo, accepts: noArguments, handle: info },
@@ -393,7 +393,7 @@ function recoveryHandlers(recoveries: ReadonlyMap<object, Recovery>): ChromeHand
 }
 
 function recoveryAttacher(
-  deps: Omit<ChromeFeatureDependencies, 'facts'> & FactsSource,
+  deps: ChromeDependencies,
   renderer: RendererOptions,
   views: ViewRegistry,
   warn: (message: string) => void,
@@ -438,18 +438,7 @@ function sourcePicker(
       }),
     openPicker: (owner) => {
       const parent = deps.windowOf(owner);
-      const window = openChromeWindow(windows, PICKER_PAGE, parent == null ? {} : { parent });
-      return {
-        webContents: window.webContents,
-        close: () => {
-          if (!window.isDestroyed()) {
-            window.close();
-          }
-        },
-        onClosed: (listener) => {
-          window.once('closed', listener);
-        },
-      };
+      return openPromptWindow(windows, PICKER_PAGE, parent == null ? {} : { parent });
     },
   });
 }
@@ -509,10 +498,7 @@ function quietActions(
   };
 }
 
-function diagnostics(
-  deps: Omit<ChromeFeatureDependencies, 'facts'> & FactsSource,
-  page?: string,
-): string {
+function diagnostics(deps: ChromeDependencies, page?: string): string {
   const info = buildAboutInfo(deps.facts());
   const updates = decideUpdatePolicy(info.channel, deps.installEvidence());
   const runtime = [`GPU ${summarizeGpu(deps.gpuStatus())}`, describeUpdatePolicy(updates)];
@@ -525,7 +511,7 @@ function diagnostics(
 
 /** The first WhatsApp view is the one diagnostics describe until accounts arrive. */
 async function currentDiagnostics(
-  deps: Omit<ChromeFeatureDependencies, 'facts'> & FactsSource,
+  deps: ChromeDependencies,
   pages: readonly AdapterPage[],
 ): Promise<string> {
   const page = pages[0];
@@ -534,22 +520,12 @@ async function currentDiagnostics(
 }
 
 /** Report a Problem's operations, describing the WhatsApp views open now. */
-function reportHandlers(
-  deps: Omit<ChromeFeatureDependencies, 'facts'> & FactsSource,
-  pages: readonly AdapterPage[],
-): ChromeHandler[] {
+function reportHandlers(deps: ChromeDependencies, pages: readonly AdapterPage[]): ChromeHandler[] {
   return problemReportHandlers({
     diagnostics: () => currentDiagnostics(deps, pages),
     writeClipboard: deps.writeClipboard,
     openExternal: deps.openExternal,
   });
-}
-
-async function writeDiagnostics(
-  deps: Omit<ChromeFeatureDependencies, 'facts'> & FactsSource,
-  pages: readonly AdapterPage[],
-): Promise<unknown> {
-  return deps.writeClipboard(await currentDiagnostics(deps, pages));
 }
 
 function chromeWindows(
@@ -578,7 +554,7 @@ function chromeOpeners(
   windows: ChromeWindowDependencies,
   { openSettings }: { openSettings: () => void },
 ): ChromeOpeners {
-  const opener = (page: ChromePage) => createChromeWindowSlot(windows, page).open;
+  const opener = (page: ChromePage) => chromeWindowOpener(windows, page);
   return {
     openSettings,
     openAccounts: opener(ACCOUNTS_PAGE),
@@ -620,13 +596,13 @@ type MenuAssistant = Pick<AssistantChrome, 'actions' | 'refreshBar'>;
 
 /** The menu's actions for the accounts as they are. */
 function menuActionsOf(
-  deps: Omit<ChromeFeatureDependencies, 'facts'> & FactsSource,
+  deps: ChromeDependencies,
   slots: Pick<ChromeSlots, 'recoveries' | 'pages'>,
   openers: ChromeOpeners,
   assistant: MenuAssistant,
   warn: (message: string) => void,
 ): (menu: AccountMenu | undefined) => MenuActions {
-  const copyDiagnostics = diagnosticsCopier(deps, slots.pages, deps.notify, warn);
+  const copyDiagnostics = diagnosticsCopier(deps, slots.pages, warn);
   const act = (run: () => Promise<void>) => () => {
     run().catch(() => {
       warn('An assistant action failed.');
@@ -665,11 +641,10 @@ function onShortcutChange(settings: SettingsService, rebuild: () => void): void 
 
 /**
  * Sets the application menu now, without accounts, and again whenever the
- * accounts or a shortcut change; returns how to give
- * it the accounts.
+ * accounts or a shortcut change; returns how to give it the accounts.
  */
 function accountMenuSetter(
-  deps: Omit<ChromeFeatureDependencies, 'facts'> & FactsSource,
+  deps: ChromeDependencies,
   slots: Pick<ChromeSlots, 'recoveries' | 'pages' | 'accounts'>,
   openers: ChromeOpeners,
   assistant: MenuAssistant,
@@ -701,7 +676,7 @@ function serveChromePages(deps: ChromeFeatureDependencies): void {
 }
 
 function allHandlers(
-  deps: Omit<ChromeFeatureDependencies, 'facts'> & FactsSource,
+  deps: ChromeDependencies,
   { recoveries, pages, picker, chats, accounts, sidebar }: ChromeSlots,
 ): ChromeHandler[] {
   return [
@@ -729,21 +704,22 @@ function allHandlers(
 
 /** Copies the diagnostics, telling the log when it cannot. */
 function diagnosticsCopier(
-  deps: Parameters<typeof writeDiagnostics>[0],
-  pages: Parameters<typeof writeDiagnostics>[1],
-  notify: (message: string) => void,
+  deps: ChromeDependencies,
+  pages: readonly AdapterPage[],
   warn: (message: string) => void,
 ): () => void {
   return () => {
-    writeDiagnostics(deps, pages).then(
-      () => {
-        notify(en.recovery.diagnosticsCopied);
-      },
-      () => {
-        warn('Could not copy the diagnostics.');
-        notify(en.recovery.diagnosticsNotCopied);
-      },
-    );
+    currentDiagnostics(deps, pages)
+      .then((text) => deps.writeClipboard(text))
+      .then(
+        () => {
+          deps.notify(en.recovery.diagnosticsCopied);
+        },
+        () => {
+          warn('Could not copy the diagnostics.');
+          deps.notify(en.recovery.diagnosticsNotCopied);
+        },
+      );
   };
 }
 
@@ -853,7 +829,7 @@ function standbyWindows(
   openSettings: () => void;
   proxyLogin: ProxyLoginPrompt;
 } {
-  const settingsOpener = createChromeWindowSlot(windows, SETTINGS_PAGE).open;
+  const settingsOpener = chromeWindowOpener(windows, SETTINGS_PAGE);
   return {
     openSettings: settingsOpener,
     assistant: assistantOf(deps, windows, accounts, settingsOpener),
@@ -902,8 +878,8 @@ function startChrome(
     },
     setAccountMenu: accountMenuSetter(withGraphics, slots, openers, standby.assistant, warn),
     openSettings: openers.openSettings,
-    openWelcome: createChromeWindowSlot(windows, WELCOME_PAGE).open,
-    openSpellingLanguages: createChromeWindowSlot(windows, SPELLING_LANGUAGES_PAGE).open,
+    openWelcome: chromeWindowOpener(windows, WELCOME_PAGE),
+    openSpellingLanguages: chromeWindowOpener(windows, SPELLING_LANGUAGES_PAGE),
     askProxyLogin: standby.proxyLogin.ask,
     attachSidebar: (create) => attachSidebar(create(renderer), views, sidebar, warn),
     attachAssistantBar: standby.assistant.attachBar,
