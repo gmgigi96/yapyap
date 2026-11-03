@@ -51,7 +51,7 @@ const SpecSchema = Type.Object(
           },
           { additionalProperties: false },
         ),
-        { minItems: 1, maxItems: MAX_TOKEN_CHATS, uniqueItems: true },
+        { maxItems: MAX_TOKEN_CHATS, uniqueItems: true },
       ),
     ]),
     limits: LimitsSchema,
@@ -68,7 +68,7 @@ type CheckedSpec = Static<typeof SpecSchema>;
 
 /** Why YapYap refuses a token, as a key of the catalog's `agents.problems`. */
 export type SpecProblem =
-  'invalid' | 'unknownAccount' | 'invalidPhone' | 'chatsNeeded' | 'sendingExpiry';
+  'invalid' | 'noChats' | 'unknownAccount' | 'invalidPhone' | 'chatsNeeded' | 'sendingExpiry';
 
 const sends = (spec: CheckedSpec): boolean => spec.scopes.includes('messages:send');
 
@@ -100,6 +100,7 @@ const RULES: readonly (readonly [
   (spec: CheckedSpec, accounts: ReadonlySet<string>) => boolean,
 ])[] = [
   ['invalid', (spec) => spec.name.trim() === '' || emptyEntry(spec)],
+  ['noChats', (spec) => spec.chats !== 'all' && spec.chats.length === 0],
   ['unknownAccount', (spec, accounts) => spec.accounts.some((account) => !accounts.has(account))],
   ['invalidPhone', badPhone],
   ['chatsNeeded', unlisted],

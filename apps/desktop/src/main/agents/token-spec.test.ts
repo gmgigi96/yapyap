@@ -31,13 +31,16 @@ describe('checkSpec', () => {
     ['an unknown scope', { scopes: ['messages:delete'] }],
     ['a repeated scope', { scopes: ['chat:open', 'chat:open'] }],
     ['no accounts', { accounts: [] }],
-    ['an empty chat list', { chats: [] }],
     ['a limit of zero', { limits: { ...DEFAULT_AGENT_LIMITS, callsPerMinute: 0 } }],
     ['a fractional limit', { limits: { ...DEFAULT_AGENT_LIMITS, sendsPerDay: 1.5 } }],
     ['an unoffered expiry', { expiresInDays: 14 }],
     ['an extra field', { owner: 'someone' }],
   ])('calls %s invalid', (_case, overrides) => {
     expect(checkSpec({ ...spec(), ...overrides }, ACCOUNTS)).toBe('invalid');
+  });
+
+  it('asks for a chat when the list of chats is empty', () => {
+    expect(checkSpec(spec({ chats: [] }), ACCOUNTS)).toBe('noChats');
   });
 
   it('refuses what is not an object at all', () => {

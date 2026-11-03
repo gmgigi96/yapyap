@@ -549,6 +549,7 @@ export interface Messages {
     readonly revokedToken: string;
     readonly problems: {
       readonly invalid: string;
+      readonly noChats: string;
       readonly unknownAccount: string;
       readonly invalidPhone: string;
       readonly chatsNeeded: string;

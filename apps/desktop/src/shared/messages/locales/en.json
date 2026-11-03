@@ -631,6 +631,7 @@
     "revokedToken": "A revoked token",
     "problems": {
       "invalid": "Give the token a name, at least one thing it may do, and at least one account.",
+      "noChats": "Add at least one chat: type its name or number, then click Add.",
       "unknownAccount": "One of the accounts no longer exists.",
       "invalidPhone": "One of the numbers is not an international number. Start it with + and the country code, such as +44 7700 900123.",
       "chatsNeeded": "A token that opens chats or sends messages must list the chats it may reach, by name or by number.",

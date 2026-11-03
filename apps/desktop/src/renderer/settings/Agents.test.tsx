@@ -277,8 +277,12 @@ describe('creating a token', () => {
     });
     fireEvent.input(number, { target: { value: '+44 7700 900123' } });
     fireEvent.click(button('Add'));
+    // Enter adds the chat rather than creating the token before it is listed.
+    fireEvent.keyDown(number, { key: 'Enter' });
+    expect(t.agents.create).not.toHaveBeenCalled();
+    fireEvent.keyDown(name, { key: 'a' });
     fireEvent.input(number, { target: { value: '+44 7700 900456' } });
-    fireEvent.click(button('Add'));
+    fireEvent.keyDown(number, { key: 'Enter' });
     // The same entry again replaces it rather than listing it twice.
     fireEvent.input(number, { target: { value: '+44 7700 900456' } });
     fireEvent.click(button('Add'));

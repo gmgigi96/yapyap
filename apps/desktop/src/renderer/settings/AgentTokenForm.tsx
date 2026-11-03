@@ -201,6 +201,7 @@ function ChatField(props: {
   readonly value: string;
   readonly max: number;
   readonly onInput: Setter<string>;
+  readonly onEnter: () => void;
 }): JSX.Element {
   return (
     <input
@@ -211,6 +212,13 @@ function ChatField(props: {
       maxLength={props.max}
       onInput={(event) => {
         props.onInput(event.currentTarget.value);
+      }}
+      onKeyDown={(event) => {
+        // Enter would submit the whole form before the chat is in the list.
+        if (event.key === 'Enter') {
+          event.preventDefault();
+          props.onEnter();
+        }
       }}
     />
   );
@@ -225,6 +233,9 @@ function AddChat(
   const [phone, setPhone] = useState('');
   const empty = name.trim() === '' && phone.trim() === '';
   const add = (): void => {
+    if (empty) {
+      return;
+    }
     const entry = { name: name.trim() || null, phone: phone.trim() || null };
     onChange([...listed.filter((chat) => chatLabel(chat) !== chatLabel(entry)), entry]);
     setName('');
@@ -233,8 +244,20 @@ function AddChat(
   return (
     <div class="add-chat">
       <p class="hint">{text.form.chatHint}</p>
-      <ChatField label={text.form.chatName} value={name} max={256} onInput={setName} />{' '}
-      <ChatField label={text.form.chatPhone} value={phone} max={64} onInput={setPhone} />{' '}
+      <ChatField
+        label={text.form.chatName}
+        value={name}
+        max={256}
+        onInput={setName}
+        onEnter={add}
+      />{' '}
+      <ChatField
+        label={text.form.chatPhone}
+        value={phone}
+        max={64}
+        onInput={setPhone}
+        onEnter={add}
+      />{' '}
       <button type="button" disabled={empty} onClick={add}>
         {text.form.addChat}
       </button>{' '}
