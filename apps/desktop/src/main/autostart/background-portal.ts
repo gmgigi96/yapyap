@@ -1,6 +1,7 @@
 import { randomBytes } from 'node:crypto';
 import { createConnection } from 'node:net';
 import { variant, type DBusValue, type Variant } from './dbus-codec.ts';
+import type { Environment } from '../environment.ts';
 import { connectBus, type Bus } from './dbus-client.ts';
 
 const BUS = {
@@ -108,7 +109,7 @@ async function openSessionBus(address: string, uid: number): Promise<Bus> {
 
 /** What reaching the session bus needs from the process. */
 export interface BusProcess {
-  readonly env: Readonly<Record<string, string | undefined>>;
+  readonly env: Environment;
   readonly getuid?: () => number;
 }
 

@@ -1,4 +1,5 @@
 import { isAbsolute, join } from 'node:path';
+import type { Environment } from '../environment.ts';
 import { APP_ID, PRODUCT_NAME } from '../identity/product.ts';
 import type { AutostartPort } from './autostart.ts';
 
@@ -11,7 +12,7 @@ interface XdgFiles {
 }
 
 export interface XdgAutostartOptions {
-  readonly env: Readonly<Record<string, string | undefined>>;
+  readonly env: Environment;
   readonly home: string;
   readonly execPath: string;
   readonly files: XdgFiles;

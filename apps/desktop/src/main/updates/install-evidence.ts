@@ -1,8 +1,9 @@
+import type { Environment } from '../environment.ts';
 import { isDeveloperIdSigned, type InstallEvidence } from './update-policy.ts';
 
 export interface EvidenceSources {
   readonly platform: string;
-  readonly env: Readonly<Record<string, string | undefined>>;
+  readonly env: Environment;
   readonly exists: (path: string) => boolean;
   /** What `codesign -dv` prints about the app bundle; it writes to stderr. */
   readonly codesign: () => string;

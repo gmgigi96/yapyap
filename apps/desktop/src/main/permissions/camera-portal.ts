@@ -1,3 +1,5 @@
+import { isSet, type Environment } from '../environment.ts';
+
 /** Chromium's command line, as far as features go. */
 export interface FeatureSwitches {
   getSwitchValue(name: string): string;
@@ -13,11 +15,8 @@ const PIPEWIRE_CAMERA = 'WebRtcPipeWireCamera';
  * works without a portal. Features already named on the command line stay:
  * Chromium keeps only the last `--enable-features`.
  */
-export function useCameraPortal(
-  commandLine: FeatureSwitches,
-  env: Readonly<Record<string, string | undefined>>,
-): void {
-  if ((env['FLATPAK_ID'] ?? '') === '') {
+export function useCameraPortal(commandLine: FeatureSwitches, env: Environment): void {
+  if (!isSet(env, 'FLATPAK_ID')) {
     return;
   }
   const named = commandLine.getSwitchValue('enable-features');
