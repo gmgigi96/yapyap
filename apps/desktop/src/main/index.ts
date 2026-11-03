@@ -43,7 +43,6 @@ import { join } from 'node:path';
 import { createDownloadList } from './downloads/download-list.ts';
 import { downloadsFolder } from './downloads/downloads.ts';
 import { lastFolderIn } from './downloads/last-folder.ts';
-import { panelPlaceIn } from './chrome/quick-panel.ts';
 import { openSecretStore, secretFileAt } from './secrets/secret-store.ts';
 import { readInstallChannel } from './about/about-info.ts';
 import { loadAccounts, saveAccounts } from './accounts/accounts-file.ts';
@@ -100,7 +99,6 @@ const WINDOW_STATE = join(app.getPath('userData'), 'window-state.json');
 const DOWNLOADS_STATE = join(app.getPath('userData'), 'downloads.json');
 // Kept apart from settings, so importing a settings file can never bring code that runs in WhatsApp.
 const CUSTOM_CODE = join(app.getPath('userData'), 'custom-code.json');
-const QUICK_PANEL_STATE = join(app.getPath('userData'), 'quick-panel.json');
 const CHAT_LIST_STATE = join(app.getPath('userData'), 'chat-list.json');
 // The assistant's state and allowed chats are no preferences, so they live apart from settings (ADR 0017).
 const ASSISTANT_STATE = join(app.getPath('userData'), 'assistant.json');
@@ -230,9 +228,6 @@ const chrome = createChromeFeature({
   settings,
   chooseFolder,
   installEvidence,
-  screens: () =>
-    [screen.getPrimaryDisplay(), ...screen.getAllDisplays()].map((display) => display.workArea),
-  quickPanelPlace: panelPlaceIn(textFileAt(QUICK_PANEL_STATE)),
   settingEffects: { 'general.autostart': applyAutostart(autostart, warn) },
   hiddenSettings: settingsIgnoredBy(updatePolicy),
   registerSchemesAsPrivileged: (schemes) => {

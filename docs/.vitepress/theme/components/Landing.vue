@@ -28,10 +28,6 @@ const everyday: readonly Highlight[] = [
     text: 'Silence everything in one click, or mute just one account and keep the rest.',
   },
   {
-    title: 'Quick access panel',
-    text: 'A tiny always-on-top window: see what is waiting and jump to any account from any app.',
-  },
-  {
     title: 'Global shortcuts',
     text: 'Ctrl+1 to 9 switches accounts. One key shows or hides YapYap from anywhere.',
   },

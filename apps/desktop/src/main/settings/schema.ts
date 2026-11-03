@@ -22,21 +22,6 @@ export const SettingsSchema = Type.Object(
         closeToTray: Type.Boolean({ default: false }),
         betaUpdates: Type.Boolean({ default: false }),
         doNotDisturb: Type.Boolean({ default: false }),
-        // The quick-access panel (#86): when it shows, and where.
-        quickPanel: Type.Union(
-          [Type.Literal('off'), Type.Literal('always'), Type.Literal('whenHidden')],
-          { default: 'off' },
-        ),
-        quickPanelPlace: Type.Union(
-          [
-            Type.Literal('free'),
-            Type.Literal('topLeft'),
-            Type.Literal('topRight'),
-            Type.Literal('bottomLeft'),
-            Type.Literal('bottomRight'),
-          ],
-          { default: 'free' },
-        ),
       },
       { default: {}, additionalProperties: false },
     ),

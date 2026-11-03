@@ -69,7 +69,7 @@ function StopSharing(props: {
   );
 }
 
-export function AccountButton(props: {
+function AccountButton(props: {
   readonly account: SidebarAccount;
   readonly compact: boolean;
   readonly onSwitch: (id: string) => void;
@@ -106,7 +106,7 @@ export function AccountButton(props: {
 }
 
 /** The latest state: pushed by YapYap, or asked for once in case a push came before the page. */
-export function useSidebarState(api: ChromeApi): SidebarState | null {
+function useSidebarState(api: ChromeApi): SidebarState | null {
   const [state, setState] = useState<SidebarState | null>(null);
   useEffect(() => {
     api.sidebar.onState(setState);

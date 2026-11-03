@@ -52,8 +52,6 @@ describe('createChromeBridge', () => {
     await api.sidebar.switchTo('a');
     await api.sidebar.setCompact(true);
     await api.sidebar.stopSharing('a');
-    await api.quickPanel.open('a');
-    await api.quickPanel.setDoNotDisturb(true);
     expect(await api.shortcuts.list()).toBe('ignored');
     expect(await api.shortcuts.set('settings', 'CmdOrCtrl+K')).toBe('ignored');
     expect(await api.downloads.list()).toBe('ignored');
@@ -112,8 +110,6 @@ describe('createChromeBridge', () => {
       ['sidebar:switch', 'a'],
       ['sidebar:set-compact', true],
       ['sidebar:stop-sharing', 'a'],
-      ['quick-panel:open', 'a'],
-      ['quick-panel:set-do-not-disturb', true],
       ['shortcuts:list'],
       ['shortcuts:set', 'settings', 'CmdOrCtrl+K'],
       ['downloads:list'],
@@ -144,7 +140,6 @@ describe('createChromeBridge', () => {
       'chat',
       'accounts',
       'sidebar',
-      'quickPanel',
       'report',
       'spelling',
       'picker',
@@ -162,7 +157,6 @@ describe('createChromeBridge', () => {
       'stopSharing',
       'onState',
     ]);
-    expect(Object.keys(api.quickPanel)).toEqual(['open', 'setDoNotDisturb']);
     expect(Object.keys(api.chat)).toEqual(['openNumber']);
     expect(Object.keys(api.shortcuts)).toEqual(['list', 'set']);
     expect(Object.keys(api.downloads)).toEqual(['list', 'act', 'clear']);

@@ -7,7 +7,6 @@ import { Downloads } from '../downloads/Downloads.tsx';
 import { NewChat } from '../new-chat/NewChat.tsx';
 import { cancelOnEscape, Picker } from '../picker/Picker.tsx';
 import { ProxyLogin } from '../proxy-login/ProxyLogin.tsx';
-import { QuickPanel } from '../quick-panel/QuickPanel.tsx';
 import { Recovery } from '../recovery/Recovery.tsx';
 import { ProblemReport } from '../report/ProblemReport.tsx';
 import { Settings } from '../settings/Settings.tsx';
@@ -57,12 +56,6 @@ const ENTRIES = [
     () => import('../proxy-login/main.tsx'),
     ProxyLogin,
     { title: windows.proxyLogin, ...close },
-  ],
-  [
-    'quick panel',
-    () => import('../quick-panel/main.tsx'),
-    QuickPanel,
-    { title: windows.quickPanel },
   ],
   ['recovery', () => import('../recovery/main.tsx'), Recovery, undefined],
   ['report', () => import('../report/main.tsx'), ProblemReport, { title: windows.report }],

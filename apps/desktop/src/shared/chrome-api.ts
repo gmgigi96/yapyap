@@ -181,11 +181,6 @@ export interface ChromeApi {
     /** YapYap sends the new state whenever it changes; the page never asks what to listen to. */
     readonly onState: (listener: (state: SidebarState) => void) => void;
   };
-  readonly quickPanel: {
-    /** Switches to the account and brings YapYap's window back. */
-    readonly open: (id: string) => Promise<void>;
-    readonly setDoNotDisturb: (on: boolean) => Promise<void>;
-  };
   readonly report: {
     /** The sanitized diagnostics the report would carry, for the user to review. */
     readonly diagnostics: () => Promise<string>;
@@ -368,8 +363,6 @@ export const CHROME_CHANNELS = {
   customCodeGet: 'custom-code:get',
   customCodeSave: 'custom-code:save',
   customCodePreview: 'custom-code:preview',
-  quickPanelOpen: 'quick-panel:open',
-  quickPanelSetDoNotDisturb: 'quick-panel:set-do-not-disturb',
   proxyLoginRequest: 'proxy-login:request',
   proxyLoginAnswer: 'proxy-login:answer',
   assistantView: 'assistant:view',
@@ -381,7 +374,7 @@ export const CHROME_CHANNELS = {
   assistantForgetChat: 'assistant:forget-chat',
 } as const;
 
-/** Tells the sidebar and the quick panel how the accounts stand. */
+/** Tells the sidebar how the accounts stand. */
 export const SIDEBAR_STATE_EVENT = 'sidebar:state-changed';
 
 /** What the main process sends on each event channel, the only ones a chrome page hears. */

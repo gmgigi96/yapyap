@@ -102,16 +102,6 @@ export const SETTING_FIELDS: readonly SettingField[] = [
   { ...described('general', 'doNotDisturb'), restart: false },
   // macOS always keeps YapYap in the Dock when the window closes.
   { ...described('general', 'closeToTray'), restart: false, platforms: ['linux', 'win32'] },
-  {
-    ...described('general', 'quickPanel'),
-    restart: false,
-    options: choices(text.general.quickPanel.options),
-  },
-  {
-    ...described('general', 'quickPanelPlace'),
-    restart: false,
-    options: choices(text.general.quickPanelPlace.options),
-  },
   { ...described('spelling', 'enabled'), restart: false },
   {
     ...described('appearance', 'theme'),

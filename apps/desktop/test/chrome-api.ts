@@ -41,7 +41,6 @@ function blank() {
       stopSharing: vi.fn(),
       onState: vi.fn(),
     },
-    quickPanel: { open: vi.fn(), setDoNotDisturb: vi.fn() },
     report: { diagnostics: vi.fn(), open: vi.fn() },
     picker: { offer: vi.fn(), choose: vi.fn(), cancel: vi.fn() },
     shortcuts: { list: vi.fn(), set: vi.fn() },

@@ -224,23 +224,34 @@ their reasons belong in the ADRs (`docs/adr/`), and released changes in
 - Renderer tests (#514): `fakeChromeApi(overrides)` in
   `apps/desktop/test/chrome-api.ts` builds `window.yapyap`; a test fakes
   only the operations it uses.
+
 - Assistant-first docs (#516): the website's assistant, Settings and
   Marketplace screenshots are taken again, the guide has an assistant
   section, the FAQ says what the assistant reads, and the install guide
   says macOS builds are signed and notarized.
 
+- Test hygiene (#521): `tempDir()` in the root `test/temp-dir.ts` gives a
+  test a temp folder that is removed when the test ends. The marketplace
+  takes its clock as `now`, so its tests use fixed dates.
+
 - Chrome page entries (#522): every page starts through `mount(Page, {
 title, escape })` (`src/renderer/shared/mount.tsx`), which titles the
   window from `en.windows`; dialog-like windows close on Escape.
+
 - IPC registrars (#523): messages from WhatsApp's preload go through
   `registerWhatsAppListeners` in `main/ipc/`, next to
   `registerChromeHandlers`; payload checks use `argumentsOf`, and the chrome
   preload hears its events through one typed `listen`.
 
+- State files (#527): every small state file is a `TextFile` from
+  `textFileAt` (`main/atomic-write.ts`), written atomically; the extension
+  records use `writeTextAtomicallyAsync`.
+
 - UI wording (#528): buttons in YapYap's windows use title case, like its
   menus; the assistant bar keeps WhatsApp's sentence case. The Installed
   list and the Marketplace share `extensions.trust`. The catalog is in US
   English.
+
 - Faster unit tests (#531): the SDK, signing CLI, scripts and example
   extension tests share workers across files (`isolate: false` in
   `vitest.projects.ts`). The desktop app and the call recorder keep one
@@ -249,74 +260,88 @@ title, escape })` (`src/renderer/shared/mount.tsx`), which titles the
 - Chrome styles (#534): each window's main action is a filled primary
   button, every text box and list shares one style, and empty live regions
   take no room.
-- E2E helpers (#540): specs reach WhatsApp's web contents with
-  `whatsAppContents`, wait for test extensions with `extensionTitle` and
-  `EXTENSION_START_TIMEOUT`, and write settings with `seedSettings`, at the
-  current schema version.
+
+- Marketplace checks (#536): `revocationOf` and `readMarketplaceIndex` in
+  the SDK serve the app and the website, which now also refuses an index
+  that is too large, signed too far ahead or valid too long.
 
 - Settings migrations (#538): one table entry per version, built from
   `adding(section, values)`; an import parses its JSON once
   (`decodeParsed`).
 
-- Marketplace checks (#536): `revocationOf` and `readMarketplaceIndex` in
-  the SDK serve the app and the website, which now also refuses an index
-  that is too large, signed too far ahead or valid too long.
-- Test hygiene (#521): `tempDir()` in the root `test/temp-dir.ts` gives a
-  test a temp folder that is removed when the test ends. The marketplace
-  takes its clock as `now`, so its tests use fixed dates.
+- E2E helpers (#540): specs reach WhatsApp's web contents with
+  `whatsAppContents`, wait for test extensions with `extensionTitle` and
+  `EXTENSION_START_TIMEOUT`, and write settings with `seedSettings`, at the
+  current schema version.
+
 - Extensions window (#541): `InstalledExtension` carries the manifest's
   name, which the list, Remove and Recent activity show. Failures are said
   in one live region, a Marketplace install refreshes the list in place,
   and an empty Installed tab leads to the Marketplace.
+
 - Adapter world (#543): main-process probes run through `runInAdapterWorld`
   (`adapter/world.ts`), and chrome pages load through `loadChromePage`,
   which the hidden recorder window uses too.
+
 - Screen readers (#545): the record prompt's ticking time is no live
   region, the discard prompt takes the focus and keeps editing on Escape,
   Downloads buttons name their file, and the consent window and compact
   sidebar say in words what they showed by color or icon.
-- Settings sections (#549): the top of Settings links to each section it
-  shows, Assistant first and Backup last.
-- Windows E2E waits (#557): the restart test flushes the account's
-  storage before quitting, which a quick quit on Windows had lost, and the
-  recovery tests wait for WhatsApp's load before the health check's delay.
-- State files (#527): every small state file is a `TextFile` from
-  `textFileAt` (`main/atomic-write.ts`), written atomically; the extension
-  records use `writeTextAtomicallyAsync`.
+
 - Start-up tests (#546): `start.test.ts` reads the tray, account menu,
   sidebar and window listeners through named helpers.
+
+- Settings sections (#549): the top of Settings links to each section it
+  shows, Assistant first and Backup last.
+
 - Test fakes (#551): main-process tests share `fakeEmitter()`
   (`apps/desktop/test/emitter.ts`) and `FAKE_FINGERPRINT`.
+
 - Main-process layout (#554): start-up lives in `main/start/` (port types in
   `types.ts`, so nothing imports `start.ts` back), product constants in
   `identity/product.ts`, window plumbing in `window/`, security plumbing
   and `views.ts` in `security/`; chrome handler modules are named after
   their feature, and the unsafe-start prompt reads its own text.
+
+- Windows E2E waits (#557): the restart test flushes the account's
+  storage before quitting, which a quick quit on Windows had lost, and the
+  recovery tests wait for WhatsApp's load before the health check's delay.
+
 - Main-process text (#560): extension install errors come from the
   catalog (an unreadable archive gets one generic reason), Check Spelling is
   a checkbox whether spelling is on or off, Copy Diagnostics notifies how it
   went, and the unsafe-start detail no longer repeats its message.
+
 - No compatibility before 1.0 (#562, C45 in ADR 0008): settings are
   schema version 1 with no migrations, and a file of another version is set
   aside like a damaged one; the read-only mode for a newer build's settings,
   the assistant extension's import and its one-time bar note are gone,
   and the manifest guide no longer warns about older YapYap releases.
   From 1.0, settings migrations start again at version 1.
+
 - CI job timeouts (#569): smoke jobs stop after 20 minutes and package
   jobs after 60, so a hung runner step no longer holds a CI run for six
   hours.
-- Notification pictures (#572, C46 in ADR 0008): notifications show the
-  chat's picture, fetched by `AccountAvatars.picture` under the account
-  photo's rules, only while the sender is shown, and waited for at most
-  1.5 s (`main/notifications/notifier.ts`).
+
 - No extensions (#571, ADR 0018): the extension host, the marketplace, the
   SDK and signing CLI, the extension template and the call recorder are
   gone, with their settings, windows, menu items, shortcuts, install links,
   release components and docs. The assistant keeps the chat readers and the
   capped download it shared with them.
+
+- Notification pictures (#572, C46 in ADR 0008): notifications show the
+  chat's picture, fetched by `AccountAvatars.picture` under the account
+  photo's rules, only while the sender is shown, and waited for at most
+  1.5 s (`main/notifications/notifier.ts`).
+
 - Install page button (#579): the download button carries its own styles,
   so it shows as a button on the install page too, not only on the home
   page.
+
 - Stale suggestions (#582): when WhatsApp draws a chat again, the bar
   checks the open chat and takes away suggestions, a summary or a consent
   question made for another one. The key links in Settings have an E2E test.
+
+- No quick access panel (#585): the always-on-top panel, its settings and
+  `quick-panel.json` are gone; the tray, the sidebar and the Account menu
+  switch accounts and turn Do not disturb on or off.
