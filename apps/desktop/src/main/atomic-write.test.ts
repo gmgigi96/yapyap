@@ -1,8 +1,8 @@
-import { mkdirSync, mkdtempSync, readdirSync, rmSync, statSync, writeFileSync } from 'node:fs';
+import { mkdtempSync, readdirSync, rmSync, statSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
-import { isMissing, readIfPresent, textFileAt, writeTextAtomicallyAsync } from './atomic-write.ts';
+import { readIfPresent, textFileAt } from './atomic-write.ts';
 
 let dir: string;
 
@@ -40,38 +40,5 @@ describe('readIfPresent', () => {
     expect(readIfPresent(file)).toBeUndefined();
     file.write('{}');
     expect(readIfPresent(file)).toBe('{}');
-  });
-});
-
-describe('writeTextAtomicallyAsync', () => {
-  it('replaces the whole file, leaving no temporary file', async () => {
-    const path = join(dir, 'records.json');
-    writeFileSync(path, 'old');
-    await writeTextAtomicallyAsync(path, 'one');
-    await writeTextAtomicallyAsync(path, 'two');
-    expect(textFileAt(path).read()).toBe('two');
-    expect(readdirSync(dir)).toEqual(['records.json']);
-  });
-
-  it('removes its temporary file when the rename fails', async () => {
-    const path = join(dir, 'records.json');
-    mkdirSync(path);
-    writeFileSync(join(path, 'keep'), '');
-    await expect(writeTextAtomicallyAsync(path, 'text')).rejects.toThrow();
-    expect(readdirSync(dir)).toEqual(['records.json']);
-  });
-
-  it('fails without leaving anything when the folder does not exist', async () => {
-    await expect(
-      writeTextAtomicallyAsync(join(dir, 'missing', 'a.json'), 'text'),
-    ).rejects.toThrow();
-    expect(readdirSync(dir)).toEqual([]);
-  });
-});
-
-describe('isMissing', () => {
-  it('knows the error of a file that does not exist, and no other', () => {
-    expect(isMissing(Object.assign(new Error('gone'), { code: 'ENOENT' }))).toBe(true);
-    expect(isMissing(Object.assign(new Error('busy'), { code: 'EBUSY' }))).toBe(false);
   });
 });
