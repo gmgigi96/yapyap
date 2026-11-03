@@ -2,6 +2,7 @@
 import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/preact';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { fakeChromeApi } from '../../../test/chrome-api.ts';
+import { nth } from '../../../test/nth.ts';
 import {
   DEFAULT_AGENT_LIMITS,
   type AgentsView,
@@ -92,14 +93,6 @@ afterEach(() => {
 const button = (name: string | RegExp) => screen.getByRole('button', { name });
 
 /** The `index`th of `items`, which the test knows is there. */
-function nth<T>(items: readonly T[], index: number): T {
-  const item = items[index];
-  if (item === undefined) {
-    throw new Error(`No item ${String(index)}.`);
-  }
-  return item;
-}
-
 describe('AgentsSection', () => {
   it('shows the switch, where agents connect, the tokens and recent activity', async () => {
     const t = setup();
