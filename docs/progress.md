@@ -388,3 +388,5 @@ title, escape })` (`src/renderer/shared/mount.tsx`), which titles the
   `@electron/asar` 4, `@electron/universal` 3, `filelist` 2 and `glob` 14,
   so every package gets minimatch 11, and drop the Squirrel.Windows
   packager YapYap never builds. `pnpm audit` finds nothing.
+- knip advisory (#597): knip moves to 6.44.1, which fixes a path traversal
+  advisory (CVE-2026-120325) that failed SonarQube Cloud's dependency gate.
