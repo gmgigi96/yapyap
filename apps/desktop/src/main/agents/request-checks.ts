@@ -26,7 +26,14 @@ export interface Refusal {
     | typeof WRONG_TYPE;
 }
 
-const LOOPBACK = new Set(['127.0.0.1', '::ffff:127.0.0.1']);
+/** How a dual-stack socket writes an IPv4 peer's address. */
+const IPV4_MAPPED = '::ffff:';
+
+/** Whether the peer is this computer over IPv4, the only address YapYap listens on. */
+function isLoopback(address: string | undefined): boolean {
+  const ipv4 = address?.startsWith(IPV4_MAPPED) ? address.slice(IPV4_MAPPED.length) : address;
+  return ipv4 === '127.0.0.1';
+}
 
 const header = (request: ArrivingRequest, name: string): string | undefined => {
   const value = request.headers[name];
@@ -50,7 +57,7 @@ export function refusalOf(request: ArrivingRequest, port: number): Refusal | und
 function fromThisComputer(request: ArrivingRequest, port: number): boolean {
   const hosts = [`127.0.0.1:${String(port)}`, `localhost:${String(port)}`];
   return (
-    LOOPBACK.has(request.remoteAddress ?? '') &&
+    isLoopback(request.remoteAddress) &&
     hosts.includes(header(request, 'host') ?? '') &&
     !('origin' in request.headers)
   );
