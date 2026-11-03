@@ -88,18 +88,18 @@ export function readUnreadSummary(
   });
 }
 
+const PLACES: SummaryPlaces = {
+  chat: LANDMARKS.chatRow,
+  unreadCount: LANDMARKS.unreadCount,
+  chatTitle: LANDMARKS.chatTitle,
+  chatPreview: LANDMARKS.chatPreview,
+  extras: `${LANDMARKS.unreadCount}, ${LANDMARKS.chatTimestamp}`,
+};
+
+const LIMITS: SummaryLimits = { chats: MAX_CHATS, name: MAX_NAME, text: MAX_TEXT };
+
 /** The reader as code for `executeJavaScriptInIsolatedWorld`. */
-export function unreadSummaryReader(): string {
-  const places: SummaryPlaces = {
-    chat: LANDMARKS.chatRow,
-    unreadCount: LANDMARKS.unreadCount,
-    chatTitle: LANDMARKS.chatTitle,
-    chatPreview: LANDMARKS.chatPreview,
-    extras: `${LANDMARKS.unreadCount}, ${LANDMARKS.chatTimestamp}`,
-  };
-  const limits: SummaryLimits = { chats: MAX_CHATS, name: MAX_NAME, text: MAX_TEXT };
-  return `(${readUnreadSummary.toString()})(document, ${JSON.stringify(places)}, ${JSON.stringify(limits)})`;
-}
+export const UNREAD_SUMMARY = `(${readUnreadSummary.toString()})(document, ${JSON.stringify(PLACES)}, ${JSON.stringify(LIMITS)})`;
 
 const UnreadSummarySchema = Type.Array(
   Type.Object(
