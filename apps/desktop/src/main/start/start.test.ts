@@ -2,7 +2,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { fakeEmitter } from '../../../test/emitter.ts';
 import { APP_ID } from '../identity/product.ts';
 import { SHOW_FALLBACK_MS } from '../window/show-when-ready.ts';
-import { startApp } from './start.ts';
+import { startApp, startAppReporting } from './start.ts';
 import type { AppPort, WindowPort } from './types.ts';
 import type { Accounts } from '../accounts/accounts.ts';
 import type { AccountMenu } from '../chrome/feature.ts';
@@ -436,6 +436,33 @@ function windowEvent(f: Pick<Fakes, 'window'>, name: string): void {
     }
   }
 }
+
+describe('startAppReporting', () => {
+  beforeEach(() => {
+    vi.useFakeTimers();
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
+  it('starts the app and reports nothing when the start succeeds', async () => {
+    const f = fakes();
+    const failed = vi.fn();
+    await startAppReporting(f, failed);
+    expect(f.createWindow).toHaveBeenCalledOnce();
+    expect(failed).not.toHaveBeenCalled();
+  });
+
+  it('hands a failed start to its reporter instead of rejecting', async () => {
+    const f = fakes();
+    const error = new Error('no display');
+    f.app.whenReady.mockRejectedValueOnce(error);
+    const failed = vi.fn();
+    await expect(startAppReporting(f, failed)).resolves.toBeUndefined();
+    expect(failed).toHaveBeenCalledExactlyOnceWith(error);
+  });
+});
 
 describe('startApp', () => {
   beforeEach(() => {
