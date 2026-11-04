@@ -23,7 +23,7 @@ const cask = (name: string, title: string, version: string, other: string) =>
     '',
     '  auto_updates true',
     `  conflicts_with cask: "${other}"`,
-    '  depends_on :macos',
+    '  depends_on macos: :ventura',
     '',
     '  app "YapYap.app"',
     '',
