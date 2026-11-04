@@ -30,7 +30,7 @@ jobs:
         with:
           client-id: ${{ vars.AUTOMATION_APP_CLIENT_ID }}
           private-key: ${{ secrets.AUTOMATION_APP_PRIVATE_KEY }}
-          repositories: yapyap
+          repositories: yapyap,homebrew-yapyap
           permission-contents: write
           permission-pull-requests: write
           permission-issues: write
@@ -49,7 +49,7 @@ jobs:
           renovate-version: 44.206.2
         env:
           RENOVATE_PLATFORM: github
-          RENOVATE_REPOSITORIES: ${{ github.repository }}
+          RENOVATE_REPOSITORIES: ${{ github.repository }},vascoguita/homebrew-yapyap
           RENOVATE_ONBOARDING: 'false'
           RENOVATE_REQUIRE_CONFIG: required
           # Commits made through GitHub's API are signed by GitHub, as the

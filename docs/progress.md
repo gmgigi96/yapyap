@@ -16,7 +16,7 @@ their reasons belong in the ADRs (`docs/adr/`), and released changes in
 - **Next:** M8 (#119 Flathub, #118 the final audit and v1.0.0).
 - **Waiting on the maintainer:** #24 (Windows code signing), #25 (AUR
   credentials), #402 (renew the macOS certificate before 2027-11-25).
-- **Open outside milestones:** #345 and #346 (winget, Scoop and Homebrew).
+- **Open outside milestones:** #345 (winget and Scoop).
   See `gh issue list` for the live list.
 
 | Milestone                                            | Status                           |
@@ -154,6 +154,13 @@ their reasons belong in the ADRs (`docs/adr/`), and released changes in
   after each release and beta, and skips each channel with a notice until
   its token exists. CI checks the manifests against vendored schemas and
   runs `brew style` and `brew audit --strict` in Homebrew's Linux container.
+  The Homebrew tap, `vascoguita/homebrew-yapyap` (#346), has the same
+  standards as this repository: a protected `master`, signed commits,
+  CodeQL, Scorecard, SonarQube Cloud and Renovate, and CI that installs
+  each cask on macOS and checks Apple's notarization. The automation App
+  proposes each release's casks there as a pull request that merges once
+  those checks pass. The casks say `auto_updates true`, since the signed
+  builds update themselves.
 
 - Total downloads (#347): the daily docs build writes `downloads.json` and
   the README badge's data.

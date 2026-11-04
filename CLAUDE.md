@@ -298,8 +298,14 @@ Update this table in the PR that adds a command.
   touches WhatsApp. The `agents` settings section is local like
   `assistant`, tokens live in `agent-tokens.json` as hashes, and their
   chat names in `secrets.json`.
+- The Homebrew tap is its own repository, `vascoguita/homebrew-yapyap`,
+  with its own checks; its casks come from `scripts/src/release/homebrew.ts`,
+  never from edits there. The Distribute workflow proposes them as a pull
+  request through the automation App, committed through GitHub's API so
+  they are signed.
 - Renovate (ADR 0020) updates every pinned version from
-  `.github/renovate.json`, on the automation App's token. A pin it cannot
+  `.github/renovate.json`, on the automation App's token, here and in the
+  Homebrew tap. A pin it cannot
   find on its own, such as the Flatpak runtime or `engines.node`, needs a
   custom manager there. Dependabot only raises security alerts and updates.
 - Packaged builds disable the Node inspector fuse, so Playwright's Electron
