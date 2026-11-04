@@ -12,6 +12,11 @@ const LINUX_ONLY = [
   // The website's screenshots are taken on Linux, under Xvfb.
   'screenshots/**',
 ];
+const MACOS_ONLY = [
+  // Only macOS reads its badge back: Windows draws an overlay Electron cannot
+  // return, and Linux keeps a count only under launchers that show one.
+  'badge.spec.ts',
+];
 const NOT_ON_MACOS = [
   // macOS shows its own system picker for screen sharing.
   'picker.spec.ts',
@@ -21,7 +26,7 @@ const NOT_ON_MACOS = [
 ];
 const elsewhere = [
   ...(process.platform === 'linux' ? [] : LINUX_ONLY),
-  ...(process.platform === 'darwin' ? NOT_ON_MACOS : []),
+  ...(process.platform === 'darwin' ? NOT_ON_MACOS : MACOS_ONLY),
 ];
 const untagged = [
   ...(process.platform === 'linux' ? [] : [/@linux/]),
