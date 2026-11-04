@@ -157,7 +157,8 @@ their reasons belong in the ADRs (`docs/adr/`), and released changes in
   The Homebrew tap, `vascoguita/homebrew-yapyap` (#346), has the same
   standards as this repository: a protected `master`, signed commits,
   CodeQL, Scorecard, SonarQube Cloud (both now on Sonar's own profiles for
-  the "Sonar way for Agentic AI" gate, ADR 0010) and Renovate, and CI that installs
+  the "Sonar way for Agentic AI" gate, with no rule turned off or ignored,
+  ADR 0010) and Renovate, and CI that installs
   each cask on macOS and checks Apple's notarization. The automation App
   proposes each release's casks there as a pull request that merges once
   those checks pass. The casks say `auto_updates true`, since the signed

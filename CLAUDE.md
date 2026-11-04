@@ -202,6 +202,13 @@ Update this table in the PR that adds a command.
   literal text in renderer JSX and in `aria-label`, `title`, `placeholder`,
   `alt` and `label`, and, in the main process, in `label`, `title`,
   `message`, `detail`, `body` and `buttons` properties.
+- SonarQube Cloud runs every rule as it ships (ADR 0010), so code meets
+  them instead of turning them off. In E2E specs, a test that means nothing
+  on some systems gets a tag (`@linux`, `@not-macos`, `@not-windows`) or
+  its file goes in `playwright.config.ts`'s lists, never a conditional
+  `test.skip`; and checks that retry use `expect(...).toPass()` or a
+  web-first assertion, never `expect.poll`. Scripts in `scripts/src/bin/`
+  take other programs' output on stdin instead of running them from `PATH`.
 - E2E tests start the app through `launchApp` in `e2e/fixtures.ts`, which
   gives each test a throwaway `--user-data-dir`. Never launch Electron in a
   spec without it, or tests write to the developer's real profile.
