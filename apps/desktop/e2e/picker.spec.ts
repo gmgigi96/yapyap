@@ -1,8 +1,6 @@
 import type { ElectronApplication, Page } from '@playwright/test';
 import { expect, quitApp, test } from './fixtures.ts';
 
-test.skip(process.platform === 'darwin', 'macOS uses its own system picker');
-
 async function requestShare(app: ElectronApplication, window: Page): Promise<Page> {
   // The share button renders before share.js wires it up; a slow runner could
   // click first, and no picker would ever open (#188).

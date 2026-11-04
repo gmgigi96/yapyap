@@ -797,3 +797,19 @@ export async function startApp<Window extends WindowPort>(
   await openWindow(deps, chrome, security, instances, origin, proxy);
   welcomeOnFirstRun(deps, chrome);
 }
+
+/**
+ * Starts YapYap for the main entry, which must not await it (Playwright holds
+ * back the ready event until the entry finishes evaluating), and hands a
+ * failed start to `failed` rather than leaving a rejected promise.
+ */
+export async function startAppReporting<Window extends WindowPort>(
+  deps: StartDependencies<Window>,
+  failed: (error: unknown) => void,
+): Promise<void> {
+  try {
+    await startApp(deps);
+  } catch (error) {
+    failed(error);
+  }
+}

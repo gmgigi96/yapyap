@@ -8,7 +8,7 @@
   "type": "module",
   "scripts": {
     "typecheck": "tsc -p tsconfig.json",
-    "check-licenses": "node src/bin/check-licenses.ts"
+    "check-licenses": "pnpm licenses list --json | node src/bin/check-licenses.ts"
   },
   "devDependencies": {
     "@electron/fuses": "2.1.3",

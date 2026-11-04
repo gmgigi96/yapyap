@@ -69,7 +69,9 @@ test('drops links with other schemes', async ({ app, window }) => {
   const opened = await recordExternalLinks(app);
   await window.getByTestId('link-file').click();
   await window.getByTestId('link-new-tab').click();
-  await expect.poll(opened).toEqual(['https://example.com/article?id=7#top']);
+  await expect(async () => {
+    expect(await opened()).toEqual(['https://example.com/article?id=7#top']);
+  }).toPass();
 });
 
 test('follows a popup that navigates after opening, then closes it', async ({ app, window }) => {
@@ -80,15 +82,18 @@ test('follows a popup that navigates after opening, then closes it', async ({ ap
   await window.waitForLoadState('load');
   await window.getByTestId('popup-then-navigate').click();
   // If this fails again, say what the popup did.
-  await expect
-    .poll(opened)
-    .toEqual(['https://example.com/from-popup'])
+  await expect(async () => {
+    expect(await opened()).toEqual(['https://example.com/from-popup']);
+  })
+    .toPass()
     .catch(async (error: unknown) => {
       const popup = await window.evaluate(() => document.body.dataset['popup'] ?? 'not clicked');
       const seen = (await events()).join(' | ');
       throw new Error(`${String(error)}\nPopup: ${popup}\nEvents: ${seen}`);
     });
-  await expect.poll(() => windowCount(app)).toBe(1);
+  await expect(async () => {
+    expect(await windowCount(app)).toBe(1);
+  }).toPass();
 });
 
 test('discards a popup that never navigates', async ({ app, window }) => {
@@ -100,5 +105,5 @@ test('discards a popup that never navigates', async ({ app, window }) => {
 
 test('handles whatsapp: links inside the app', async ({ window, fakeWhatsApp }) => {
   await window.getByTestId('link-deep').click();
-  await expect.poll(() => window.url()).toBe(`${fakeWhatsApp.origin}/send?phone=447700900123`);
+  await expect(window).toHaveURL(`${fakeWhatsApp.origin}/send?phone=447700900123`);
 });

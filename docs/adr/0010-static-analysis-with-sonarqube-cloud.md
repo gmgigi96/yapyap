@@ -43,32 +43,39 @@ analysis must run in CI.
   code. Once overall code passed it, the maintainer chose the built-in gate
   and the custom one was deleted (2026-10-22). Vitest still enforces 100%
   coverage (ADR 0005), so the gate's 80% is only a floor.
-- **Quality profiles "YapYap strict"**, for TypeScript, JavaScript, CSS, HTML,
-  GitHub Actions, YAML, JSON, XML, secrets and text. Each inherits Sonar way
-  comprehensive, so new built-in rules arrive on their own, and also
-  activates every other rule of its language except these:
+- **Quality profiles: Sonar's own, paired with that gate** (amended
+  2026-11-04). TypeScript and JavaScript use the built-in "Sonar agentic
+  AI" profile, made for the "Sonar way for Agentic AI" gate; every other
+  language uses the organization's default, "Sonar way comprehensive". The
+  Homebrew tap, `vascoguita/homebrew-yapyap`, uses the same gate and
+  profiles, through SonarQube Cloud's automatic analysis, since it has no
+  coverage to import. Until then the project used custom "YapYap strict" profiles,
+  each Sonar way comprehensive plus every other rule of its language but
+  eight that clash with the codebase's conventions (trailing commas and
+  parenthesized parameters, which Prettier writes; per-file license headers;
+  ternaries; `undefined` assignments; unions of more than two types; HTML
+  resource bundles; and the word `master`). The maintainer chose Sonar's
+  profiles instead, to keep the rules Sonar maintains for this gate rather
+  than a set of its own, and the custom profiles were deleted. Sonar's
+  profiles enable none of those eight rules.
 
-  | Rule                                        | Why it is off                                                                                                                       |
-  | ------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------- |
-  | S1537 (no trailing commas)                  | Prettier adds trailing commas (`trailingComma: all`); the two cannot both pass                                                      |
-  | S3524 (no parentheses around one parameter) | Prettier always parenthesizes arrow function parameters                                                                             |
-  | S1451, Web:HeaderCheck (file headers)       | The license lives in `LICENSE` and package metadata; per-file headers would repeat it hundreds of times                             |
-  | S1774 (no ternary operator)                 | Ternaries are the idiomatic way to choose a value in TypeScript and JSX; ESLint already limits nesting                              |
-  | S2138 (no `undefined` assignment)           | The codebase uses `undefined` for "absent" everywhere, as TypeScript's optional properties do; `null` is kept for JSON and DOM APIs |
-  | S4622 (unions of at most two types)         | String literal unions such as `'system' \| 'light' \| 'dark'` are how the settings schema and IPC types are modelled                |
-  | Web:InternationalizationCheck               | The app chrome is localized in TypeScript (#55), not through server-side resource bundles in HTML                                   |
-  | text:S7036 (inclusive terminology)          | Every hit is the name of the default branch, `master`; renaming the branch is a separate decision                                   |
-
-  S100 (function names) allows PascalCase as well, because Preact components
-  and ESLint rule visitors (`Program`) must use it.
-
-- **Exceptions:** an issue is fixed, or the rule is turned off above with a
-  reason. Issues are never accepted, even where the gate would pass. Marking a
-  false positive needs a comment that explains it. Narrow per-file
-  exceptions live in `sonar-project.properties`, each with its reason:
-  console output and `PATH` lookups in command-line scripts, the main
-  entry's promise chain (no top-level await), and two E2E rules the
-  analyzer misreads for Playwright (assertions and conditional skips).
+- **No exceptions** (amended 2026-11-04): every rule runs as Sonar ships
+  it, and an issue is fixed, never accepted, even where the gate would pass,
+  nor marked as a false positive (the maintainer's choice): code that trips
+  a rule is rewritten. `sonar-project.properties` sets only what is analyzed
+  and how, never which rules apply. It once ignored five rules in some
+  files; each is now met in code instead:
+  - command-line scripts take `git` and `pnpm` output as input, piped by
+    their workflow or package script, instead of running programs found on
+    `PATH`;
+  - the main entry, which must not use top-level await, hands its start to
+    `startAppReporting` instead of a top-level promise chain;
+  - E2E tests that mean nothing on some systems stay out of those runs
+    through the Playwright config, by file or tag, instead of a conditional
+    `test.skip`;
+  - E2E tests assert with `expect(...)`, `expect(...).toPass()` or
+    web-first assertions, which the analyzer recognizes, instead of
+    `expect.poll`.
 - **Required check:** SonarQube Cloud's own `SonarCloud Code Analysis`
   check, which it posts on every analyzed pull request, is
   required in `.github/rulesets/master.json`, pinned to SonarQube Cloud's
@@ -85,5 +92,5 @@ analysis must run in CI.
   push its branch here.
 - The CI job repeats the unit tests to produce coverage next to the scan;
   this costs about a minute and keeps the job self-contained.
-- A rule that conflicts with a project convention is turned off with a reason
-  here rather than worked around in code.
+- Sonar's profiles and rules apply as they come, so a rule that conflicts
+  with a project convention changes the convention, or the code.

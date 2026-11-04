@@ -89,6 +89,6 @@ jobs:
     with:
       tag: ${{ needs.tag.outputs.tag }}
     secrets:
-      HOMEBREW_TAP_TOKEN: ${{ secrets.HOMEBREW_TAP_TOKEN }}
+      AUTOMATION_APP_PRIVATE_KEY: ${{ secrets.AUTOMATION_APP_PRIVATE_KEY }}
       SCOOP_BUCKET_TOKEN: ${{ secrets.SCOOP_BUCKET_TOKEN }}
       WINGET_TOKEN: ${{ secrets.WINGET_TOKEN }}

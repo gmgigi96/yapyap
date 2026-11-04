@@ -34,7 +34,12 @@ jobs:
         id: scope
         env:
           BASE_SHA: ${{ github.event.pull_request.base.sha }}
-        run: node scripts/src/bin/ci-changes.ts
+        run: |
+          changed=''
+          if [ -n "$BASE_SHA" ]; then
+            changed=$(git diff --name-only "$BASE_SHA...HEAD")
+          fi
+          node scripts/src/bin/ci-changes.ts <<< "$changed"
 
   lint:
     name: Lint and typecheck

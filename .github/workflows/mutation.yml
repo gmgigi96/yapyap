@@ -44,7 +44,13 @@ jobs:
           BASE_SHA: ${{ github.event.pull_request.base.sha || github.event.before }}
           SHARD: ${{ matrix.shard }}
         run: |
-          targets=$(node scripts/src/bin/mutation-targets.ts ${ALL:+"$ALL"} --shard "$SHARD/16")
+          set -o pipefail
+          if [ -n "$ALL" ]; then
+            files=$(git ls-files)
+          else
+            files=$(git diff --name-only --diff-filter=AMR "${BASE_SHA:-origin/master}...HEAD")
+          fi
+          targets=$(node scripts/src/bin/mutation-targets.ts --shard "$SHARD/16" <<< "$files")
           echo "targets=$targets" >> "$GITHUB_OUTPUT"
           if [ -z "$targets" ]; then
             echo "No in-scope modules in this shard; the nightly run covers everything." >> "$GITHUB_STEP_SUMMARY"

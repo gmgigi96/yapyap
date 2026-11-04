@@ -64,14 +64,14 @@ one to roll back.
 
 ## Homebrew, winget and Scoop {#package-managers}
 
-Homebrew on macOS, and winget and Scoop on Windows, are coming. YapYap's
-release workflow is ready for them, and they start with the first release
-after they are set up. Like the Linux repositories, they download YapYap
-from its GitHub releases. Until then, use the download button above.
+On macOS, YapYap is in its own [Homebrew tap](https://github.com/vascoguita/homebrew-yapyap).
+winget and Scoop on Windows are coming: YapYap's release workflow is ready
+for them, and they start with the first release after they are set up.
+Like the Linux repositories, all of them download YapYap from its GitHub
+releases.
 
-Once they are available, these commands will install YapYap; the beta
-packages (`yapyap@beta`, `YapYap.YapYap.Beta` and `yapyap-beta`) get each
-beta and each release:
+These commands install YapYap; the beta packages (`yapyap@beta`,
+`YapYap.YapYap.Beta` and `yapyap-beta`) get each beta and each release:
 
 ::: code-group
 
@@ -92,8 +92,10 @@ scoop install yapyap/yapyap
 
 :::
 
-Homebrew installs the same signed and notarized build as the DMG. Scoop
-installs the portable build, which Scoop updates.
+Homebrew installs the same signed and notarized build as the DMG, which
+updates itself, so `brew upgrade` leaves it alone; `brew upgrade --greedy`
+updates it through Homebrew anyway. Scoop installs the portable build, which
+Scoop updates.
 
 ## All formats {#all-formats}
 
@@ -111,7 +113,7 @@ YapYap is available in these formats:
 | Windows        | Portable (x64, arm64)            | Notifies you of new versions             |
 | Windows        | winget, Scoop (coming)           | Through winget or Scoop                  |
 | macOS          | Universal DMG                    | Built-in updater                         |
-| macOS          | Homebrew cask (coming)           | Through Homebrew                         |
+| macOS          | Homebrew cask                    | Built-in updater                         |
 
 Releases are published on
 [GitHub](https://github.com/vascoguita/yapyap/releases).

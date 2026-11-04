@@ -53,19 +53,17 @@ test('starts with the default size when the saved state is corrupt', async ({
   await writeFile(join(profile, 'window-state.json'), '{"bounds":"nonsense"');
   const again = await launchApp(fakeWhatsApp.origin, profile);
   try {
-    await expect
-      .poll(async () => {
-        const bounds = await mainBounds(again);
-        return [bounds.width, bounds.height];
-      })
-      .toEqual([fresh.width, fresh.height]);
+    await expect(async () => {
+      const bounds = await mainBounds(again);
+      expect([bounds.width, bounds.height]).toEqual([fresh.width, fresh.height]);
+    }).toPass();
   } finally {
     await closeApp(again);
   }
 });
 
-test('hides the menu bar when the setting says so', async ({ app }) => {
-  test.skip(process.platform === 'darwin', 'macOS keeps its menu bar outside the window');
+// macOS keeps its menu bar outside the window.
+test('hides the menu bar when the setting says so', { tag: '@not-macos' }, async ({ app }) => {
   // Settings opens a second window, so find WhatsApp's by what it shows.
   const main = await mainWindow(app);
   const autoHidden = () => main.evaluate((window) => window.isMenuBarAutoHide());

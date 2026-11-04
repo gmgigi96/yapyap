@@ -73,7 +73,7 @@ import {
   explainUnsafeStartWithDialog,
   reviewCrashWithDialog,
 } from './dialogs/prompts.ts';
-import { startApp } from './start/start.ts';
+import { startAppReporting } from './start/start.ts';
 import { findLocalModels, loopbackRequest, modelServerPorts } from './assistant/local-servers.ts';
 import { ENGINE_CHANNELS } from '../shared/api/engine-api.ts';
 import { assistantState } from './assistant/state.ts';
@@ -332,135 +332,138 @@ const chrome = createChromeFeature({
 
 // No top-level await: test harnesses hold back the `ready` event until the
 // entry module has finished evaluating.
-startApp({
-  app,
-  autostart,
-  chrome,
-  settings,
-  nativeTheme,
-  notify,
-  warn,
-  customCode,
-  secrets,
-  createWindow: (options) => createMainWindow(options),
-  createAccountHost: (window, renderer) => createAccountHost(window, renderer),
-  createSidebar: (window, renderer) => createSidebarView(window, renderer),
-  defaultSession: () => session.defaultSession,
-  sessionOf: (partition) => session.fromPartition(partition),
-  accounts: loadAccounts(USER_DATA),
-  whatsAppPreload: join(import.meta.dirname, '..', 'preload', 'whatsapp.cjs'),
-  notifications: {
-    create: (options) =>
-      new Notification({
-        ...options,
-        icon: notificationIcon<string | Electron.NativeImage>(options.icon, trayIcon, (url) =>
-          nativeImage.createFromDataURL(url),
+void startAppReporting(
+  {
+    app,
+    autostart,
+    chrome,
+    settings,
+    nativeTheme,
+    notify,
+    warn,
+    customCode,
+    secrets,
+    createWindow: (options) => createMainWindow(options),
+    createAccountHost: (window, renderer) => createAccountHost(window, renderer),
+    createSidebar: (window, renderer) => createSidebarView(window, renderer),
+    defaultSession: () => session.defaultSession,
+    sessionOf: (partition) => session.fromPartition(partition),
+    accounts: loadAccounts(USER_DATA),
+    whatsAppPreload: join(import.meta.dirname, '..', 'preload', 'whatsapp.cjs'),
+    notifications: {
+      create: (options) =>
+        new Notification({
+          ...options,
+          icon: notificationIcon<string | Electron.NativeImage>(options.icon, trayIcon, (url) =>
+            nativeImage.createFromDataURL(url),
+          ),
+        }),
+      isSupported: () => Notification.isSupported(),
+    },
+    ipc: ipcMain,
+    chatListWidths: chatListWidths(textFileAt(CHAT_LIST_STATE), warn),
+    saveAccounts: (accounts) => {
+      saveAccounts(USER_DATA, accounts);
+    },
+    newAccountId: randomUUID,
+    askMedia: askMediaWithDialog,
+    capture: (pickInApp, wayland) =>
+      electronCapture(process.platform, wayland, process.getSystemVersion(), pickInApp),
+    chromeVersion: process.versions.chrome,
+    platform: process.platform,
+    env: process.env,
+    argv: process.argv,
+    openExternal: (url) => shell.openExternal(url),
+    isOnline: () => net.isOnline(),
+    avatarImage: (bytes) => shrinkAvatar(nativeImage.createFromBuffer(Buffer.from(bytes))),
+    gpuCrashLog: textFileAt(GPU_CRASH_LOG),
+    appMetrics: () => app.getAppMetrics(),
+    idleSeconds: () => powerMonitor.getSystemIdleTime(),
+    globalShortcuts: globalShortcut,
+    systemLanguages: () => app.getPreferredSystemLanguages(),
+    contextMenu: (items) => {
+      Menu.buildFromTemplate(items).popup();
+    },
+    onResume: (listener) => {
+      powerMonitor.on('resume', listener);
+    },
+    windowState: textFileAt(WINDOW_STATE),
+    workAreas: () => screen.getAllDisplays().map((display) => display.workArea),
+    downloads: {
+      folder: () =>
+        downloadsFolder(settings.current().downloads.folder, () => app.getPath('downloads'), {
+          realpath: (path) => realpathSync(path),
+          isFolder: (path) => statSync(path).isDirectory(),
+        }),
+      taken: (path) => lstatSync(path, { throwIfNoEntry: false }) !== undefined,
+      lastFolder: lastFolderIn(textFileAt(DOWNLOADS_STATE)),
+      openPath: (path) => shell.openPath(path),
+      track: downloadList.add,
+    },
+    shutdown: {
+      onSignal: (signal, listener) => {
+        process.on(signal, listener);
+      },
+      onSystemShutdown: (listener) => {
+        powerMonitor.on('shutdown', listener);
+      },
+    },
+    sandboxDisabled: sandboxDisabled(app.commandLine, process.env),
+    explainUnsafeStart: explainUnsafeStartWithDialog,
+    selfUpdate: {
+      updater: async () => {
+        const { default: electronUpdater } = await import('electron-updater');
+        return electronUpdater.autoUpdater;
+      },
+      askToInstall: askToInstallUpdateWithDialog,
+    },
+    badge: {
+      setBadgeCount: (count) => app.setBadgeCount(count),
+      createImage: ({ bitmap, width, height, scaleFactor }) =>
+        nativeImage.createFromBitmap(bitmap, { width, height, scaleFactor }),
+    },
+    tray: {
+      create: () => {
+        tray = new Tray(trayIcon);
+        return tray;
+      },
+      buildMenu: (template) => Menu.buildFromTemplate(template),
+      image: (choice) =>
+        trayImage(
+          choice,
+          {
+            fromPath: (path) => nativeImage.createFromPath(path),
+            fromBitmap: (bitmap, size) => nativeImage.createFromBitmap(bitmap, size),
+          },
+          trayIcon,
         ),
-      }),
-    isSupported: () => Notification.isSupported(),
-  },
-  ipc: ipcMain,
-  chatListWidths: chatListWidths(textFileAt(CHAT_LIST_STATE), warn),
-  saveAccounts: (accounts) => {
-    saveAccounts(USER_DATA, accounts);
-  },
-  newAccountId: randomUUID,
-  askMedia: askMediaWithDialog,
-  capture: (pickInApp, wayland) =>
-    electronCapture(process.platform, wayland, process.getSystemVersion(), pickInApp),
-  chromeVersion: process.versions.chrome,
-  platform: process.platform,
-  env: process.env,
-  argv: process.argv,
-  openExternal: (url) => shell.openExternal(url),
-  isOnline: () => net.isOnline(),
-  avatarImage: (bytes) => shrinkAvatar(nativeImage.createFromBuffer(Buffer.from(bytes))),
-  gpuCrashLog: textFileAt(GPU_CRASH_LOG),
-  appMetrics: () => app.getAppMetrics(),
-  idleSeconds: () => powerMonitor.getSystemIdleTime(),
-  globalShortcuts: globalShortcut,
-  systemLanguages: () => app.getPreferredSystemLanguages(),
-  contextMenu: (items) => {
-    Menu.buildFromTemplate(items).popup();
-  },
-  onResume: (listener) => {
-    powerMonitor.on('resume', listener);
-  },
-  windowState: textFileAt(WINDOW_STATE),
-  workAreas: () => screen.getAllDisplays().map((display) => display.workArea),
-  downloads: {
-    folder: () =>
-      downloadsFolder(settings.current().downloads.folder, () => app.getPath('downloads'), {
-        realpath: (path) => realpathSync(path),
-        isFolder: (path) => statSync(path).isDirectory(),
-      }),
-    taken: (path) => lstatSync(path, { throwIfNoEntry: false }) !== undefined,
-    lastFolder: lastFolderIn(textFileAt(DOWNLOADS_STATE)),
-    openPath: (path) => shell.openPath(path),
-    track: downloadList.add,
-  },
-  shutdown: {
-    onSignal: (signal, listener) => {
-      process.on(signal, listener);
+      scheme: nativeTheme,
     },
-    onSystemShutdown: (listener) => {
-      powerMonitor.on('shutdown', listener);
+    releases: {
+      policy: updatePolicy,
+      currentVersion: app.getVersion(),
+      fetchJson: releaseFetcher((url, init) => net.fetch(url, init)),
+      showNotice: (body, url) => {
+        const notice = new Notification({ title: PRODUCT_NAME, body });
+        notice.on('click', () => {
+          void shell.openExternal(url);
+        });
+        notice.show();
+      },
+    },
+    crashes: {
+      files: profileCrashFiles(USER_DATA, app.getPath('crashDumps')),
+      version: app.getVersion(),
+      previousLog: () => readPreviousLog(LOG_DIR),
+      review: reviewCrashWithDialog,
+      writeClipboard: (text) => clipboard.writeText(text),
+    },
+    logError: (message) => {
+      logger.log('error', message);
     },
   },
-  sandboxDisabled: sandboxDisabled(app.commandLine, process.env),
-  explainUnsafeStart: explainUnsafeStartWithDialog,
-  selfUpdate: {
-    updater: async () => {
-      const { default: electronUpdater } = await import('electron-updater');
-      return electronUpdater.autoUpdater;
-    },
-    askToInstall: askToInstallUpdateWithDialog,
+  (error) => {
+    logger.log('error', `Startup failed: ${String(error)}`);
+    app.exit(1);
   },
-  badge: {
-    setBadgeCount: (count) => app.setBadgeCount(count),
-    createImage: ({ bitmap, width, height, scaleFactor }) =>
-      nativeImage.createFromBitmap(bitmap, { width, height, scaleFactor }),
-  },
-  tray: {
-    create: () => {
-      tray = new Tray(trayIcon);
-      return tray;
-    },
-    buildMenu: (template) => Menu.buildFromTemplate(template),
-    image: (choice) =>
-      trayImage(
-        choice,
-        {
-          fromPath: (path) => nativeImage.createFromPath(path),
-          fromBitmap: (bitmap, size) => nativeImage.createFromBitmap(bitmap, size),
-        },
-        trayIcon,
-      ),
-    scheme: nativeTheme,
-  },
-  releases: {
-    policy: updatePolicy,
-    currentVersion: app.getVersion(),
-    fetchJson: releaseFetcher((url, init) => net.fetch(url, init)),
-    showNotice: (body, url) => {
-      const notice = new Notification({ title: PRODUCT_NAME, body });
-      notice.on('click', () => {
-        void shell.openExternal(url);
-      });
-      notice.show();
-    },
-  },
-  crashes: {
-    files: profileCrashFiles(USER_DATA, app.getPath('crashDumps')),
-    version: app.getVersion(),
-    previousLog: () => readPreviousLog(LOG_DIR),
-    review: reviewCrashWithDialog,
-    writeClipboard: (text) => clipboard.writeText(text),
-  },
-  logError: (message) => {
-    logger.log('error', message);
-  },
-}).catch((error: unknown) => {
-  logger.log('error', `Startup failed: ${String(error)}`);
-  app.exit(1);
-});
+);

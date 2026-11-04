@@ -43,22 +43,22 @@ test('saves an attachment into the downloads folder under a safe name', async ({
   );
 });
 
-test('never writes through a symlink planted under the same name', async ({
-  app,
-  window,
-  profile,
-}) => {
-  test.skip(process.platform === 'win32', 'creating symlinks needs extra rights on Windows');
-  const folder = await useDownloads(app, profile);
-  const outside = join(profile, 'outside.txt');
-  await writeFile(outside, 'keep me');
-  await symlink(outside, join(folder, 'report.txt'));
-  await download(window, 'report.txt');
-  await expect
-    .poll(async () => (await readdir(folder)).sort())
-    .toEqual(['report (1).txt', 'report.txt']);
-  expect(await readFile(outside, 'utf8')).toBe('keep me');
-});
+// Creating symlinks needs extra rights on Windows.
+test(
+  'never writes through a symlink planted under the same name',
+  { tag: '@not-windows' },
+  async ({ app, window, profile }) => {
+    const folder = await useDownloads(app, profile);
+    const outside = join(profile, 'outside.txt');
+    await writeFile(outside, 'keep me');
+    await symlink(outside, join(folder, 'report.txt'));
+    await download(window, 'report.txt');
+    await expect
+      .poll(async () => (await readdir(folder)).sort())
+      .toEqual(['report (1).txt', 'report.txt']);
+    expect(await readFile(outside, 'utf8')).toBe('keep me');
+  },
+);
 
 test('renames a Windows device name instead of saving it', async ({ app, window, profile }) => {
   const folder = await useDownloads(app, profile);

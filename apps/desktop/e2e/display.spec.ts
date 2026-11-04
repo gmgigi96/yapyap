@@ -2,8 +2,6 @@ import { expectedLinuxBackend } from './app-environment.ts';
 import { clickMenu } from './chrome-helpers.ts';
 import { expect, test } from './fixtures.ts';
 
-test.skip(process.platform !== 'linux', 'Display backends exist only on Linux');
-
 test('draws the WhatsApp page on the display backend it reports', async ({ app, window }) => {
   await expect(window.getByTestId('fake-whatsapp')).toBeVisible();
   await clickMenu(app, 'Copy Diagnostics');

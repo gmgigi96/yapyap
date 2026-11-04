@@ -2,8 +2,6 @@ import type { ElectronApplication, Page } from '@playwright/test';
 import { chromePage, clickMenu } from './chrome-helpers.ts';
 import { expect, test, whatsAppPage } from './fixtures.ts';
 
-test.skip(process.platform === 'darwin', 'macOS uses its own system picker');
-
 /** Adds a second account, so the sidebar shows, and returns its WhatsApp page. */
 async function secondAccount(app: ElectronApplication, first: Page): Promise<Page> {
   await clickMenu(app, 'Add Account');
