@@ -26,8 +26,6 @@ async function launchWith(origin: string, profile: string, general: object) {
   return launchApp(origin, profile);
 }
 
-test.skip(process.platform === 'darwin', 'macOS always keeps YapYap in the Dock instead');
-
 test('keeps running hidden when the window closes, with Close to the tray on', async ({
   fakeWhatsApp,
   profile,

@@ -53,12 +53,10 @@ test('starts with the default size when the saved state is corrupt', async ({
   await writeFile(join(profile, 'window-state.json'), '{"bounds":"nonsense"');
   const again = await launchApp(fakeWhatsApp.origin, profile);
   try {
-    await expect
-      .poll(async () => {
-        const bounds = await mainBounds(again);
-        return [bounds.width, bounds.height];
-      })
-      .toEqual([fresh.width, fresh.height]);
+    await expect(async () => {
+      const bounds = await mainBounds(again);
+      expect([bounds.width, bounds.height]).toEqual([fresh.width, fresh.height]);
+    }).toPass();
   } finally {
     await closeApp(again);
   }
