@@ -21,6 +21,7 @@ const cask = (name: string, title: string, version: string, other: string) =>
     '    skip "Updated by the YapYap release workflow"',
     '  end',
     '',
+    '  auto_updates true',
     `  conflicts_with cask: "${other}"`,
     '  depends_on :macos',
     '',
