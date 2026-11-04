@@ -2,7 +2,8 @@
 import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/preact';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { fakeChromeApi } from '../../../test/chrome-api.ts';
-import type { AssistantView, SettingsSnapshot } from '../../shared/chrome-api.ts';
+import { nth } from '../../../test/nth.ts';
+import type { AssistantView, SettingsSnapshot } from '../../shared/api/chrome-api.ts';
 import { AssistantSection } from './Assistant.tsx';
 
 const VIEW: AssistantView = {
@@ -38,7 +39,6 @@ const SNAPSHOT: SettingsSnapshot = {
   },
   restartPending: false,
   problems: {},
-  unavailable: {},
 };
 
 function setup(view: AssistantView = VIEW, snapshot: SettingsSnapshot = SNAPSHOT) {
@@ -70,14 +70,6 @@ function setup(view: AssistantView = VIEW, snapshot: SettingsSnapshot = SNAPSHOT
 }
 
 /** The `index`th of `items`, which the test knows is there. */
-function nth<T>(items: readonly T[], index: number): T {
-  const item = items[index];
-  if (item === undefined) {
-    throw new Error(`No item ${String(index)}.`);
-  }
-  return item;
-}
-
 afterEach(() => {
   cleanup();
   vi.useRealTimers();

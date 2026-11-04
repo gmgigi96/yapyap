@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
-import type { ProxyLoginAnswer } from '../../shared/chrome-api.ts';
+import type { ProxyLoginAnswer } from '../../shared/api/chrome-api.ts';
 import { createProxyLogin, DECLINE_MS } from './proxy-login.ts';
 
 const PROXY = { isProxy: true, host: 'proxy.example.org', port: 3128 };

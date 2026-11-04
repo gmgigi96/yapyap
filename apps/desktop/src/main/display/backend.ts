@@ -1,3 +1,5 @@
+import { isSet, type Environment } from '../support/environment.ts';
+
 type DisplayBackendSetting = 'auto' | 'wayland' | 'x11';
 
 type Backend = 'wayland' | 'x11';
@@ -19,24 +21,20 @@ export interface BackendInputs {
   readonly platform: string;
   readonly setting: DisplayBackendSetting;
   readonly argv: readonly string[];
-  readonly env: Readonly<Record<string, string | undefined>>;
+  readonly env: Environment;
 }
 
 const BACKEND_NAMES: Readonly<Record<Backend, string>> = { wayland: 'Wayland', x11: 'X11' };
 
 const OZONE_FLAG = /^--ozone-platform(?:-hint)?=(\S*)$/;
 
-function present(env: BackendInputs['env'], name: string): boolean {
-  return (env[name] ?? '') !== '';
-}
-
 /** What Chromium's automatic choice picks: Wayland whenever a Wayland display exists. */
-function automatic(env: BackendInputs['env']): Backend {
-  return present(env, 'WAYLAND_DISPLAY') ? 'wayland' : 'x11';
+function automatic(env: Environment): Backend {
+  return isSet(env, 'WAYLAND_DISPLAY') ? 'wayland' : 'x11';
 }
 
 /** A Chromium value; anything but the two backends means its automatic choice. */
-function backendOf(value: string, env: BackendInputs['env']): Backend {
+function backendOf(value: string, env: Environment): Backend {
   return value === 'wayland' || value === 'x11' ? value : automatic(env);
 }
 
@@ -45,9 +43,9 @@ function fromCommandLine(argv: readonly string[]): string | undefined {
 }
 
 /** A forced backend whose display server is missing would stop Chromium from starting. */
-function fromSettings(setting: Backend, env: BackendInputs['env']): DisplayBackend {
+function fromSettings(setting: Backend, env: Environment): DisplayBackend {
   const display = setting === 'wayland' ? 'WAYLAND_DISPLAY' : 'DISPLAY';
-  if (present(env, display)) {
+  if (isSet(env, display)) {
     return { ozonePlatform: setting, active: setting, source: 'settings', fallback: undefined };
   }
   return {

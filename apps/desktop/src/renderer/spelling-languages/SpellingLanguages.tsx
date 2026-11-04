@@ -4,7 +4,7 @@ import {
   MAX_SPELLING_LANGUAGES,
   type ChromeApi,
   type SpellingLanguages,
-} from '../../shared/chrome-api.ts';
+} from '../../shared/api/chrome-api.ts';
 import { en } from '../../shared/messages/en.ts';
 
 const text = en.spellingLanguages;

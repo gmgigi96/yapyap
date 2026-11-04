@@ -2,7 +2,7 @@
 import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/preact';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { fakeChromeApi } from '../../../test/chrome-api.ts';
-import type { SpellingLanguages } from '../../shared/chrome-api.ts';
+import type { SpellingLanguages } from '../../shared/api/chrome-api.ts';
 import { languageNames, SpellingLanguagesPage } from './SpellingLanguages.tsx';
 
 const AVAILABLE = [

@@ -18,8 +18,8 @@ import {
   type SidebarState,
   type SpellingLanguages,
   type TransferResult,
-} from '../../shared/chrome-api.ts';
-import type { AgentsView, AgentTokenCreated } from '../../shared/agents-api.ts';
+} from '../../shared/api/chrome-api.ts';
+import type { AgentsView, AgentTokenCreated } from '../../shared/api/agents-api.ts';
 
 type Invoke = (channel: string, ...args: unknown[]) => Promise<unknown>;
 /** Hears one of the events the main process sends. */
@@ -27,6 +27,11 @@ type Listen = <Event extends keyof ChromeEvents>(
   event: Event,
   listener: (payload: ChromeEvents[Event]) => void,
 ) => void;
+
+/** An operation that takes nothing and answers nothing. */
+const running = (invoke: Invoke, channel: string) => async (): Promise<void> => {
+  await invoke(channel);
+};
 
 function assistantBridge(invoke: Invoke): ChromeApi['assistant'] {
   return {
@@ -56,9 +61,7 @@ function agentsBridge(invoke: Invoke): ChromeApi['agents'] {
       await invoke(CHROME_CHANNELS.agentsRevoke, id);
     },
     narrow: (id, step) => invoke(CHROME_CHANNELS.agentsNarrow, id, step) as Promise<boolean>,
-    newPort: async () => {
-      await invoke(CHROME_CHANNELS.agentsNewPort);
-    },
+    newPort: running(invoke, CHROME_CHANNELS.agentsNewPort),
     openChat: (account) =>
       invoke(CHROME_CHANNELS.agentsOpenChat, account) as Promise<string | null>,
     copy: async (text) => {
@@ -104,9 +107,7 @@ function pickerBridge(invoke: Invoke): ChromeApi['picker'] {
     choose: async (id, audio) => {
       await invoke(CHROME_CHANNELS.pickerChoose, id, audio);
     },
-    cancel: async () => {
-      await invoke(CHROME_CHANNELS.pickerCancel);
-    },
+    cancel: running(invoke, CHROME_CHANNELS.pickerCancel),
   };
 }
 
@@ -116,9 +117,7 @@ function downloadsBridge(invoke: Invoke): ChromeApi['downloads'] {
     act: async (id, action) => {
       await invoke(CHROME_CHANNELS.downloadsAct, id, action);
     },
-    clear: async () => {
-      await invoke(CHROME_CHANNELS.downloadsClear);
-    },
+    clear: running(invoke, CHROME_CHANNELS.downloadsClear),
   };
 }
 
@@ -181,9 +180,7 @@ function settingsBridge(invoke: Invoke): ChromeApi['settings'] {
   return {
     get: () => invoke(CHROME_CHANNELS.settingsGet) as Promise<SettingsSnapshot>,
     set: (id, value) => invoke(CHROME_CHANNELS.settingsSet, id, value) as Promise<SettingsSnapshot>,
-    restart: async () => {
-      await invoke(CHROME_CHANNELS.settingsRestart);
-    },
+    restart: running(invoke, CHROME_CHANNELS.settingsRestart),
     export: () => invoke(CHROME_CHANNELS.settingsExport) as Promise<TransferResult>,
     import: () => invoke(CHROME_CHANNELS.settingsImport) as Promise<TransferResult>,
     chooseFolder: async (id) => {
@@ -191,10 +188,6 @@ function settingsBridge(invoke: Invoke): ChromeApi['settings'] {
     },
   };
 }
-
-const running = (invoke: Invoke, channel: string) => async (): Promise<void> => {
-  await invoke(channel);
-};
 
 function aboutBridge(invoke: Invoke): ChromeApi['about'] {
   return {

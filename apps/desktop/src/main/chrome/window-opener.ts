@@ -14,8 +14,8 @@ export interface ChromeWindowPort {
   loadURL(url: string): Promise<unknown>;
 }
 
-export interface ChromeWindowDependencies<Window extends ChromeWindowPort = ChromeWindowPort> {
-  readonly createWindow: (options: WindowOptions) => Window;
+export interface ChromeWindowDependencies {
+  readonly createWindow: (options: WindowOptions) => ChromeWindowPort;
   readonly views: ViewRegistry;
   readonly warn: (message: string) => void;
 }
@@ -27,12 +27,16 @@ export interface ChromePage {
   readonly window: WindowOptions;
 }
 
-/** Opens `page` in a new chrome window, shown once it has rendered or after a short wait. */
-export function openChromeWindow<Window extends ChromeWindowPort>(
-  deps: ChromeWindowDependencies<Window>,
+/**
+ * Opens `page` in a new chrome window, known as chrome to the permission
+ * and navigation guards, and shown once it has rendered or after a short
+ * wait. A page that fails to load is logged.
+ */
+function openChromeWindow(
+  deps: ChromeWindowDependencies,
   page: ChromePage,
-  extra: WindowOptions = {},
-): Window {
+  extra: WindowOptions,
+): ChromeWindowPort {
   // Dialog-like windows have no use for the app menu, which Windows and Linux
   // would otherwise draw inside each of them.
   const window = deps.createWindow({
@@ -42,51 +46,22 @@ export function openChromeWindow<Window extends ChromeWindowPort>(
     show: false,
   });
   showWhenReady(window);
-  void loadChromePage(deps, window, page.path);
+  deps.views.set(window.webContents, CHROME_VIEW);
+  window.loadURL(`${CHROME_ORIGIN}/${page.path}`).catch(() => {
+    deps.warn(`Could not load ${page.path}.`);
+  });
   return window;
 }
 
-/**
- * Loads one of YapYap's own pages in `window`, known as chrome to the
- * permission and navigation guards. Settles once the load ends, however it
- * ends; a failure is logged.
- */
-function loadChromePage(
-  deps: Pick<ChromeWindowDependencies, 'views' | 'warn'>,
-  window: Pick<ChromeWindowPort, 'webContents' | 'loadURL'>,
-  path: string,
-): Promise<void> {
-  deps.views.set(window.webContents, CHROME_VIEW);
-  return window.loadURL(`${CHROME_ORIGIN}/${path}`).then(
-    () => undefined,
-    () => {
-      deps.warn(`Could not load ${path}.`);
-    },
-  );
-}
-
-/** A chrome window opened at most once. */
-export interface ChromeWindowSlot {
-  /** Opens the window, or focuses it when it is already open. */
-  readonly open: () => void;
-}
-
-export function createChromeWindowSlot(
-  deps: ChromeWindowDependencies,
-  page: ChromePage,
-): ChromeWindowSlot {
+/** Opens `page` in a window at most once: opening it again focuses it. */
+export function chromeWindowOpener(deps: ChromeWindowDependencies, page: ChromePage): () => void {
   let current: ChromeWindowPort | undefined;
-  const open = (): ChromeWindowPort | undefined =>
-    current !== undefined && !current.isDestroyed() ? current : undefined;
-  return {
-    open: () => {
-      const shown = open();
-      if (shown === undefined) {
-        current = openChromeWindow(deps, page);
-      } else {
-        shown.focus();
-      }
-    },
+  return () => {
+    if (current === undefined || current.isDestroyed()) {
+      current = openChromeWindow(deps, page, {});
+    } else {
+      current.focus();
+    }
   };
 }
 
@@ -99,12 +74,12 @@ export interface PromptWindow {
 }
 
 /** Opens `page` as a prompt window, which closing twice cannot break. */
-export function openPromptWindow(deps: ChromeWindowDependencies, page: ChromePage): PromptWindow {
-  return asPromptWindow(openChromeWindow(deps, page));
-}
-
-/** `window` as a prompt window, which closing twice cannot break. */
-function asPromptWindow(window: ChromeWindowPort): PromptWindow {
+export function openPromptWindow(
+  deps: ChromeWindowDependencies,
+  page: ChromePage,
+  extra: WindowOptions = {},
+): PromptWindow {
+  const window = openChromeWindow(deps, page, extra);
   return {
     webContents: window.webContents,
     close: () => {

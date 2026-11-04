@@ -1,6 +1,6 @@
 import type { JSX } from 'preact';
 import { useCallback, useEffect, useState } from 'preact/hooks';
-import type { ChromeApi, DownloadAction, DownloadEntry } from '../../shared/chrome-api.ts';
+import type { ChromeApi, DownloadAction, DownloadEntry } from '../../shared/api/chrome-api.ts';
 import { en } from '../../shared/messages/en.ts';
 
 const text = en.downloads;

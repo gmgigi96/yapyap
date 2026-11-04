@@ -1,16 +1,8 @@
 import type { ElectronApplication, Page } from '@playwright/test';
+import { chromePage, clickMenu } from './chrome-helpers.ts';
 import { expect, test } from './fixtures.ts';
 
-const sidebarPage = async (app: ElectronApplication): Promise<Page> => {
-  await expect
-    .poll(() => app.windows().some((page) => page.url().endsWith('/sidebar.html')))
-    .toBe(true);
-  const page = app.windows().find((candidate) => candidate.url().endsWith('/sidebar.html'));
-  if (page === undefined) {
-    throw new Error('No sidebar.');
-  }
-  return page;
-};
+const sidebarPage = (app: ElectronApplication): Promise<Page> => chromePage(app, '/sidebar.html');
 
 /** Where each view sits in the main window: the sidebar first, then the accounts. */
 const layout = (app: ElectronApplication) =>
@@ -30,12 +22,7 @@ test('switches accounts from the sidebar, which appears with a second account', 
 }) => {
   await expect(window.getByTestId('fake-whatsapp')).toBeVisible();
   expect((await layout(app)).map((view) => view.x)).toEqual([0]);
-  await app.evaluate(({ Menu }) => {
-    Menu.getApplicationMenu()
-      ?.items.flatMap((menu) => menu.submenu?.items ?? [])
-      .find((entry) => entry.label === 'Add Account')
-      ?.click();
-  });
+  await clickMenu(app, 'Add Account');
   const sidebar = await sidebarPage(app);
   const first = sidebar.getByRole('button', { name: 'WhatsApp', exact: true });
   const second = sidebar.getByRole('button', { name: 'WhatsApp 2', exact: true });

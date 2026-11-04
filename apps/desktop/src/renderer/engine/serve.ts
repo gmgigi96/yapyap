@@ -1,4 +1,4 @@
-import type { EngineBridge, EngineCommand } from '../../shared/engine-api.ts';
+import type { EngineBridge, EngineCommand } from '../../shared/api/engine-api.ts';
 import { failureOf, type Engine } from './engine.ts';
 
 /** What the page serves with: the engine, and how it reads the downloaded model. */

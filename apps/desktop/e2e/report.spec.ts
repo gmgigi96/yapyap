@@ -1,3 +1,4 @@
+import { openFromMenu } from './chrome-helpers.ts';
 import { expect, test } from './fixtures.ts';
 
 test('builds a problem report the user reviews, copies it and opens GitHub', async ({
@@ -14,15 +15,7 @@ test('builds a problem report the user reviews, copies it and opens GitHub', asy
       return Promise.resolve();
     };
   });
-  const reportOpened = app.waitForEvent('window');
-  await app.evaluate(({ Menu }) => {
-    Menu.getApplicationMenu()
-      ?.items.flatMap((menu) => menu.submenu?.items ?? [])
-      .find((entry) => entry.label === 'Report a Problem…')
-      ?.click();
-  });
-  const report = await reportOpened;
-  await report.waitForURL('app://chrome/report.html');
+  const report = await openFromMenu(app, 'Report a Problem…', 'report.html');
   await expect(report.getByLabel('What the report includes')).toHaveValue(/^YapYap /);
   await report.getByLabel('What happened?').fill('The window stays blank after waking up.');
   await report.getByRole('button', { name: 'Copy and Open GitHub' }).click();

@@ -4,10 +4,11 @@
 
 YapYap is a desktop window for the official WhatsApp Web, the same page you
 would open in Chrome. It loads `https://web.whatsapp.com` unchanged, on
-Chromium, and identifies itself as the Chrome version it is built on. It
-never sends messages or acts on WhatsApp for you: there is no automation of
-any kind. The AI assistant only writes drafts, and a message goes out only
-when you send it.
+Chromium, and identifies itself as the Chrome version it is built on. On
+its own, it never sends messages or acts on WhatsApp for you. The AI
+assistant only writes drafts, and a message goes out only when you send it.
+An [AI agent](/guide/ai-agents) you connect sends only with a token that
+allows it, and WhatsApp may ban numbers that send automatically.
 
 YapYap is not made by WhatsApp or Meta, and nobody but WhatsApp can promise
 what WhatsApp will do. What YapYap can promise is that it behaves like a

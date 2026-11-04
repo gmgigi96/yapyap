@@ -1,4 +1,4 @@
-import { CHROME_CHANNELS, type TransferResult } from '../../shared/chrome-api.ts';
+import { CHROME_CHANNELS, type TransferResult } from '../../shared/api/chrome-api.ts';
 import { noArguments } from '../ipc/arguments.ts';
 import type { ChromeCall, ChromeHandler } from '../ipc/chrome.ts';
 import type { SettingsService } from './service.ts';

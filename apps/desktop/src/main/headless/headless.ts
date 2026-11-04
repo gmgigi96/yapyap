@@ -1,4 +1,5 @@
 import type { DisplayBackend } from '../display/backend.ts';
+import { isSet, type Environment } from '../support/environment.ts';
 
 /** Starts YapYap with no window on screen and, on Linux, no display at all (ADR 0021). */
 const HEADLESS_FLAG = '--headless';
@@ -26,21 +27,17 @@ export function headlessRequested(argv: readonly string[]): boolean {
  */
 const HEADLESS_BACKEND = '--ozone-platform=headless';
 
-function present(env: Readonly<Record<string, string | undefined>>, name: string): boolean {
-  return (env[name] ?? '') !== '';
-}
-
 /** Whether Chromium has a display to start on: its headless backend, or a display server. */
 export function headlessCanStart(
   argv: readonly string[],
   platform: string,
-  env: Readonly<Record<string, string | undefined>>,
+  env: Environment,
 ): boolean {
   return (
     platform !== 'linux' ||
     argv.includes(HEADLESS_BACKEND) ||
-    present(env, 'DISPLAY') ||
-    present(env, 'WAYLAND_DISPLAY')
+    isSet(env, 'DISPLAY') ||
+    isSet(env, 'WAYLAND_DISPLAY')
   );
 }
 

@@ -252,7 +252,6 @@ function displayMediaHandler(deps: SessionGuardDependencies, shares: Shares) {
   };
 }
 
-/** Applies the permission policy from ADR 0001 to one session. */
 /** What a session remembers the user allowed, and how to make it ask again (#77). */
 export interface PermissionMemory {
   /** The devices the user allowed for this session, until YapYap quits. */
@@ -270,6 +269,7 @@ function memoryOf(grants: Grants): PermissionMemory {
   };
 }
 
+/** Applies the permission policy from ADR 0001 to one session. */
 export function guardSession(
   session: SessionPort,
   deps: SessionGuardDependencies,

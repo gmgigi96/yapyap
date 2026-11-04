@@ -1,5 +1,6 @@
 import { CHAT_LIST_TO_TOP, chatOpenerStep, parseOpenStep } from '../../adapter/open-chat.ts';
 import { runInAdapterWorld } from '../../adapter/world.ts';
+import { pause } from '../support/pause.ts';
 import { readOpenChat, readUnreadChats } from '../assistant/chat-reading.ts';
 import {
   pressEnter,
@@ -57,11 +58,6 @@ async function openFromList(contents: ReplyContents, name: string, wait: Wait): 
   }
   return opened;
 }
-
-const pause = (ms: number): Promise<void> =>
-  new Promise((resolve) => {
-    setTimeout(resolve, ms);
-  });
 
 /** The page as opening a number needs it: WhatsApp's own `/send?phone=` link. */
 interface LinkContents extends ReplyContents {

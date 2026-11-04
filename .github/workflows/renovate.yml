@@ -37,6 +37,7 @@ jobs:
           permission-workflows: write
           permission-statuses: write
           permission-checks: read
+          permission-vulnerability-alerts: read
       - name: Say why nothing is proposed
         if: steps.app-token.outputs.token == ''
         run: echo "::notice::The automation App is not configured, so no updates are proposed (see CONTRIBUTING)."

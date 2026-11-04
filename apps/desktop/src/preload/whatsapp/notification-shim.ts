@@ -1,4 +1,4 @@
-import type { NotificationBridge } from '../../shared/notification-api.ts';
+import type { NotificationBridge } from '../../shared/api/notification-api.ts';
 
 type Handler = ((this: EventTarget, event: Event) => unknown) | null;
 

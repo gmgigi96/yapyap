@@ -117,18 +117,9 @@ export default defineConfig({
               text: '0010 Static analysis',
               link: '/adr/0010-static-analysis-with-sonarqube-cloud',
             },
-            {
-              text: '0011 Notifications',
-              link: '/adr/0011-whatsapp-notifications',
-            },
-            {
-              text: '0012 Translations',
-              link: '/adr/0012-translations',
-            },
-            {
-              text: '0013 In-chat assistant',
-              link: '/adr/0013-in-chat-assistant-bar',
-            },
+            { text: '0011 Notifications', link: '/adr/0011-whatsapp-notifications' },
+            { text: '0012 Translations', link: '/adr/0012-translations' },
+            { text: '0013 In-chat assistant', link: '/adr/0013-in-chat-assistant-bar' },
             { text: '0014 Marketplace (superseded)', link: '/adr/0014-extension-marketplace' },
             { text: '0015 Call recording (superseded)', link: '/adr/0015-call-recording' },
             { text: '0016 Extensions (superseded)', link: '/adr/0016-extensions-not-plugins' },

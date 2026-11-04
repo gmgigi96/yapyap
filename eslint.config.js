@@ -153,7 +153,6 @@ export default defineConfig(
       'apps/desktop/src/preload/*/index.ts',
       'apps/desktop/src/renderer/*/main.tsx',
       'scripts/src/bin/*.ts',
-      'packages/*/src/bin/*.ts',
     ],
     rules: { complexity: ['error', 1] },
   },

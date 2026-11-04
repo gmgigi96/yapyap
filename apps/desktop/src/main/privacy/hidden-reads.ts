@@ -1,5 +1,4 @@
-import type { Settings } from '../settings/schema.ts';
-import type { SettingsService } from '../settings/service.ts';
+import { followSettings, type SettingsService } from '../settings/service.ts';
 
 export interface ThrottledContents {
   setBackgroundThrottling(allowed: boolean): void;
@@ -16,9 +15,7 @@ export function followHiddenReadsSetting(
   contents: ThrottledContents,
   settings: Pick<SettingsService, 'current' | 'onChange'>,
 ): void {
-  const apply = (current: Settings): void => {
+  followSettings(settings, (current) => {
     contents.setBackgroundThrottling(current.privacy.unreadWhileHidden);
-  };
-  apply(settings.current());
-  settings.onChange(apply);
+  });
 }

@@ -1,16 +1,12 @@
 import { expectedLinuxBackend } from './app-environment.ts';
+import { clickMenu } from './chrome-helpers.ts';
 import { expect, test } from './fixtures.ts';
 
 test.skip(process.platform !== 'linux', 'Display backends exist only on Linux');
 
 test('draws the WhatsApp page on the display backend it reports', async ({ app, window }) => {
   await expect(window.getByTestId('fake-whatsapp')).toBeVisible();
-  await app.evaluate(({ Menu }) => {
-    Menu.getApplicationMenu()
-      ?.items.flatMap((menu) => menu.submenu?.items ?? [])
-      .find((entry) => entry.label === 'Copy Diagnostics')
-      ?.click();
-  });
+  await clickMenu(app, 'Copy Diagnostics');
   await expect
     .poll(() => app.evaluate(({ clipboard }) => clipboard.readText()))
     .toContain(`, display ${expectedLinuxBackend()} (automatic)\n`);

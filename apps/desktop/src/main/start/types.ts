@@ -1,7 +1,7 @@
 import type { Terminal } from '../headless/headless.ts';
 import type { AccountAvatars, AvatarPage } from '../accounts/avatars.ts';
-import type { ChromeFeature, WhatsAppContents } from '../chrome/feature.ts';
-import type { SidebarPort } from '../chrome/sidebar.ts';
+import type { ChromeFeature, ChromeRuntime, WhatsAppContents } from '../chrome/feature.ts';
+import type { SidebarPort } from '../accounts/sidebar-handlers.ts';
 import type { InPageChatList } from '../chat-list/chat-list-page.ts';
 import type { ChatListWidths } from '../chat-list/widths.ts';
 import type {
@@ -38,10 +38,10 @@ import type { WhatsAppIpc } from '../ipc/whatsapp.ts';
 import type { AccountNotifier, NotifierDependencies } from '../notifications/notifier.ts';
 import type { KeyContents, ReplyContents } from '../notifications/reply.ts';
 import type { MainWindowOptions } from '../window/windows.ts';
-import type { LinkWindow } from '../instances.ts';
+import type { LinkWindow } from '../app/instances.ts';
 import type { UnsafeStartDependencies } from '../security/sandbox-check.ts';
 import type { DownloadDependencies, DownloadingSession } from '../downloads/downloads.ts';
-import type { ShutdownSources } from '../shutdown.ts';
+import type { ShutdownSources } from '../app/shutdown.ts';
 import type { ReadyPage } from '../window/show-when-ready.ts';
 import type { FocusablePage, FocusableWindow } from '../window/focus-page.ts';
 import type { BadgeDrawing } from '../badge/badge-image.ts';
@@ -56,7 +56,8 @@ import type { SpellingController, SpellingSession } from '../spelling/spelling.t
 import type { AuthInfo, LoginCallback } from '../network/proxy-login.ts';
 import type { SecretStore } from '../secrets/secret-store.ts';
 import type { CodePage, CustomCodeController } from '../custom-code/custom-code.ts';
-import type { TextFile } from '../atomic-write.ts';
+import type { TextFile } from '../support/atomic-write.ts';
+import type { Environment } from '../support/environment.ts';
 
 export interface AppPort {
   disableHardwareAcceleration(): void;
@@ -198,7 +199,7 @@ export interface StartDependencies<Window extends WindowPort> {
    */
   readonly capture: (pickInApp: PickInApp, wayland: boolean) => DisplayCapturePort;
   readonly chrome: ChromeFeature;
-  readonly env: Readonly<Record<string, string | undefined>>;
+  readonly env: Environment;
   /** The command line, for `--safe-mode` and `--headless`. */
   readonly argv: readonly string[];
   /** Where headless mode shows what the user must see, such as a login code (ADR 0021). */
@@ -273,6 +274,9 @@ export interface StartDependencies<Window extends WindowPort> {
 
 export type PickInApp = (contents: object) => Promise<CaptureChoice | undefined>;
 
+/** What every session's guards share: the view registry, capture and the identity. */
+export type SessionSecurity = Parameters<typeof secureSession>[1];
+
 /** An open account's views, and how to bring its WhatsApp back after an outage. */
 export interface OpenedAccount extends AccountPage {
   readonly contents: AccountContents;
@@ -285,8 +289,8 @@ export interface OpenedAccount extends AccountPage {
 
 export interface AccountWiring<Window extends WindowPort> {
   readonly deps: StartDependencies<Window>;
-  readonly chrome: ReturnType<StartDependencies<Window>['chrome']['afterReady']>;
-  readonly security: Parameters<typeof secureSession>[1];
+  readonly chrome: ChromeRuntime;
+  readonly security: SessionSecurity;
   readonly window: Window;
   readonly signals: AccountSignals;
   /** Each account's profile photo, for the sidebar (#87). */

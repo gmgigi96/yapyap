@@ -1,7 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
 import { en } from '../../shared/messages/en.ts';
-import { defaultSettings } from '../settings/decode.ts';
-import type { Settings } from '../settings/schema.ts';
+import { fakeSettings } from '../../../test/fake-settings.ts';
 import {
   applyAutostart,
   chooseAutostart,
@@ -20,20 +19,6 @@ function loginItems(openAtLogin = false) {
     }),
   };
   return items;
-}
-
-function settingsWith(autostart: boolean) {
-  let settings: Settings = defaultSettings();
-  settings = { ...settings, general: { ...settings.general, autostart } };
-  return {
-    current: () => settings,
-    notice: undefined,
-    firstRun: false,
-    update: vi.fn((change: (current: Settings) => Settings) => {
-      settings = change(settings);
-    }),
-    onChange: vi.fn(),
-  };
 }
 
 const port = (enabled: boolean) => ({
@@ -112,13 +97,13 @@ describe('loginItemAutostart', () => {
 
 describe('syncAutostartSetting', () => {
   it('turns the setting off when the user removed the login item', () => {
-    const settings = settingsWith(true);
+    const settings = fakeSettings({ general: { autostart: true } });
     syncAutostartSetting(port(false), settings, vi.fn());
     expect(settings.current().general.autostart).toBe(false);
   });
 
   it('turns the setting on and refreshes the entry when the login item exists', () => {
-    const settings = settingsWith(false);
+    const settings = fakeSettings({ general: { autostart: false } });
     const autostart = port(true);
     syncAutostartSetting(autostart, settings, vi.fn());
     expect(settings.current().general.autostart).toBe(true);
@@ -127,13 +112,13 @@ describe('syncAutostartSetting', () => {
   });
 
   it('saves nothing when both agree', () => {
-    const settings = settingsWith(false);
+    const settings = fakeSettings({ general: { autostart: false } });
     syncAutostartSetting(port(false), settings, vi.fn());
     expect(settings.update).not.toHaveBeenCalled();
   });
 
   it('warns and leaves the setting alone when the system cannot be read', () => {
-    const settings = settingsWith(true);
+    const settings = fakeSettings({ general: { autostart: true } });
     const warn = vi.fn();
     const broken: AutostartPort = {
       enabled: () => {

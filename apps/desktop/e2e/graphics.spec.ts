@@ -1,20 +1,12 @@
-import type { ElectronApplication, Page } from '@playwright/test';
-import { closeApp, expect, launchApp, test, whatsAppPage } from './fixtures.ts';
+import type { ElectronApplication } from '@playwright/test';
+import { openFromMenu } from './chrome-helpers.ts';
+import { closeApp, expect, launchApp, test } from './fixtures.ts';
 
 /** The display backend diagnostics name: Linux CI runs on its virtual X11 display. */
 const DISPLAY = process.platform === 'linux' ? 'X11 \\(automatic\\)' : 'native';
 
 async function technicalDetails(app: ElectronApplication): Promise<string> {
-  await whatsAppPage(app);
-  const opened = app.waitForEvent('window');
-  await app.evaluate(({ Menu }) => {
-    Menu.getApplicationMenu()
-      ?.items.flatMap((menu) => menu.submenu?.items ?? [])
-      .find((entry) => entry.label === 'About YapYap')
-      ?.click();
-  });
-  const about: Page = await opened;
-  await about.waitForURL('app://chrome/about.html');
+  const about = await openFromMenu(app, 'About YapYap', 'about.html');
   await about.getByRole('button', { name: 'Copy Technical Details' }).click();
   await expect(about.getByRole('status')).toHaveText('Copied to the clipboard.');
   return app.evaluate(({ clipboard }) => clipboard.readText());

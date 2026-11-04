@@ -1,5 +1,5 @@
 import { basename } from 'node:path';
-import type { DownloadAction, DownloadEntry } from '../../shared/chrome-api.ts';
+import type { DownloadAction, DownloadEntry } from '../../shared/api/chrome-api.ts';
 
 /** The part of Electron's `DownloadItem` the Downloads window works with. */
 export interface TrackedItem {

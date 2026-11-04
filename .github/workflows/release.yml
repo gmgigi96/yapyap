@@ -15,9 +15,6 @@ concurrency:
 jobs:
   release-please:
     name: Release PR
-    # Paused until the first release is near: every update of the release PR
-    # runs the full check suite and holds runners that feature PRs wait for.
-    if: vars.RELEASES_ENABLED == 'true'
     runs-on: ubuntu-latest
     permissions:
       contents: write

@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import type { AssistantBarState } from '../../shared/assistant-bar-api.ts';
+import type { AssistantBarState } from '../../shared/api/assistant-bar-api.ts';
 import { inPageAssistantBar } from './bar-page.ts';
 
 const STATE: AssistantBarState = {

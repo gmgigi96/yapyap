@@ -1,4 +1,5 @@
 import { en } from '../../shared/messages/en.ts';
+import { isSet, type Environment } from '../support/environment.ts';
 
 export const TROUBLESHOOTING_URL = 'https://yapyap.guita.org/guide/troubleshooting#sandbox';
 
@@ -17,11 +18,8 @@ export interface SandboxSwitches {
  * AppImage launcher adds on its own when user namespaces are restricted, or
  * by `ELECTRON_DISABLE_SANDBOX`.
  */
-export function sandboxDisabled(
-  switches: SandboxSwitches,
-  env: Readonly<Record<string, string | undefined>>,
-): boolean {
-  return switches.hasSwitch('no-sandbox') || (env['ELECTRON_DISABLE_SANDBOX'] ?? '') !== '';
+export function sandboxDisabled(switches: SandboxSwitches, env: Environment): boolean {
+  return switches.hasSwitch('no-sandbox') || isSet(env, 'ELECTRON_DISABLE_SANDBOX');
 }
 
 export interface UnsafeStartDependencies {

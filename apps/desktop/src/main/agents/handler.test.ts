@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
 import type { ReadChat } from '../../adapter/active-chat.ts';
-import { DEFAULT_AGENT_LIMITS, type AgentScope } from '../../shared/agents-api.ts';
+import { DEFAULT_AGENT_LIMITS, type AgentScope } from '../../shared/api/agents-api.ts';
 import { chatId } from '../assistant/chats.ts';
 import { answerAgent, type AgentHandlerDependencies } from './handler.ts';
 import { failureLock, slidingCounter } from './limits.ts';

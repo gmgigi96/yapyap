@@ -68,24 +68,16 @@ function spellingItems(params: ContextMenuParams, actions: ContextMenuActions): 
 }
 
 function spellingSwitch(actions: ContextMenuActions): ContextMenuItem[] {
-  return actions.spellingOn()
-    ? [
-        {
-          label: en.contextMenu.checkSpelling,
-          type: 'checkbox',
-          checked: true,
-          click: actions.turnSpellingOff,
-        },
-        { label: en.contextMenu.languages, click: actions.openLanguages },
-      ]
-    : [
-        {
-          label: en.contextMenu.checkSpelling,
-          type: 'checkbox',
-          checked: false,
-          click: actions.openSettings,
-        },
-      ];
+  const on = actions.spellingOn();
+  return [
+    {
+      label: en.contextMenu.checkSpelling,
+      type: 'checkbox',
+      checked: on,
+      click: on ? actions.turnSpellingOff : actions.openSettings,
+    },
+    ...(on ? [{ label: en.contextMenu.languages, click: actions.openLanguages }] : []),
+  ];
 }
 
 /** What a right click offers: editing and spelling in text boxes, and Copy for selected text. */

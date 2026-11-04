@@ -1,6 +1,6 @@
 import type { JSX } from 'preact';
 import { useCallback, useEffect, useState } from 'preact/hooks';
-import type { ChromeApi, SettingsSnapshot, TransferResult } from '../../shared/chrome-api.ts';
+import type { ChromeApi, SettingsSnapshot, TransferResult } from '../../shared/api/chrome-api.ts';
 import { en } from '../../shared/messages/en.ts';
 import { SETTING_FIELDS, SETTINGS_SECTIONS } from '../../shared/settings-fields.ts';
 import { AgentsSection } from './Agents.tsx';
@@ -12,17 +12,17 @@ const text = en.settings;
 /** Sections with their own component, shown when their switch is. */
 const OWN_SECTIONS: ReadonlySet<string> = new Set(['assistant', 'agents']);
 
+/** A section's fields that do something on this platform; main lists only those. */
+const fieldsIn = (id: string, snapshot: SettingsSnapshot) =>
+  SETTING_FIELDS.filter((field) => field.id.startsWith(`${id}.`) && field.id in snapshot.values);
+
 /** The sections this platform shows, in order, with the heading each one has. */
 function shownSections(
   snapshot: SettingsSnapshot,
 ): { readonly id: string; readonly title: string }[] {
   // As the page renders them: the assistant's and the agents' own sections, then those with a field here.
   const shown = SETTINGS_SECTIONS.filter(({ id }) =>
-    OWN_SECTIONS.has(id)
-      ? `${id}.enabled` in snapshot.values
-      : SETTING_FIELDS.some(
-          (field) => field.id.startsWith(`${id}.`) && field.id in snapshot.values,
-        ),
+    OWN_SECTIONS.has(id) ? `${id}.enabled` in snapshot.values : fieldsIn(id, snapshot).length > 0,
   );
   return [...shown, { id: 'backup', title: text.backup.title }];
 }
@@ -51,10 +51,7 @@ function Sections(props: {
   readonly onChooseFolder: (id: string) => void;
 }): JSX.Element[] {
   return SETTINGS_SECTIONS.flatMap(({ id, title }) => {
-    // Main lists only the settings that do something on this platform.
-    const fields = SETTING_FIELDS.filter(
-      (field) => field.id.startsWith(`${id}.`) && field.id in props.snapshot.values,
-    );
+    const fields = fieldsIn(id, props.snapshot);
     // The assistant's and the agents' sections are their own, with more than fields (ADR 0017, 0019).
     if (fields.length === 0 || OWN_SECTIONS.has(id)) {
       return [];

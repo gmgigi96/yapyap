@@ -57,6 +57,9 @@ YapYap is young and not yet at 1.0. Follow what comes next on the
   run, or Claude or OpenAI with your own key. It reads a chat only once you
   allow it there, shows exactly what it sends, and never sends a message
   on its own.
+- An opt-in MCP server: AI agents on your computer can read chats, write
+  drafts and, only if you allow it, send messages, as far as the token you
+  give each one allows
 - Multiple accounts with fully isolated sessions
 - Native notifications, tray or menu bar with unread counts, and do-not-disturb
 - Recovery tools that fix a stuck session without logging you out

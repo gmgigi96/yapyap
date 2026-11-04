@@ -1,6 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
-import { defaultSettings } from '../settings/decode.ts';
-import type { Settings } from '../settings/schema.ts';
+import { fakeSettings } from '../../../test/fake-settings.ts';
 import { darkPanel, followTrayIconSetting, trayImage } from './tray-icon.ts';
 
 const images = () => {
@@ -47,33 +46,25 @@ describe('darkPanel', () => {
 
 describe('followTrayIconSetting', () => {
   it('shows the chosen icon, again when the setting or the scheme changes', () => {
-    let settings: Settings = defaultSettings();
-    const listeners: { settings?: () => void; scheme?: () => void } = {};
+    const settings = fakeSettings();
+    let schemeChanged: (() => void) | undefined;
     const scheme = {
       shouldUseDarkColors: false,
       shouldUseDarkColorsForSystemIntegratedUI: false,
       on: vi.fn((_event: 'updated', listener: () => void) => {
-        listeners.scheme = listener;
+        schemeChanged = listener;
       }),
     };
     const tray = { setImage: vi.fn() };
     followTrayIconSetting(tray, {
       platform: 'linux',
-      settings: {
-        current: () => settings,
-        onChange: (listener) => {
-          listeners.settings = () => {
-            listener(settings);
-          };
-        },
-      },
+      settings,
       scheme,
       image: (choice) => choice,
     });
-    settings = { ...settings, appearance: { ...settings.appearance, trayIcon: 'auto' } };
-    listeners.settings?.();
+    settings.change({ appearance: { trayIcon: 'auto' } });
     scheme.shouldUseDarkColors = true;
-    listeners.scheme?.();
+    schemeChanged?.();
     expect(tray.setImage.mock.calls).toEqual([['color'], ['dark'], ['light']]);
   });
 });

@@ -1,31 +1,18 @@
 import type { ElectronApplication, Page } from '@playwright/test';
+import { chromePage, clickMenu } from './chrome-helpers.ts';
 import { expect, test, whatsAppPage } from './fixtures.ts';
 
 test.skip(process.platform === 'darwin', 'macOS uses its own system picker');
 
 /** Adds a second account, so the sidebar shows, and returns its WhatsApp page. */
 async function secondAccount(app: ElectronApplication, first: Page): Promise<Page> {
-  await app.evaluate(({ Menu }) => {
-    Menu.getApplicationMenu()
-      ?.items.flatMap((menu) => menu.submenu?.items ?? [])
-      .find((entry) => entry.label === 'Add Account')
-      ?.click();
-  });
+  await clickMenu(app, 'Add Account');
   const page = await whatsAppPage(app, first);
   await page.waitForLoadState('load');
   return page;
 }
 
-const sidebarOf = async (app: ElectronApplication): Promise<Page> => {
-  await expect
-    .poll(() => app.windows().some((page) => page.url().endsWith('/sidebar.html')))
-    .toBe(true);
-  const sidebar = app.windows().find((page) => page.url().endsWith('/sidebar.html'));
-  if (sidebar === undefined) {
-    throw new Error('No sidebar.');
-  }
-  return sidebar;
-};
+const sidebarOf = (app: ElectronApplication): Promise<Page> => chromePage(app, '/sidebar.html');
 
 /** Shares the first screen through YapYap's picker, as the picker tests do. */
 async function shareScreen(app: ElectronApplication, page: Page): Promise<void> {

@@ -2,7 +2,7 @@
 import { cleanup, fireEvent, render, screen } from '@testing-library/preact';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { fakeChromeApi } from '../../../test/chrome-api.ts';
-import type { AboutInfo, ChromeApi } from '../../shared/chrome-api.ts';
+import type { AboutInfo, ChromeApi } from '../../shared/api/chrome-api.ts';
 import { About, LINKS, SUPPORTER } from './About.tsx';
 
 const INFO: AboutInfo = {

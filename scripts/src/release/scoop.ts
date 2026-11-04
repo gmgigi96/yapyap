@@ -3,6 +3,7 @@ import {
   channelsOf,
   checkSchema,
   download,
+  packageName,
   type DistributionRelease,
 } from './distribution.ts';
 import type { Channel } from './repository.ts';
@@ -24,7 +25,6 @@ function manifest(channel: Channel, release: DistributionRelease): object {
       return [arch, { url: `${file.url}#/${EXECUTABLE}`, hash: file.sha256 }];
     }),
   );
-  const name = channel === 'stable' ? ABOUT.name : `${ABOUT.name} Beta`;
   return {
     version: release.version,
     description:
@@ -32,7 +32,7 @@ function manifest(channel: Channel, release: DistributionRelease): object {
     homepage: ABOUT.homepage,
     license: ABOUT.license,
     architecture: downloads,
-    shortcuts: [[EXECUTABLE, name]],
+    shortcuts: [[EXECUTABLE, packageName(channel)]],
   };
 }
 

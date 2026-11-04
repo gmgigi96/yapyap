@@ -59,6 +59,6 @@ export function guardCrashes(contents: CrashableContents, deps: CrashGuardDepend
     }, UNRESPONSIVE_GRACE_MS);
   });
   contents.on('responsive', () => {
-    hangs++;
+    hangs += 1;
   });
 }

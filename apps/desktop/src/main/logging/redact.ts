@@ -18,14 +18,9 @@ const RULES: readonly (readonly [RegExp, string])[] = [
   [/[+(]?\d(?:[\s()-]{0,2}\d){6,}/g, '[phone]'],
 ];
 
-function escapeRegExp(text: string): string {
-  return text.replace(/[.*+?^${}()|[\]\\]/g, String.raw`\$&`);
-}
-
 /** `home` is replaced with `~` first, so user names in paths never appear. */
 export function redact(line: string, home: string): string {
-  const withoutHome =
-    home.length > 1 ? line.replace(new RegExp(escapeRegExp(home), 'g'), '~') : line;
+  const withoutHome = home.length > 1 ? line.replaceAll(home, '~') : line;
   return RULES.reduce(
     (text, [pattern, replacement]) => text.replace(pattern, replacement),
     withoutHome,

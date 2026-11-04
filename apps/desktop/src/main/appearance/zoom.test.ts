@@ -1,7 +1,7 @@
 import fc from 'fast-check';
 import { describe, expect, it, vi } from 'vitest';
+import { fakeSettings } from '../../../test/fake-settings.ts';
 import { defaultSettings } from '../settings/decode.ts';
-import type { Settings } from '../settings/schema.ts';
 import { changeZoom, followZoomSetting, stepZoom, type ZoomableContents } from './zoom.ts';
 
 describe('stepZoom', () => {
@@ -35,23 +35,6 @@ describe('stepZoom', () => {
     );
   });
 });
-
-function fakeSettings() {
-  let settings: Settings = defaultSettings();
-  const listeners: ((settings: Settings) => void)[] = [];
-  return {
-    current: () => settings,
-    onChange: (listener: (settings: Settings) => void) => {
-      listeners.push(listener);
-    },
-    update: vi.fn((change: (current: Settings) => Settings) => {
-      settings = change(settings);
-      for (const listener of listeners) {
-        listener(settings);
-      }
-    }),
-  };
-}
 
 describe('changeZoom', () => {
   it('stores the stepped zoom and nothing else', () => {

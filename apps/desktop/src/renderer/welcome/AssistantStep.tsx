@@ -5,14 +5,12 @@ import type {
   ChromeApi,
   FoundServer,
   KeyedProvider,
-} from '../../shared/chrome-api.ts';
+} from '../../shared/api/chrome-api.ts';
 import { en } from '../../shared/messages/en.ts';
-import type { SettingValue } from '../../shared/settings-fields.ts';
 import { KeyField, useAssistantView } from '../settings/Assistant.tsx';
+import type { Change } from '../settings/Field.tsx';
 
 const text = en.assistant.welcome;
-
-type Change = (id: string, value: SettingValue) => void;
 
 /** What the user picked: a key to paste for a service, or done. */
 type Picked = KeyedProvider | 'done' | undefined;
@@ -38,14 +36,13 @@ function Option(props: {
   readonly hint: string;
   readonly onPick: (value: string) => void;
 }): JSX.Element {
-  const { value, onPick } = props;
   return (
     <div class="option">
       <button
         type="button"
-        onClick={useCallback(() => {
-          onPick(value);
-        }, [value, onPick])}
+        onClick={() => {
+          props.onPick(props.value);
+        }}
       >
         {props.label}
       </button>
@@ -128,9 +125,6 @@ export function AssistantStep(props: {
   const { api, onChange } = props;
   const [view, reload] = useAssistantView(api);
   const [picked, setPicked] = useState<Picked>(undefined);
-  if (view === null) {
-    return null;
-  }
   const choose = useCallback(
     (provider: string, then: Picked = 'done'): void => {
       onChange('assistant.provider', provider);
@@ -138,6 +132,9 @@ export function AssistantStep(props: {
     },
     [onChange],
   );
+  if (view === null) {
+    return null;
+  }
   return (
     <section aria-labelledby="welcome-assistant">
       <h2 id="welcome-assistant">{text.title}</h2>

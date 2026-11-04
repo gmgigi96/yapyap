@@ -30,6 +30,8 @@ const CONTENT_TYPES: ReadonlyMap<string, string> = new Map([
   ['.woff2', 'font/woff2'],
 ]);
 
+const NOT_FOUND = 404;
+
 export interface ChromeAsset {
   readonly path: string;
   readonly contentType: string;
@@ -65,12 +67,9 @@ export function createChromeHandler(
 ): (request: { readonly url: string }) => Promise<Response> {
   return async ({ url }) => {
     const asset = resolveChromeAsset(url, root);
-    if (asset === undefined) {
-      return new Response(null, { status: 404 });
-    }
-    const body = await readFile(asset.path).catch(() => undefined);
-    if (body === undefined) {
-      return new Response(null, { status: 404 });
+    const body = asset && (await readFile(asset.path).catch(() => undefined));
+    if (asset === undefined || body === undefined) {
+      return new Response(null, { status: NOT_FOUND });
     }
     return new Response(body, {
       headers: {

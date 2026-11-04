@@ -1,6 +1,6 @@
 import { copyFileSync, existsSync, readFileSync, renameSync } from 'node:fs';
 import { join } from 'node:path';
-import { writeTextAtomically } from '../atomic-write.ts';
+import { writeTextAtomically } from '../support/atomic-write.ts';
 import { decodeSettings, defaultSettings } from './decode.ts';
 import type { Settings } from './schema.ts';
 import { en } from '../../shared/messages/en.ts';

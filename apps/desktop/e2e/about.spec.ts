@@ -1,21 +1,8 @@
-import type { ElectronApplication, Page } from '@playwright/test';
-import { expect, test, whatsAppPage } from './fixtures.ts';
+import type { ElectronApplication } from '@playwright/test';
+import { openFromMenu } from './chrome-helpers.ts';
+import { expect, test } from './fixtures.ts';
 
-async function openAbout(app: ElectronApplication): Promise<Page> {
-  // The WhatsApp window must exist first so the next window event is About's;
-  // that event can fire while the new page is still about:blank.
-  await whatsAppPage(app);
-  const opened = app.waitForEvent('window');
-  await app.evaluate(({ Menu }) => {
-    const item = Menu.getApplicationMenu()
-      ?.items.flatMap((menu) => menu.submenu?.items ?? [])
-      .find((entry) => entry.label === 'About YapYap');
-    item?.click();
-  });
-  const page = await opened;
-  await page.waitForURL('app://chrome/about.html');
-  return page;
-}
+const openAbout = (app: ElectronApplication) => openFromMenu(app, 'About YapYap', 'about.html');
 
 test('opens About from the menu with the version, engines and disclaimer, and closes on Escape', async ({
   app,

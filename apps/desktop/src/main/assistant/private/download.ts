@@ -147,10 +147,10 @@ export async function download(
     }
     const saved = await resumed(model, deps.files);
     onProgress(saved.done);
-    const free = await deps.files.free();
     if (saved.done === model.size) {
       return await verified(model, saved, deps.files);
     }
+    const free = await deps.files.free();
     if (free !== undefined && free < model.size - saved.done) {
       return 'disk-full';
     }

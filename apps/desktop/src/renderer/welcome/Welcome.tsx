@@ -1,8 +1,8 @@
 import type { JSX } from 'preact';
-import type { ChromeApi, SettingsSnapshot } from '../../shared/chrome-api.ts';
+import type { ChromeApi, SettingsSnapshot } from '../../shared/api/chrome-api.ts';
 import { en } from '../../shared/messages/en.ts';
-import { SETTING_FIELDS, type SettingValue } from '../../shared/settings-fields.ts';
-import { Field } from '../settings/Field.tsx';
+import { SETTING_FIELDS } from '../../shared/settings-fields.ts';
+import { Field, type Change } from '../settings/Field.tsx';
 import { useSnapshot } from '../settings/Settings.tsx';
 import { AssistantStep } from './AssistantStep.tsx';
 
@@ -25,7 +25,7 @@ const GROUPS = [
 function Group(props: {
   readonly group: (typeof GROUPS)[number];
   readonly snapshot: SettingsSnapshot;
-  readonly onChange: (id: string, value: SettingValue) => void;
+  readonly onChange: Change;
 }): JSX.Element {
   const { group, snapshot } = props;
   const ids: readonly string[] = group.ids;

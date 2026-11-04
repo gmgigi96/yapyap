@@ -538,7 +538,6 @@ export interface Messages {
     readonly intro: string;
     readonly address: string;
     readonly copy: string;
-    readonly copied: string;
     readonly off: string;
     readonly portTaken: (params: { readonly port: string | number }) => string;
     readonly newPort: string;
@@ -564,7 +563,6 @@ export interface Messages {
       readonly remove: (params: { readonly item: string | number }) => string;
       readonly removeMark: string;
       readonly allChats: string;
-      readonly chatCount: (params: { readonly count: number }) => string;
       readonly unnamedChat: string;
       readonly expires: (params: { readonly date: string | number }) => string;
       readonly neverExpires: string;

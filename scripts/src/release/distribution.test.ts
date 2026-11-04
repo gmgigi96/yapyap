@@ -3,6 +3,7 @@ import {
   channelsOf,
   checkSchema,
   download,
+  packageName,
   parseRelease,
   releaseNotesUrl,
   type DistributionRelease,
@@ -67,6 +68,13 @@ describe('download', () => {
     expect(() => download(release, 'win-x64-setup.exe')).toThrow(
       'SHA256SUMS lists no YapYap-1.2.3-beta.4-win-x64-setup.exe',
     );
+  });
+});
+
+describe('packageName', () => {
+  it('names the beta channel’s package apart', () => {
+    expect(packageName('stable')).toBe('YapYap');
+    expect(packageName('beta')).toBe('YapYap Beta');
   });
 });
 

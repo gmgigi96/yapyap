@@ -1,4 +1,4 @@
-import { SHARE_CHANNELS } from '../../shared/share-api.ts';
+import { SHARE_CHANNELS } from '../../shared/api/share-api.ts';
 import { argumentsOf } from '../ipc/arguments.ts';
 import {
   registerWhatsAppListeners,

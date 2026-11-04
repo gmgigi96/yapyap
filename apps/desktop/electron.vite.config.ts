@@ -2,7 +2,7 @@ import { globSync, readFileSync } from 'node:fs';
 import { createRequire } from 'node:module';
 import { basename, dirname, join, resolve } from 'node:path';
 import { defineConfig } from 'electron-vite';
-import type { Plugin } from 'vite';
+import { build, mergeConfig, type Plugin, type UserConfig } from 'vite';
 
 const RENDERER = resolve(import.meta.dirname, 'src/renderer');
 
@@ -43,8 +43,48 @@ function engineWasm(): Plugin {
   };
 }
 
+/**
+ * The main process serves the chrome pages from the built `out/renderer`
+ * over `app://` (ADR 0001), never from the Vite dev server, so `dev`
+ * watch-builds the renderer there too. Electron starts only once the
+ * first build is written, so the pages always match the main process.
+ */
+function watchChromePages(): Plugin {
+  let renderer: UserConfig = {};
+  return {
+    name: 'yapyap-watch-chrome-pages',
+    apply: 'serve',
+    config(config) {
+      renderer = config;
+    },
+    async configureServer() {
+      await new Promise<void>((built, reject) => {
+        const firstBuild: Plugin = {
+          name: 'yapyap-first-build',
+          closeBundle: () => {
+            built();
+          },
+        };
+        // The production mode gives the pages the relative base of a real build.
+        build(
+          mergeConfig(renderer, {
+            configFile: false,
+            mode: 'production',
+            build: { watch: {} },
+            plugins: [firstBuild],
+          }),
+        ).catch(reject);
+      });
+    },
+  };
+}
+
 export default defineConfig({
-  main: {},
+  // The main process's dependencies are bundled like YapYap's own code rather
+  // than shipped as node_modules: the package then holds only the code that
+  // runs, not the SDKs' sources, type definitions and source maps. Bundled
+  // code keeps its licenses in a notice file next to it.
+  main: { build: { externalizeDeps: false, license: { fileName: 'licenses.md' } } },
   preload: {
     build: {
       rolldownOptions: {
@@ -60,8 +100,9 @@ export default defineConfig({
   },
   renderer: {
     root: RENDERER,
-    plugins: [appIcon(), engineWasm()],
+    plugins: [appIcon(), engineWasm(), watchChromePages()],
     build: {
+      license: { fileName: 'licenses.md' },
       // Every HTML shell in the renderer folder is a chrome page.
       rolldownOptions: {
         input: Object.fromEntries(

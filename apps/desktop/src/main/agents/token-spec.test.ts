@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { DEFAULT_AGENT_LIMITS, type AgentTokenSpec } from '../../shared/agents-api.ts';
+import { DEFAULT_AGENT_LIMITS, type AgentTokenSpec } from '../../shared/api/agents-api.ts';
 import { checkSpec } from './token-spec.ts';
 
 const ACCOUNT = '11111111-2222-4333-8444-555555555555';

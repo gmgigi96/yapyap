@@ -1,4 +1,4 @@
-import { RELEASE_DOWNLOADS } from './releases.ts';
+import { RELEASE_DOWNLOADS, REPOSITORY } from './releases.ts';
 
 type AurArch = 'x86_64' | 'aarch64';
 
@@ -16,7 +16,7 @@ export interface AurRelease {
 
 const PKGNAME = 'yapyap-bin';
 const ARCHES: readonly AurArch[] = ['x86_64', 'aarch64'];
-const SOURCES = 'https://raw.githubusercontent.com/vascoguita/yapyap/v';
+const SOURCES = `https://raw.githubusercontent.com/${REPOSITORY}/v`;
 const LISTS = ['license', 'depends', 'provides', 'conflicts', 'options'] as const;
 const FIELDS = {
   pkgdesc: 'Desktop client for WhatsApp Web (unofficial)',

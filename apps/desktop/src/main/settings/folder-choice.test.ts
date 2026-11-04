@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
-import { CHROME_CHANNELS } from '../../shared/chrome-api.ts';
+import { CHROME_CHANNELS } from '../../shared/api/chrome-api.ts';
 import { defaultSettings } from './decode.ts';
 import { folderChoiceHandlers } from './folder-choice.ts';
 import type { Settings } from './schema.ts';

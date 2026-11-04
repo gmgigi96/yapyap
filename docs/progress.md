@@ -8,19 +8,15 @@ their reasons belong in the ADRs (`docs/adr/`), and released changes in
 ## Current state (2026-11-01)
 
 - **Latest stable release:** v0.2.0 (2026-10-29). **Latest beta:**
-  v0.2.1-beta.2 (2026-10-31). The release-please PR for 0.2.1 is open.
+  v0.3.0-beta.1 (2026-11-02). The release-please PR for 0.3.0 is open.
   Releases happen only by merging it, and a release needs a published beta
   of its version first (#184).
 - **On `master`, unreleased:** the AI assistant is part of YapYap itself
   (ADR 0017, #505). It is YapYap's main feature and no longer an extension.
-- **Next:** M7 (#210, the full packaging matrix and the up-to-date rule on
-  pull requests) and M8 (#119 Flathub, #118 the final audit and v1.0.0).
+- **Next:** M8 (#119 Flathub, #118 the final audit and v1.0.0).
 - **Waiting on the maintainer:** #24 (Windows code signing), #25 (AUR
-  credentials), #402 (renew the macOS certificate before 2027-11-25), #419
-  (where reviewed third-party extension archives are hosted).
-- **Open outside milestones:** #345 and #346 (winget, Scoop and Homebrew),
-  #477 (the SDK and signing CLI on npm), #507 (a slow welcome window in
-  Windows E2E).
+  credentials), #402 (renew the macOS certificate before 2027-11-25).
+- **Open outside milestones:** #345 and #346 (winget, Scoop and Homebrew).
   See `gh issue list` for the live list.
 
 | Milestone                                            | Status                           |
@@ -32,7 +28,7 @@ their reasons belong in the ADRs (`docs/adr/`), and released changes in
 | M4 · Remaining desktop features (v0.1.x)             | Done                             |
 | M5 · Extension platform                              | Done                             |
 | M6 · AI writing assistant (v0.2.0)                   | Done; made part of YapYap (#505) |
-| M7 · Hardening                                       | In progress (#210)               |
+| M7 · Hardening                                       | Done                             |
 | M8 · Docs and v1.0.0                                 | In progress (#118, #119)         |
 
 ## Conventions
@@ -53,11 +49,9 @@ their reasons belong in the ADRs (`docs/adr/`), and released changes in
 - **Test-only switches.** `YAPYAP_TEST_*` variables (marketplace origin and
   anchor, model ports, the built-in model) point E2E tests at local fakes.
   Packaged builds ignore them.
-- **Releases.** release-please runs only while the `RELEASES_ENABLED`
-  variable is `true`. The release workflow merges each change's commit and
-  merge-commit entries into one changelog entry (`merge-changelog.ts`,
-  #358). Extensions have their own release-please components and
-  `<name>-vX.Y.Z` tags (#474).
+- **Releases.** release-please keeps the release PR on `master`, and the
+  release workflow merges each change's commit and merge-commit entries
+  into one changelog entry (`merge-changelog.ts`, #358).
 - **Identity.** The site is https://yapyap.guita.org (a GitHub Pages custom
   domain), and the app ID is `org.guita.YapYap`. Ensita supports YapYap's
   development and is credited in the README, the site footer and the About
@@ -145,6 +139,9 @@ their reasons belong in the ADRs (`docs/adr/`), and released changes in
 - CI cost and E2E stability (#188, #210, #223, #247, #296, #327, #394):
   docs-only changes skip code jobs (ADR 0007); E2E teardown kills hung apps
   and attaches diagnostics; local runs stay on the virtual X11 display.
+  Releases are the hard gate: the full matrix on every pull request and
+  the up-to-date rule stay off by design, with every push to `master`
+  running everything (#210).
 
 - Mutation (#275, #312): the nightly run is split into 16 shards.
 
@@ -244,7 +241,7 @@ title, escape })` (`src/renderer/shared/mount.tsx`), which titles the
   preload hears its events through one typed `listen`.
 
 - State files (#527): every small state file is a `TextFile` from
-  `textFileAt` (`main/atomic-write.ts`), written atomically; the extension
+  `textFileAt` (`main/support/atomic-write.ts`), written atomically; the extension
   records use `writeTextAtomicallyAsync`.
 
 - UI wording (#528): buttons in YapYap's windows use title case, like its
@@ -374,3 +371,25 @@ title, escape })` (`src/renderer/shared/mount.tsx`), which titles the
   `--ozone-platform=headless` on the command line, and adds `--disable-gpu`. The `login-code.ts` probe reads the logged-out page's QR code as
   modules, which `headless/pairing.ts` draws in the terminal, and only
   there.
+- Dev chrome pages (#588): `pnpm dev` watch-builds the renderer into
+  `out/renderer`, which `app://chrome/` serves, and starts Electron only
+  after the first build, so the dev app never shows stale chrome pages.
+- SonarQube Cloud on forks (#591, ADR 0010): a run without the token, as
+  for pull requests from forks, fails instead of passing, and the ruleset
+  requires SonarQube Cloud's own check. A fork's branch is pushed here to
+  be analyzed (CONTRIBUTING).
+- Codebase cleanup (#592): the same jobs are done the same way across
+  files, with shared helpers for environment variables, small JSON stores,
+  pauses and following a setting, and one fake settings service for tests.
+  Dead code and leftovers of the removed extensions and quick access panel
+  are gone, the MCP server's SonarQube Cloud issues are fixed, and mutation
+  testing covers the moved security and window modules again. Each feature
+  keeps its window handlers in its own folder, `src/main/` holds only
+  `index.ts` beside its folders, the process contracts sit in
+  `src/shared/api/`, and `AGENTS.md` links to `CLAUDE.md`.
+- minimatch advisory (#594): overrides move electron-builder to
+  `@electron/asar` 4, `@electron/universal` 3, `filelist` 2 and `glob` 14,
+  so every package gets minimatch 11, and drop the Squirrel.Windows
+  packager YapYap never builds. `pnpm audit` finds nothing.
+- knip advisory (#597): knip moves to 6.44.1, which fixes a path traversal
+  advisory (CVE-2026-120325) that failed SonarQube Cloud's dependency gate.

@@ -1,6 +1,6 @@
 import type { JSX } from 'preact';
 import { useEffect, useState } from 'preact/hooks';
-import type { ChromeApi } from '../../shared/chrome-api.ts';
+import type { ChromeApi } from '../../shared/api/chrome-api.ts';
 import { en } from '../../shared/messages/en.ts';
 import { DiscardPrompt, useEscapeToClose } from '../shared/discard.tsx';
 

@@ -1,4 +1,4 @@
-import { CHAT_LIST_CHANNELS } from '../../shared/chat-list-api.ts';
+import { CHAT_LIST_CHANNELS } from '../../shared/api/chat-list-api.ts';
 import { argumentsOf, noArguments } from '../ipc/arguments.ts';
 import {
   registerWhatsAppListeners,

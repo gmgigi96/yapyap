@@ -1,9 +1,10 @@
 import type { JSX } from 'preact';
 import { useCallback, useEffect, useRef, useState } from 'preact/hooks';
-import type { ChromeApi, CustomCodeView } from '../../shared/chrome-api.ts';
+import type { ChromeApi, CustomCodeView } from '../../shared/api/chrome-api.ts';
 import {
   ALL_ACCOUNTS,
   MAX_SNIPPET,
+  NO_CUSTOM_CODE,
   type CustomCode,
   type Snippet,
 } from '../../shared/custom-code.ts';
@@ -107,7 +108,7 @@ function EnabledField(props: {
  */
 function useDraft(api: ChromeApi) {
   const [view, setView] = useState<CustomCodeView>();
-  const [draft, setDraft] = useState<CustomCode>({ enabled: false, snippets: {} });
+  const [draft, setDraft] = useState<CustomCode>(NO_CUSTOM_CODE);
   const previewed = useRef(new Set<string>());
   const show = useCallback(
     (next: CustomCode, scope: string): void => {

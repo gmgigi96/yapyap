@@ -1,7 +1,8 @@
 import type { ElectronApplication } from '@playwright/test';
 import { readFile, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
-import { closeApp, expect, launchApp, mainWindow, test } from './fixtures.ts';
+import { openFromMenu } from './chrome-helpers.ts';
+import { closeApp, expect, launchApp, mainWindow, quitApp, test } from './fixtures.ts';
 
 const BOUNDS = { x: 60, y: 40, width: 900, height: 640 };
 
@@ -9,16 +10,12 @@ const mainBounds = async (app: ElectronApplication) =>
   (await mainWindow(app)).evaluate((window) => window.getNormalBounds());
 
 async function exited(app: ElectronApplication, signal?: NodeJS.Signals): Promise<void> {
-  const done = new Promise((resolve) => app.process().once('exit', resolve));
   if (signal === undefined) {
-    await app.evaluate(({ app: electronApp }) => {
-      setTimeout(() => {
-        electronApp.quit();
-      });
-    });
-  } else {
-    app.process().kill(signal);
+    await quitApp(app);
+    return;
   }
+  const done = new Promise((resolve) => app.process().once('exit', resolve));
+  app.process().kill(signal);
   await done;
 }
 
@@ -52,7 +49,7 @@ test('starts with the default size when the saved state is corrupt', async ({
 }) => {
   // The default as this machine shows it: small screens shrink it to fit.
   const fresh = await mainBounds(app);
-  await exited(app);
+  await quitApp(app);
   await writeFile(join(profile, 'window-state.json'), '{"bounds":"nonsense"');
   const again = await launchApp(fakeWhatsApp.origin, profile);
   try {
@@ -73,15 +70,7 @@ test('hides the menu bar when the setting says so', async ({ app }) => {
   const main = await mainWindow(app);
   const autoHidden = () => main.evaluate((window) => window.isMenuBarAutoHide());
   expect(await autoHidden()).toBe(false);
-  const opened = app.waitForEvent('window');
-  await app.evaluate(({ Menu }) => {
-    Menu.getApplicationMenu()
-      ?.items.flatMap((menu) => menu.submenu?.items ?? [])
-      .find((entry) => entry.label === 'Settings…')
-      ?.click();
-  });
-  const settings = await opened;
-  await settings.waitForURL('app://chrome/settings.html');
+  const settings = await openFromMenu(app, 'Settings…', 'settings.html');
   await settings.getByRole('checkbox', { name: 'Hide the menu bar' }).check();
   await expect.poll(autoHidden).toBe(true);
 });

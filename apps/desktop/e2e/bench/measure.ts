@@ -1,5 +1,5 @@
 import type { ElectronApplication } from '@playwright/test';
-import { mkdtemp, rm } from 'node:fs/promises';
+import { mkdtemp, readFile, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { startFakeWhatsApp } from '../fake-whatsapp-server.ts';
@@ -22,6 +22,56 @@ export interface Sample {
 
 /** Long enough for start-up work to finish and memory to settle. */
 const SETTLE_MS = 10_000;
+
+/** Waits for start-up work to finish and memory to settle. */
+export const settle = (): Promise<void> => new Promise((resolve) => setTimeout(resolve, SETTLE_MS));
+
+/** This platform's budgets from `budgets.json`, as the calling benchmark reads them. */
+export async function budgetHere<Budget>(): Promise<Budget> {
+  const budgets = JSON.parse(
+    await readFile(join(import.meta.dirname, 'budgets.json'), 'utf8'),
+  ) as Record<string, Budget | undefined>;
+  const budget = budgets[process.platform];
+  if (budget === undefined) {
+    throw new Error(`No budget for ${process.platform}`);
+  }
+  return budget;
+}
+
+/**
+ * Launches YapYap on a fresh profile against its own fake WhatsApp, as a
+ * first launch after install, runs `measure` with the app and when the
+ * launch began, and cleans everything up after.
+ */
+export async function onFreshProfile<T>(
+  measure: (app: ElectronApplication, started: number) => Promise<T>,
+): Promise<T> {
+  const fake = await startFakeWhatsApp();
+  const profile = await mkdtemp(join(tmpdir(), 'yapyap-bench-'));
+  const started = performance.now();
+  const app = await launchApp(fake.origin, profile);
+  try {
+    return await measure(app, started);
+  } finally {
+    await app.close();
+    await fake.close();
+    await rm(profile, { recursive: true, force: true });
+  }
+}
+
+/** All of YapYap's processes' working sets together, in megabytes. */
+export const memoryMb = async (app: ElectronApplication): Promise<number> =>
+  Math.round(
+    (await app.evaluate(({ app: electronApp }) =>
+      electronApp.getAppMetrics().reduce((sum, metric) => sum + metric.memory.workingSetSize, 0),
+    )) / 1024,
+  );
+
+/** `seconds` of CPU used since `started`, as a share of one core to a tenth of a percent. */
+export function cpuPercentSince(seconds: number, started: number): number {
+  const percent = (seconds / ((performance.now() - started) / 1000)) * 100;
+  return Math.round(percent * 10) / 10;
+}
 
 /**
  * Working-set kilobytes by process: a page's process by what it shows, the
@@ -51,16 +101,12 @@ async function memoryByProcess(
 const megabytes = (kilobytes: number): number => Math.round(kilobytes / 1024);
 
 /** One cold start on a fresh profile, as a first launch after install. */
-export async function measureOnce(): Promise<Sample> {
-  const fake = await startFakeWhatsApp();
-  const profile = await mkdtemp(join(tmpdir(), 'yapyap-bench-'));
-  const started = performance.now();
-  const app = await launchApp(fake.origin, profile);
-  try {
+export function measureOnce(): Promise<Sample> {
+  return onFreshProfile(async (app, started) => {
     const window = await whatsAppPage(app);
     await window.getByTestId('fake-whatsapp').waitFor({ state: 'visible' });
     const coldStartMs = Math.round(performance.now() - started);
-    await new Promise((resolve) => setTimeout(resolve, SETTLE_MS));
+    await settle();
     const { kilobytes: processes, renderers } = await memoryByProcess(app);
     return {
       coldStartMs,
@@ -70,11 +116,7 @@ export async function measureOnce(): Promise<Sample> {
         Object.entries(processes).map(([label, kilobytes]) => [label, megabytes(kilobytes)]),
       ),
     };
-  } finally {
-    await app.close();
-    await fake.close();
-    await rm(profile, { recursive: true, force: true });
-  }
+  });
 }
 
 export function median(values: readonly number[]): number {

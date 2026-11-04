@@ -1,4 +1,5 @@
 import type { ElectronApplication } from '@playwright/test';
+import { clickMenu } from './chrome-helpers.ts';
 import { expect, mainWindow, test, whatsAppContents } from './fixtures.ts';
 
 /**
@@ -61,13 +62,7 @@ test('turns WhatsApp’s notifications into system ones that open the chat and g
 });
 
 /** Clicks Do Not Disturb in the Account menu. */
-const toggleDoNotDisturb = (app: ElectronApplication) =>
-  app.evaluate(({ Menu }) => {
-    Menu.getApplicationMenu()
-      ?.items.flatMap((menu) => menu.submenu?.items ?? [])
-      .find((entry) => entry.label === 'Do Not Disturb')
-      ?.click();
-  });
+const toggleDoNotDisturb = (app: ElectronApplication) => clickMenu(app, 'Do Not Disturb');
 
 /** Whether WhatsApp's page is muted. */
 const whatsAppAudioMuted = async (app: ElectronApplication) =>

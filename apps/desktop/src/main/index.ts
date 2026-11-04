@@ -35,7 +35,7 @@ import {
   statSync,
 } from 'node:fs';
 import { readFile } from 'node:fs/promises';
-import { textFileAt, writeTextAtomically } from './atomic-write.ts';
+import { textFileAt, writeTextAtomically } from './support/atomic-write.ts';
 import { chatListWidths } from './chat-list/widths.ts';
 import { createCustomCode } from './custom-code/custom-code.ts';
 import { availableParallelism, homedir, release, totalmem } from 'node:os';
@@ -56,7 +56,8 @@ import { recordTrace } from './crash/trace.ts';
 import trayIcon from '../../build/icons/32x32.png?asset';
 import { PRODUCT_NAME } from './identity/product.ts';
 import { createLogger } from './logging/logger.ts';
-import { logProcessErrors } from './process-errors.ts';
+import { logProcessErrors } from './app/process-errors.ts';
+import { pause } from './support/pause.ts';
 import { readInstallEvidence } from './updates/install-evidence.ts';
 import { releaseFetcher } from './updates/update-notice.ts';
 import { decideUpdatePolicy, settingsIgnoredBy } from './updates/update-policy.ts';
@@ -74,7 +75,7 @@ import {
 } from './dialogs/prompts.ts';
 import { startApp } from './start/start.ts';
 import { findLocalModels, loopbackRequest, modelServerPorts } from './assistant/local-servers.ts';
-import { ENGINE_CHANNELS } from '../shared/engine-api.ts';
+import { ENGINE_CHANNELS } from '../shared/api/engine-api.ts';
 import { assistantState } from './assistant/state.ts';
 import { allowedChats } from './assistant/chats.ts';
 import { assistantKeys } from './assistant/keys.ts';
@@ -97,22 +98,24 @@ import {
 
 const PICKER_THUMBNAIL = { width: 320, height: 180 };
 
-const GPU_CRASH_LOG = join(app.getPath('userData'), 'gpu-crashes.json');
-const WINDOW_STATE = join(app.getPath('userData'), 'window-state.json');
-const DOWNLOADS_STATE = join(app.getPath('userData'), 'downloads.json');
+const USER_DATA = app.getPath('userData');
+
+const GPU_CRASH_LOG = join(USER_DATA, 'gpu-crashes.json');
+const WINDOW_STATE = join(USER_DATA, 'window-state.json');
+const DOWNLOADS_STATE = join(USER_DATA, 'downloads.json');
 // Kept apart from settings, so importing a settings file can never bring code that runs in WhatsApp.
-const CUSTOM_CODE = join(app.getPath('userData'), 'custom-code.json');
-const CHAT_LIST_STATE = join(app.getPath('userData'), 'chat-list.json');
+const CUSTOM_CODE = join(USER_DATA, 'custom-code.json');
+const CHAT_LIST_STATE = join(USER_DATA, 'chat-list.json');
 // The assistant's state and allowed chats are no preferences, so they live apart from settings (ADR 0017).
-const ASSISTANT_STATE = join(app.getPath('userData'), 'assistant.json');
-const ASSISTANT_CHATS = join(app.getPath('userData'), 'assistant-chats.json');
+const ASSISTANT_STATE = join(USER_DATA, 'assistant.json');
+const ASSISTANT_CHATS = join(USER_DATA, 'assistant-chats.json');
 // The agents' tokens are state, kept apart from settings and never exported (ADR 0019).
-const AGENT_TOKENS = join(app.getPath('userData'), 'agent-tokens.json');
+const AGENT_TOKENS = join(USER_DATA, 'agent-tokens.json');
 
 // Holds the tray for the app's lifetime; a collected Tray disappears from the panel.
 let tray: Tray | undefined;
 
-const LOG_DIR = join(app.getPath('userData'), 'logs');
+const LOG_DIR = join(USER_DATA, 'logs');
 
 const logger = createLogger({
   dir: LOG_DIR,
@@ -145,7 +148,7 @@ const notify = (body: string): void => {
   new Notification({ title: PRODUCT_NAME, body }).show();
 };
 
-const settings = openSettings(app.getPath('userData'), Date.now());
+const settings = openSettings(USER_DATA, Date.now());
 
 const installChannel = (): string =>
   readInstallChannel(() => readFileSync(join(app.getAppPath(), 'package.json'), 'utf8'));
@@ -202,7 +205,7 @@ const downloadList = createDownloadList((path) => {
 const customCode = createCustomCode(textFileAt(CUSTOM_CODE), warn);
 
 const secrets = openSecretStore(
-  secretFileAt(join(app.getPath('userData'), 'secrets.json')),
+  secretFileAt(join(USER_DATA, 'secrets.json')),
   safeStorage,
   process.platform,
 );
@@ -263,7 +266,7 @@ const chrome = createChromeFeature({
       start: (categories) =>
         contentTracing.startRecording({ included_categories: [...categories] }),
       stop: (path) => contentTracing.stopRecording(path),
-      wait: (ms) => new Promise((resolve) => setTimeout(resolve, ms)),
+      wait: pause,
       tell: (message) => {
         void dialog.showMessageBox(message);
       },
@@ -296,7 +299,7 @@ const chrome = createChromeFeature({
     keys,
     fetch: assistantFetch,
     hardware: () => ({ memory: totalmem(), cores: availableParallelism() }),
-    files: diskModelFiles(join(app.getPath('userData'), 'models')),
+    files: diskModelFiles(join(USER_DATA, 'models')),
     state: assistantStore,
     chats: assistantChats,
     languages: translationLanguages(app.getPreferredSystemLanguages()),
@@ -360,7 +363,7 @@ startApp({
   createSidebar: (window, renderer) => createSidebarView(window, renderer),
   defaultSession: () => session.defaultSession,
   sessionOf: (partition) => session.fromPartition(partition),
-  accounts: loadAccounts(app.getPath('userData')),
+  accounts: loadAccounts(USER_DATA),
   whatsAppPreload: join(import.meta.dirname, '..', 'preload', 'whatsapp.cjs'),
   notifications: {
     create: (options) =>
@@ -375,7 +378,7 @@ startApp({
   ipc: ipcMain,
   chatListWidths: chatListWidths(textFileAt(CHAT_LIST_STATE), warn),
   saveAccounts: (accounts) => {
-    saveAccounts(app.getPath('userData'), accounts);
+    saveAccounts(USER_DATA, accounts);
   },
   newAccountId: randomUUID,
   askMedia: askMediaWithDialog,
@@ -465,7 +468,7 @@ startApp({
     },
   },
   crashes: {
-    files: profileCrashFiles(app.getPath('userData'), app.getPath('crashDumps')),
+    files: profileCrashFiles(USER_DATA, app.getPath('crashDumps')),
     version: app.getVersion(),
     previousLog: () => readPreviousLog(LOG_DIR),
     review: reviewCrashWithDialog,

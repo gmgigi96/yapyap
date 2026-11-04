@@ -1,11 +1,26 @@
-import { ASSISTANT_BAR_CHANNELS, type AssistantBarBridge } from '../../shared/assistant-bar-api.ts';
-import { CHAT_LIST_CHANNELS, type ChatListBridge } from '../../shared/chat-list-api.ts';
-import { NOTIFICATION_CHANNELS, type NotificationBridge } from '../../shared/notification-api.ts';
-import { SHARE_CHANNELS, type ShareBridge } from '../../shared/share-api.ts';
+import {
+  ASSISTANT_BAR_CHANNELS,
+  type AssistantBarBridge,
+} from '../../shared/api/assistant-bar-api.ts';
+import { CHAT_LIST_CHANNELS, type ChatListBridge } from '../../shared/api/chat-list-api.ts';
+import {
+  NOTIFICATION_CHANNELS,
+  type NotificationBridge,
+} from '../../shared/api/notification-api.ts';
+import { SHARE_CHANNELS, type ShareBridge } from '../../shared/api/share-api.ts';
 
 export interface PreloadIpc {
   send(channel: string, ...args: unknown[]): void;
   on(channel: string, listener: (event: unknown, ...args: unknown[]) => void): unknown;
+}
+
+/** Hands `listener` each ID the main process sends on `channel`, and nothing else. */
+function onId(ipc: PreloadIpc, channel: string, listener: (id: string) => void): void {
+  ipc.on(channel, (_event, id) => {
+    if (typeof id === 'string') {
+      listener(id);
+    }
+  });
 }
 
 /**
@@ -21,11 +36,7 @@ export function createNotificationBridge(ipc: PreloadIpc): NotificationBridge {
       ipc.send(NOTIFICATION_CHANNELS.close, id);
     },
     onClick: (listener) => {
-      ipc.on(NOTIFICATION_CHANNELS.click, (_event, id) => {
-        if (typeof id === 'string') {
-          listener(id);
-        }
-      });
+      onId(ipc, NOTIFICATION_CHANNELS.click, listener);
     },
   };
 }
@@ -40,11 +51,7 @@ export function createShareBridge(ipc: PreloadIpc): ShareBridge {
       ipc.send(SHARE_CHANNELS.ended, id);
     },
     onStop: (listener) => {
-      ipc.on(SHARE_CHANNELS.stop, (_event, id) => {
-        if (typeof id === 'string') {
-          listener(id);
-        }
-      });
+      onId(ipc, SHARE_CHANNELS.stop, listener);
     },
   };
 }

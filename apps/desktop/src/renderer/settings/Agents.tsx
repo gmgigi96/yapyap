@@ -1,7 +1,7 @@
 import type { JSX } from 'preact';
 import { useCallback, useEffect, useState } from 'preact/hooks';
-import type { AgentsView, AgentTokenView } from '../../shared/agents-api.ts';
-import type { ChromeApi, SettingsSnapshot } from '../../shared/chrome-api.ts';
+import type { AgentsView, AgentTokenView } from '../../shared/api/agents-api.ts';
+import type { ChromeApi, SettingsSnapshot } from '../../shared/api/chrome-api.ts';
 import { en } from '../../shared/messages/en.ts';
 import { AgentTokenForm, chatLabel, CreatedToken, type Created } from './AgentTokenForm.tsx';
 import { fieldsOf, type Change } from './Field.tsx';
@@ -190,19 +190,6 @@ function Activity({ view }: { readonly view: AgentsView }): JSX.Element {
   );
 }
 
-function StartButton({ onStart }: { readonly onStart: (creating: boolean) => void }) {
-  return (
-    <button
-      type="button"
-      onClick={() => {
-        onStart(true);
-      }}
-    >
-      {text.tokens.create}
-    </button>
-  );
-}
-
 /** Creating a token, then showing it once. */
 function NewToken(props: {
   readonly api: ChromeApi;
@@ -212,34 +199,35 @@ function NewToken(props: {
   const { api, view, reload } = props;
   const [creating, setCreating] = useState(false);
   const [created, setCreated] = useState<Created | null>(null);
-  const form = (
-    <AgentTokenForm
-      api={api}
-      accounts={view.accounts}
-      onCreated={(next) => {
-        setCreating(false);
-        setCreated(next);
-        reload();
-      }}
-      onCancel={() => {
-        setCreating(false);
-      }}
-    />
+  const show = useCallback(
+    (next: Created): void => {
+      setCreating(false);
+      setCreated(next);
+      reload();
+    },
+    [reload],
   );
-  const shown =
-    created === null ? null : (
-      <CreatedToken
-        api={api}
-        created={created}
-        onDone={() => {
-          setCreated(null);
-        }}
-      />
-    );
+  const cancel = useCallback((): void => {
+    setCreating(false);
+  }, []);
+  const done = useCallback((): void => {
+    setCreated(null);
+  }, []);
   return (
     <>
-      {shown}
-      {creating ? form : <StartButton onStart={setCreating} />}
+      {created === null ? null : <CreatedToken api={api} created={created} onDone={done} />}
+      {creating ? (
+        <AgentTokenForm api={api} accounts={view.accounts} onCreated={show} onCancel={cancel} />
+      ) : (
+        <button
+          type="button"
+          onClick={() => {
+            setCreating(true);
+          }}
+        >
+          {text.tokens.create}
+        </button>
+      )}
     </>
   );
 }

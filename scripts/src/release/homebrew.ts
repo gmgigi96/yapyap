@@ -1,4 +1,10 @@
-import { ABOUT, channelsOf, download, type DistributionRelease } from './distribution.ts';
+import {
+  ABOUT,
+  channelsOf,
+  download,
+  packageName,
+  type DistributionRelease,
+} from './distribution.ts';
 import type { Channel } from './repository.ts';
 
 const CASKS: Readonly<Record<Channel, string>> = { stable: 'yapyap', beta: 'yapyap@beta' };
@@ -7,7 +13,6 @@ const OTHER: Readonly<Record<Channel, Channel>> = { stable: 'beta', beta: 'stabl
 function cask(channel: Channel, release: DistributionRelease): string {
   const dmg = download(release, 'mac-universal.dmg');
   const url = dmg.url.replaceAll(release.version, '#{version}');
-  const title = channel === 'stable' ? ABOUT.name : `${ABOUT.name} Beta`;
   return [
     `cask "${CASKS[channel]}" do`,
     `  version "${release.version}"`,
@@ -15,7 +20,7 @@ function cask(channel: Channel, release: DistributionRelease): string {
     '',
     `  url "${url}",`,
     '      verified: "github.com/vascoguita/yapyap/"',
-    `  name "${title}"`,
+    `  name "${packageName(channel)}"`,
     `  desc "${ABOUT.summary}"`,
     `  homepage "${ABOUT.homepage}"`,
     '',

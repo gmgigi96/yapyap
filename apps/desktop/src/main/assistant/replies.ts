@@ -1,5 +1,6 @@
 import type { ReadChat } from '../../adapter/active-chat.ts';
 import type { CompletionRequest } from './providers/provider.ts';
+import { cleanRewrite } from './rewrites.ts';
 
 /** How many replies the assistant offers to choose from. */
 const SUGGESTIONS = 3;
@@ -58,11 +59,9 @@ const MARKER = /^(?:\d{1,2}[.)]|[-*•])\s*/;
  * (#457) repeat before a reply as if it were part of it.
  */
 const SPEAKER = /^Me:\s*/i;
-/** Quotes around a reply. */
-const QUOTES = /^["“”']|["“”']$/g;
 
 const clean = (line: string): string =>
-  line.trim().replace(MARKER, '').replace(SPEAKER, '').replaceAll(QUOTES, '').trim();
+  cleanRewrite(line.trim().replace(MARKER, '').replace(SPEAKER, ''));
 
 /** The replies in the model's answer, at most {@link SUGGESTIONS}. */
 export function suggestionsIn(answer: string): string[] {

@@ -2,6 +2,7 @@ import { readFile } from 'node:fs/promises';
 import { createRequire } from 'node:module';
 import type { ElectronApplication, Page } from '@playwright/test';
 import type { AxeResults, RunOptions } from 'axe-core';
+import { openFromMenu } from './chrome-helpers.ts';
 import { expect, test, whatsAppPage } from './fixtures.ts';
 
 /** YapYap's own windows, by the menu item that opens them. */
@@ -17,16 +18,7 @@ const PAGES = [
 ] as const;
 
 async function openChrome(app: ElectronApplication, label: string, page: string): Promise<Page> {
-  await whatsAppPage(app);
-  const opened = app.waitForEvent('window');
-  await app.evaluate(({ Menu }, wanted) => {
-    Menu.getApplicationMenu()
-      ?.items.flatMap((menu) => menu.submenu?.items ?? [])
-      .find((entry) => entry.label === wanted)
-      ?.click();
-  }, label);
-  const window = await opened;
-  await window.waitForURL(`app://chrome/${page}`);
+  const window = await openFromMenu(app, label, page);
   await window.waitForLoadState('load');
   // Parts of a page fill in after it loads; walking or auditing it earlier misses them.
   await expect(window.locator('main')).toBeAttached();

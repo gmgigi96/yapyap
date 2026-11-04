@@ -1,4 +1,4 @@
-import type { AgentActivity } from '../../shared/agents-api.ts';
+import type { AgentActivity } from '../../shared/api/agents-api.ts';
 import { en } from '../../shared/messages/en.ts';
 import type { SettingsService } from '../settings/service.ts';
 import { answerAgent, type AgentAnswer, type AgentRequest } from './handler.ts';
@@ -71,11 +71,11 @@ function answering(
     counter: slidingCounter(deps.now),
     lock: failureLock(deps.now),
     queue: accountQueue(),
-    record,
     notifySent: (token: AgentToken, chat: string) => {
       deps.notify(en.agents.sent({ token: token.name, chat }));
     },
     version: deps.version,
+    record,
   };
   return (port) => (request) =>
     answerAgent(request, port, { ...handler, accounts: deps.accounts() ?? noAccounts });

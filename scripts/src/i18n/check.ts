@@ -8,6 +8,9 @@ import {
 /** Tags and character references: a catalog holds text, which YapYap never renders as markup. */
 const MARKUP = /<\/?[a-z][^>]*>|&#?\w+;/i;
 
+/** Where `key` sits below `path` in a catalog, as `a.b.c`. */
+const keyPath = (path: string, key: string): string => (path === '' ? key : `${path}.${key}`);
+
 const sameNames = (a: readonly string[], b: readonly string[]): boolean =>
   a.join(',') === b.join(',');
 
@@ -77,7 +80,7 @@ function levelProblems(
 ): string[] {
   const known = entries(english);
   return [...entries(translation)].flatMap(([key, entry]) => {
-    const at = path === '' ? key : `${path}.${key}`;
+    const at = keyPath(path, key);
     const source = known.get(key);
     if (source === undefined) {
       return [`${at} is not in English.`];
@@ -93,7 +96,7 @@ const keyProblems = (at: string, key: string): string[] =>
 /** Problems in English itself: dotted keys, empty text, markup, and plurals without their English forms. */
 export function checkEnglish(english: CatalogJson, path = ''): string[] {
   return [...entries(english)].flatMap(([key, entry]) => {
-    const at = path === '' ? key : `${path}.${key}`;
+    const at = keyPath(path, key);
     if (entry.kind === 'group') {
       return [...keyProblems(at, key), ...checkEnglish(entry.group, at)];
     }

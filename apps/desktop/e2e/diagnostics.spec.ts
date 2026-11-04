@@ -1,3 +1,4 @@
+import { clickMenu } from './chrome-helpers.ts';
 import { expect, test } from './fixtures.ts';
 
 test('copies diagnostics with the GPU summary and recent log from the Help menu', async ({
@@ -5,12 +6,7 @@ test('copies diagnostics with the GPU summary and recent log from the Help menu'
   window,
 }) => {
   await expect(window.getByTestId('fake-whatsapp')).toBeVisible();
-  await app.evaluate(({ Menu }) => {
-    Menu.getApplicationMenu()
-      ?.items.flatMap((menu) => menu.submenu?.items ?? [])
-      .find((entry) => entry.label === 'Copy Diagnostics')
-      ?.click();
-  });
+  await clickMenu(app, 'Copy Diagnostics');
   await expect
     .poll(() => app.evaluate(({ clipboard }) => clipboard.readText()))
     .toMatch(

@@ -1,6 +1,6 @@
 import type { ReadChat } from '../../adapter/active-chat.ts';
 import type { UnreadSummaryChat } from '../../adapter/unread-summary.ts';
-import type { AssistantBarState, BarButtonId } from '../../shared/assistant-bar-api.ts';
+import type { AssistantBarState, BarButtonId } from '../../shared/api/assistant-bar-api.ts';
 import { en } from '../../shared/messages/en.ts';
 import type { SettingsService } from '../settings/service.ts';
 import { problemWords, privateWords, setupWords, type Fix, type Words } from './bar-words.ts';
@@ -101,6 +101,15 @@ const EMPTY: AssistantBarState = {
 
 const button = (id: BarButtonId, label: string, primary = false) => ({ id, label, primary });
 const close = button('close', text.bar.close);
+
+/** What the bar shows while the model answers. */
+const THINKING: Partial<AssistantBarState> = {
+  status: text.status.thinking,
+  working: true,
+  buttons: [],
+  result: null,
+  suggestions: [],
+};
 
 function update(bar: BarContext, next: Partial<AssistantBarState>): void {
   bar.state = { ...bar.state, ...next };
@@ -226,13 +235,7 @@ async function run(bar: BarContext, setup: Setup, request: ChatRequest, chat: Re
     say(bar, { status: text.status.emptyDraft });
     return;
   }
-  update(bar, {
-    status: text.status.thinking,
-    working: true,
-    buttons: [],
-    result: null,
-    suggestions: [],
-  });
+  update(bar, THINKING);
   try {
     answered(bar, request, await bar.deps.core.ask(setup, sent.instructions, sent.text));
   } catch (error) {
@@ -350,7 +353,7 @@ async function sendCatchUp(bar: BarContext): Promise<void> {
   if (setup === undefined) {
     return;
   }
-  update(bar, { status: text.status.thinking, working: true, buttons: [], result: null });
+  update(bar, THINKING);
   try {
     const answer = await bar.deps.core.ask(setup, CATCH_UP_INSTRUCTIONS, digest);
     answered(bar, { kind: 'summarize' }, answer);
@@ -459,15 +462,15 @@ export interface AssistantBar {
   readonly chatRedrawn: () => Promise<void>;
 }
 
+/** Answers a request about the open chat, unless another request runs. */
+const chatRequest = (bar: BarContext, request: ChatRequest): Promise<void> =>
+  once(bar, () => aboutChat(bar, request));
+
 /** Rewrites the draft in one of the offered ways; anything else is dropped. */
-async function rewriteDraft(
-  bar: BarContext,
-  value: string,
-  chatRequest: (request: ChatRequest) => Promise<void>,
-): Promise<void> {
+async function rewriteDraft(bar: BarContext, value: string): Promise<void> {
   const rewrite = rewriteOf(value, bar.deps.languages);
   if (rewrite !== undefined) {
-    await chatRequest({ kind: 'rewrite', rewrite });
+    await chatRequest(bar, { kind: 'rewrite', rewrite });
   }
 }
 
@@ -571,18 +574,17 @@ export function createAssistantBar(deps: BarDependencies): AssistantBar {
     busy: false,
     redrawn: false,
   };
-  const chatRequest = (request: ChatRequest) => once(bar, () => aboutChat(bar, request));
   return {
     state: () => bar.state,
     refresh: async () => {
       deps.show(deps.settings.current().assistant.enabled);
       await refresh(bar);
     },
-    suggest: () => chatRequest({ kind: 'suggest' }),
+    suggest: () => chatRequest(bar, { kind: 'suggest' }),
     suggestOnArrival: () => once(bar, () => suggestOnArrival(bar)),
-    prompt: (typed) => chatRequest({ kind: 'prompt', text: typed }),
-    summarize: () => chatRequest({ kind: 'summarize' }),
-    rewrite: (value) => rewriteDraft(bar, value, chatRequest),
+    prompt: (typed) => chatRequest(bar, { kind: 'prompt', text: typed }),
+    summarize: () => chatRequest(bar, { kind: 'summarize' }),
+    rewrite: (value) => rewriteDraft(bar, value),
     catchUp: () => once(bar, () => catchUp(bar)),
     use: async (index) => {
       await pick(bar, index);

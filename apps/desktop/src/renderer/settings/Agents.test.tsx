@@ -2,13 +2,14 @@
 import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/preact';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { fakeChromeApi } from '../../../test/chrome-api.ts';
+import { nth } from '../../../test/nth.ts';
 import {
   DEFAULT_AGENT_LIMITS,
   type AgentsView,
   type AgentTokenCreated,
   type AgentTokenView,
-} from '../../shared/agents-api.ts';
-import type { SettingsSnapshot } from '../../shared/chrome-api.ts';
+} from '../../shared/api/agents-api.ts';
+import type { SettingsSnapshot } from '../../shared/api/chrome-api.ts';
 import { AgentsSection } from './Agents.tsx';
 
 const ACCOUNT = '11111111-2222-4333-8444-555555555555';
@@ -58,7 +59,6 @@ const snapshot = (on: boolean): SettingsSnapshot => ({
   values: { 'agents.enabled': on },
   restartPending: false,
   problems: {},
-  unavailable: {},
 });
 
 function setup(view: AgentsView = VIEW, on = true) {
@@ -93,14 +93,6 @@ afterEach(() => {
 const button = (name: string | RegExp) => screen.getByRole('button', { name });
 
 /** The `index`th of `items`, which the test knows is there. */
-function nth<T>(items: readonly T[], index: number): T {
-  const item = items[index];
-  if (item === undefined) {
-    throw new Error(`No item ${String(index)}.`);
-  }
-  return item;
-}
-
 describe('AgentsSection', () => {
   it('shows the switch, where agents connect, the tokens and recent activity', async () => {
     const t = setup();
@@ -164,10 +156,10 @@ describe('AgentsSection', () => {
     await vi.advanceTimersByTimeAsync(0);
     const before = t.agents.view.mock.calls.length;
     await vi.advanceTimersByTimeAsync(2000);
-    expect(t.agents.view.mock.calls.length).toBe(before + 1);
+    expect(t.agents.view.mock.calls).toHaveLength(before + 1);
     t.rendered.unmount();
     await vi.advanceTimersByTimeAsync(4000);
-    expect(t.agents.view.mock.calls.length).toBe(before + 1);
+    expect(t.agents.view.mock.calls).toHaveLength(before + 1);
   });
 
   it('keeps showing what it had when the view cannot be read', async () => {
@@ -223,7 +215,7 @@ describe('creating a token', () => {
     const t = await openForm();
     t.agents.create.mockResolvedValueOnce({ token: TOKEN, address: null });
     fireEvent.click(button('Create Token'));
-    await screen.findByText(/http:\/\/127\.0\.0\.1:<port>\/mcp/);
+    expect(await screen.findByText(/http:\/\/127\.0\.0\.1:<port>\/mcp/)).toBeTruthy();
   });
 
   it('shows why YapYap refused the token, keeping the form', async () => {

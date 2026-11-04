@@ -1,5 +1,5 @@
 import type { Settings } from '../settings/schema.ts';
-import type { SettingsService } from '../settings/service.ts';
+import { followSettings, type SettingsService } from '../settings/service.ts';
 
 export interface ThemePort {
   themeSource: Settings['appearance']['theme'];
@@ -15,9 +15,7 @@ export function followThemeSetting(
   nativeTheme: ThemePort,
   settings: Pick<SettingsService, 'current' | 'onChange'>,
 ): void {
-  const apply = (current: Settings): void => {
+  followSettings(settings, (current) => {
     nativeTheme.themeSource = current.appearance.theme;
-  };
-  apply(settings.current());
-  settings.onChange(apply);
+  });
 }

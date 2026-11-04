@@ -24,7 +24,7 @@ The maintainer decided (2026-11-02) that:
 Each of these goes against something decided before:
 
 - YapYap listens on no port or socket, enforced by
-  `src/main/no-endpoint.test.ts`.
+  `src/main/security/no-endpoint.test.ts`.
 - Rule 8 of `CLAUDE.md`: nothing sends a message for the user. ADR 0013
   and ADR 0017 say the same of the assistant.
 

@@ -1,4 +1,4 @@
-import type { EngineTurn } from '../../../shared/engine-api.ts';
+import type { EngineTurn } from '../../../shared/api/engine-api.ts';
 import { EngineFailed, type EngineHost } from '../private/engine-host.ts';
 import { ProviderError, type CompletionRequest, type Provider } from './provider.ts';
 

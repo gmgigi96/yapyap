@@ -1,15 +1,18 @@
 import type { ElectronApplication } from '@playwright/test';
 import { expect, test } from '@playwright/test';
-import { mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
-import { tmpdir } from 'node:os';
-import { join } from 'node:path';
-import { startFakeWhatsApp } from '../fake-whatsapp-server.ts';
-import { launchApp, whatsAppPage } from '../fixtures.ts';
-import { median } from './measure.ts';
+import { writeFile } from 'node:fs/promises';
+import { clickMenu } from '../chrome-helpers.ts';
+import { whatsAppPage } from '../fixtures.ts';
+import {
+  budgetHere,
+  cpuPercentSince,
+  median,
+  memoryMb,
+  onFreshProfile,
+  settle,
+} from './measure.ts';
 
 const RUNS = 3;
-/** Long enough for start-up work to finish and memory to settle. */
-const SETTLE_MS = 10_000;
 
 interface Budget {
   readonly accountMemoryMb: number;
@@ -22,15 +25,6 @@ interface AccountSample {
   /** A hidden account's renderer, as a share of one core, while it idles. */
   readonly hiddenCpuPercent: number;
 }
-
-const settle = () => new Promise((resolve) => setTimeout(resolve, SETTLE_MS));
-
-const memoryMb = async (app: ElectronApplication): Promise<number> =>
-  Math.round(
-    (await app.evaluate(({ app: electronApp }) =>
-      electronApp.getAppMetrics().reduce((sum, metric) => sum + metric.memory.workingSetSize, 0),
-    )) / 1024,
-  );
 
 /** The WhatsApp pages, oldest account first. */
 const accountPids = (app: ElectronApplication): Promise<number[]> =>
@@ -56,21 +50,13 @@ const cpuSeconds = (app: ElectronApplication, pid: number): Promise<number> =>
   );
 
 async function addAccount(app: ElectronApplication): Promise<void> {
-  await app.evaluate(({ Menu }) => {
-    Menu.getApplicationMenu()
-      ?.items.flatMap((menu) => menu.submenu?.items ?? [])
-      .find((entry) => entry.label === 'Add Account')
-      ?.click();
-  });
+  await clickMenu(app, 'Add Account');
   await expect.poll(async () => (await accountPids(app)).length).toBe(2);
 }
 
 /** One launch: memory with one account, then with two, and the hidden one's CPU. */
-async function measureAccounts(): Promise<AccountSample> {
-  const fake = await startFakeWhatsApp();
-  const profile = await mkdtemp(join(tmpdir(), 'yapyap-bench-'));
-  const app = await launchApp(fake.origin, profile);
-  try {
+function measureAccounts(): Promise<AccountSample> {
+  return onFreshProfile(async (app) => {
     await (await whatsAppPage(app)).getByTestId('fake-whatsapp').waitFor({ state: 'visible' });
     await settle();
     const one = await memoryMb(app);
@@ -83,24 +69,13 @@ async function measureAccounts(): Promise<AccountSample> {
     const started = performance.now();
     await settle();
     const used = (await cpuSeconds(app, hidden)) - before;
-    const percent = (used / ((performance.now() - started) / 1000)) * 100;
-    return { accountMemoryMb: two - one, hiddenCpuPercent: Math.round(percent * 10) / 10 };
-  } finally {
-    await app.close();
-    await fake.close();
-    await rm(profile, { recursive: true, force: true });
-  }
+    return { accountMemoryMb: two - one, hiddenCpuPercent: cpuPercentSince(used, started) };
+  });
 }
 
 test('stays within the per-account memory and hidden-account CPU budgets', async ({}, testInfo) => {
   test.setTimeout((RUNS + 1) * 90_000);
-  const budgets = JSON.parse(
-    await readFile(join(import.meta.dirname, 'budgets.json'), 'utf8'),
-  ) as Record<string, Budget | undefined>;
-  const budget = budgets[process.platform];
-  if (budget === undefined) {
-    throw new Error(`No budget for ${process.platform}`);
-  }
+  const budget = await budgetHere<Budget>();
   const samples: AccountSample[] = [];
   for (let run = 0; run < RUNS; run += 1) {
     samples.push(await measureAccounts());
