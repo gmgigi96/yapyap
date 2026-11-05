@@ -396,3 +396,9 @@ title, escape })` (`src/renderer/shared/mount.tsx`), which titles the
   packager YapYap never builds. `pnpm audit` finds nothing.
 - knip advisory (#597): knip moves to 6.44.1, which fixes a path traversal
   advisory (CVE-2026-120325) that failed SonarQube Cloud's dependency gate.
+- Agent guide split (#601): the root `CLAUDE.md` keeps the rules, commands,
+  architecture, merge flow and cross-cutting pitfalls; notes for one area
+  live in a `CLAUDE.md` next to its code (`.github/`, `packaging/`,
+  `scripts/`, `apps/desktop/e2e/`, and `src/main/`, `adapter/`,
+  `preload/` and `renderer/`). Sessions read the progress status and
+  only the ADRs for the area they change.
