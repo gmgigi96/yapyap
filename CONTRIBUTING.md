@@ -171,20 +171,19 @@ below 10 on purpose or for now (#404):
 The pipelines skip steps whose secrets are missing, and print a notice in the
 job summary instead of failing.
 
-| Secret / variable                                                            | Used for                                                                                                                                                                               | Missing →                                                                                                                  |
-| ---------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------- |
-| `AUTOMATION_APP_CLIENT_ID` (variable), `AUTOMATION_APP_PRIVATE_KEY` (secret) | The YapYap automation GitHub App. The release and Renovate workflows mint an hour-long token from it, so their PRs trigger the required checks (see [Automation app](#automation-app)) | Release PRs are opened with the workflow token, and the maintainer re-runs their checks by hand; Renovate proposes nothing |
-| `CSC_LINK`, `CSC_KEY_PASSWORD`                                               | macOS signing: the Developer ID Application certificate and its key, as a base64 `.p12`, and the `.p12` password                                                                       | Unsigned DMG, no macOS self-update                                                                                         |
-| `APPLE_API_KEY`, `APPLE_API_KEY_ID`, `APPLE_API_ISSUER`                      | macOS notarization with an App Store Connect team API key (the `.p8` file's text, its key ID and the issuer ID); preferred over the Apple ID secrets (#400)                            | The Apple ID secrets are used, if set                                                                                      |
-| `APPLE_ID`, `APPLE_APP_SPECIFIC_PASSWORD`, `APPLE_TEAM_ID`                   | macOS notarization with an Apple ID, when no API key is set                                                                                                                            | Not notarized: Gatekeeper warns on first launch                                                                            |
-| `WIN_CSC_LINK`, `WIN_CSC_KEY_PASSWORD`                                       | Windows Authenticode signing                                                                                                                                                           | Unsigned installers (SmartScreen warning)                                                                                  |
-| `AUR_SSH_KEY`                                                                | Publishing `yapyap-bin` to the AUR                                                                                                                                                     | PKGBUILD attached to the release only                                                                                      |
-| `PACKAGES_SIGNING_KEY` (secret)                                              | Signing the apt and dnf repositories at `packages.guita.org` (see [Package repository key](#package-repository-key))                                                                   | The repositories are not deployed                                                                                          |
-| `CLOUDFLARE_API_TOKEN` (secret), `CLOUDFLARE_ACCOUNT_ID` (variable)          | Deploying `packages.guita.org` to the `yapyap-packages` Cloudflare Pages project (a token with Pages Write only)                                                                       | The repositories are not deployed                                                                                          |
-| `SONAR_TOKEN`                                                                | SonarQube Cloud analysis (a project analysis token for `vascoguita_yapyap`, also stored as a Dependabot secret)                                                                        | The SonarQube Cloud job fails, and no pull request can merge without its check                                             |
-| `HOMEBREW_TAP_TOKEN` (secret)                                                | Pushing the `yapyap` and `yapyap@beta` casks to the `vascoguita/homebrew-yapyap` tap (see [Package managers](#package-managers))                                                       | The casks are generated but not published                                                                                  |
-| `SCOOP_BUCKET_TOKEN` (secret)                                                | Pushing the `yapyap` and `yapyap-beta` manifests to the `vascoguita/scoop-yapyap` bucket                                                                                               | The Scoop manifests are generated but not published                                                                        |
-| `WINGET_TOKEN` (secret)                                                      | Opening pull requests for `YapYap.YapYap` and `YapYap.YapYap.Beta` in `microsoft/winget-pkgs`, from a fork owned by the token's account                                                | The winget manifests are generated but not proposed                                                                        |
+| Secret / variable                                                            | Used for                                                                                                                                                                                           | Missing →                                                                                                                  |
+| ---------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------- |
+| `AUTOMATION_APP_CLIENT_ID` (variable), `AUTOMATION_APP_PRIVATE_KEY` (secret) | The YapYap automation GitHub App. The release, Distribute and Renovate workflows mint an hour-long token from it, so their PRs trigger the required checks (see [Automation app](#automation-app)) | Release PRs are opened with the workflow token, and the maintainer re-runs their checks by hand; Renovate proposes nothing |
+| `CSC_LINK`, `CSC_KEY_PASSWORD`                                               | macOS signing: the Developer ID Application certificate and its key, as a base64 `.p12`, and the `.p12` password                                                                                   | Unsigned DMG, no macOS self-update                                                                                         |
+| `APPLE_API_KEY`, `APPLE_API_KEY_ID`, `APPLE_API_ISSUER`                      | macOS notarization with an App Store Connect team API key (the `.p8` file's text, its key ID and the issuer ID); preferred over the Apple ID secrets (#400)                                        | The Apple ID secrets are used, if set                                                                                      |
+| `APPLE_ID`, `APPLE_APP_SPECIFIC_PASSWORD`, `APPLE_TEAM_ID`                   | macOS notarization with an Apple ID, when no API key is set                                                                                                                                        | Not notarized: Gatekeeper warns on first launch                                                                            |
+| `WIN_CSC_LINK`, `WIN_CSC_KEY_PASSWORD`                                       | Windows Authenticode signing                                                                                                                                                                       | Unsigned installers (SmartScreen warning)                                                                                  |
+| `AUR_SSH_KEY`                                                                | Publishing `yapyap-bin` to the AUR                                                                                                                                                                 | PKGBUILD attached to the release only                                                                                      |
+| `PACKAGES_SIGNING_KEY` (secret)                                              | Signing the apt and dnf repositories at `packages.guita.org` (see [Package repository key](#package-repository-key))                                                                               | The repositories are not deployed                                                                                          |
+| `CLOUDFLARE_API_TOKEN` (secret), `CLOUDFLARE_ACCOUNT_ID` (variable)          | Deploying `packages.guita.org` to the `yapyap-packages` Cloudflare Pages project (a token with Pages Write only)                                                                                   | The repositories are not deployed                                                                                          |
+| `SONAR_TOKEN`                                                                | SonarQube Cloud analysis (a project analysis token for `vascoguita_yapyap`, also stored as a Dependabot secret)                                                                                    | The SonarQube Cloud job fails, and no pull request can merge without its check                                             |
+| `SCOOP_BUCKET_TOKEN` (secret)                                                | Pushing the `yapyap` and `yapyap-beta` manifests to the `vascoguita/scoop-yapyap` bucket                                                                                                           | The Scoop manifests are generated but not published                                                                        |
+| `WINGET_TOKEN` (secret)                                                      | Opening pull requests for `YapYap.YapYap` and `YapYap.YapYap.Beta` in `microsoft/winget-pkgs`, from a fork owned by the token's account                                                            | The winget manifests are generated but not proposed                                                                        |
 
 Issues that need one of these are labelled `needs-maintainer`.
 
@@ -200,8 +199,9 @@ by GitHub. To set it up:
    and Commit statuses (read and write), and Checks and Dependabot alerts
    (read). Nothing else. Renovate needs Workflows to update action pins, the
    statuses and checks to follow its own PRs (ADR 0020), and the alerts to
-   raise security updates.
-2. Install it on `vascoguita/yapyap` only.
+   raise security updates. The Distribute workflow uses Contents and Pull
+   requests to propose the Homebrew casks.
+2. Install it on `vascoguita/yapyap` and `vascoguita/homebrew-yapyap` only.
 3. Generate a private key, store it, and delete the downloaded file:
    `gh secret set AUTOMATION_APP_PRIVATE_KEY --repo vascoguita/yapyap < key.pem`
 4. Store the app's Client ID:
@@ -241,16 +241,21 @@ After every release and beta, the **Distribute** workflow
 (`.github/workflows/distribute.yml`) writes the Homebrew casks, the Scoop
 manifests and the winget manifests from the release's `SHA256SUMS` (#345,
 #346), checks the winget and Scoop ones against their schemas, and
-publishes each where its token exists. A release updates both the release
-and the beta packages; a beta updates only the beta ones. Each step needs
-one thing from the maintainer:
+publishes them. A release updates both the release and the beta packages;
+a beta updates only the beta ones.
 
-1. **Homebrew.** Create the public repository `vascoguita/homebrew-yapyap`
-   with a README, so it has a default branch. Create a fine-grained token
-   for that repository only, with **Contents: read and write**, and store it:
-   `gh secret set HOMEBREW_TAP_TOKEN --repo vascoguita/yapyap`.
-2. **Scoop.** The same for the public repository `vascoguita/scoop-yapyap`,
-   stored as `SCOOP_BUCKET_TOKEN`.
+1. **Homebrew.** The tap [`vascoguita/homebrew-yapyap`](https://github.com/vascoguita/homebrew-yapyap)
+   holds the casks and runs its own checks: `brew style`, `brew audit
+--strict`, and an install of each cask on macOS that verifies the
+   download, the signature and Apple's notarization. Its `master` takes
+   changes only through pull requests, so the automation App, installed on
+   the tap, opens one with the new casks, committed through GitHub's API so
+   they are signed, and lets it merge once the tap's checks pass. A cask
+   changes in `scripts/src/release/homebrew.ts`, never in the tap.
+2. **Scoop.** Create the public repository `vascoguita/scoop-yapyap` with a
+   README, so it has a default branch. Create a fine-grained token for that
+   repository only, with **Contents: read and write**, and store it as
+   `SCOOP_BUCKET_TOKEN`.
 3. **winget.** Create a classic token with only the `public_repo` scope
    (Komac cannot open winget-pkgs pull requests with a fine-grained token)
    and store it as `WINGET_TOKEN`. The workflow uses

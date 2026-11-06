@@ -51,8 +51,3 @@ export function buildJobs(platform: string, arch: string): BuildJob[] {
   }
   throw new Error(`Unsupported platform: ${platform}`);
 }
-
-/** pnpm is a `.cmd` shim on Windows, which only runs through a shell. */
-export function needsShell(platform: string): boolean {
-  return platform === 'win32';
-}

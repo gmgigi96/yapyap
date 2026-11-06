@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { buildJobs, needsShell } from './targets.ts';
+import { buildJobs } from './targets.ts';
 
 describe('buildJobs', () => {
   it('packages AppImage, DEB and RPM separately on Linux for the host architecture', () => {
@@ -96,12 +96,5 @@ describe('buildJobs', () => {
   it('rejects unsupported hosts', () => {
     expect(() => buildJobs('linux', 'ia32')).toThrow('Unsupported Linux architecture: ia32');
     expect(() => buildJobs('freebsd', 'x64')).toThrow('Unsupported platform: freebsd');
-  });
-});
-
-describe('needsShell', () => {
-  it('is only needed on Windows', () => {
-    expect(needsShell('win32')).toBe(true);
-    expect(needsShell('linux')).toBe(false);
   });
 });

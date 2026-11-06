@@ -74,11 +74,11 @@ test('restarts the app from the restart notice', async ({ app }) => {
   const settings = await openSettings(app);
   await settings.getByRole('checkbox', { name: 'Use hardware acceleration' }).click();
   await settings.getByRole('button', { name: 'Restart Now' }).click();
-  await expect
-    .poll(() =>
-      app.evaluate(() => (globalThis as unknown as { restartCalls: string[] }).restartCalls),
-    )
-    .toEqual(['relaunch', 'quit']);
+  await expect(async () => {
+    expect(
+      await app.evaluate(() => (globalThis as unknown as { restartCalls: string[] }).restartCalls),
+    ).toEqual(['relaunch', 'quit']);
+  }).toPass();
 });
 
 test('opens one Settings window and closes it with Escape', async ({ app }) => {
@@ -119,19 +119,24 @@ test('exports the settings to a file and imports them back', async ({ app, profi
   expect(saved.appearance.theme).toBe('dark');
 });
 
-test('starts at login through an autostart entry on Linux', async ({ app, profile }) => {
-  test.skip(
-    process.platform !== 'linux',
-    'Windows and macOS use login items, which tests leave alone',
-  );
-  const entry = join(profile, 'xdg-config', 'autostart', 'org.guita.YapYap.desktop');
-  const settings = await openSettings(app);
-  const toggle = settings.getByRole('checkbox', { name: 'Start at login' });
-  await toggle.check();
-  await expect.poll(() => readFile(entry, 'utf8').catch(() => '')).toContain('Exec=');
-  await toggle.uncheck();
-  await expect.poll(() => readFile(entry, 'utf8').catch(() => 'gone')).toBe('gone');
-});
+// Windows and macOS use login items, which tests leave alone.
+test(
+  'starts at login through an autostart entry on Linux',
+  { tag: '@linux' },
+  async ({ app, profile }) => {
+    const entry = join(profile, 'xdg-config', 'autostart', 'org.guita.YapYap.desktop');
+    const settings = await openSettings(app);
+    const toggle = settings.getByRole('checkbox', { name: 'Start at login' });
+    await toggle.check();
+    await expect(async () => {
+      expect(await readFile(entry, 'utf8').catch(() => '')).toContain('Exec=');
+    }).toPass();
+    await toggle.uncheck();
+    await expect(async () => {
+      expect(await readFile(entry, 'utf8').catch(() => 'gone')).toBe('gone');
+    }).toPass();
+  },
+);
 
 /** What WhatsApp's session and the default session would use to reach WhatsApp. */
 const proxiesInUse = (app: ElectronApplication): Promise<string[]> =>

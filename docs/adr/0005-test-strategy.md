@@ -100,7 +100,7 @@ Stryker uses its `command` runner. Each mutant runs `vitest run --config vitest.
 (`--mutate` from the diff), dealt out to 16 shards so that a change touching
 most modules, such as a rename, stays within a runner's time limit; a shard
 with nothing to mutate stops before installing. Nightly runs the full scope
-in 16 shards (`mutation-targets.ts --all --shard i/16` deals the sorted
+in 16 shards (`git ls-files | mutation-targets.ts --shard i/16` deals the sorted
 modules out in turn), each mutating its modules and running only their
 related tests, as PRs do;
 one run over everything with the whole suite per mutant took more than a

@@ -29,8 +29,13 @@ function cask(channel: Channel, release: DistributionRelease): string {
     '    skip "Updated by the YapYap release workflow"',
     '  end',
     '',
+    // Signed and notarized builds update themselves (ADR 0003), so Homebrew
+    // leaves them to it unless asked with --greedy.
+    '  auto_updates true',
     `  conflicts_with cask: "${CASKS[OTHER[channel]]}"`,
-    '  depends_on :macos',
+    // The oldest macOS the app's Info.plist accepts, Electron's; brew audit
+    // --online compares the two.
+    '  depends_on macos: :ventura',
     '',
     '  app "YapYap.app"',
     '',

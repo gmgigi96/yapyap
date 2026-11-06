@@ -20,8 +20,12 @@ test('records a performance trace where the user chose, once they agree', async 
   await clickMenu(app, 'Record a Performance Trace…');
   // Electron writes Perfetto's binary format, which names the categories it recorded.
   const trace = () => readFile(path, 'latin1').catch(() => '');
-  await expect.poll(trace, { timeout: 30_000 }).toContain('toplevel');
-  await expect
-    .poll(() => app.evaluate(() => (globalThis as { traceMessages?: string[] }).traceMessages))
-    .toEqual(['Record a performance trace?', 'The performance trace is saved.']);
+  await expect(async () => {
+    expect(await trace()).toContain('toplevel');
+  }).toPass({ timeout: 30_000 });
+  await expect(async () => {
+    expect(
+      await app.evaluate(() => (globalThis as { traceMessages?: string[] }).traceMessages),
+    ).toEqual(['Record a performance trace?', 'The performance trace is saved.']);
+  }).toPass();
 });

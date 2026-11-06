@@ -68,11 +68,11 @@ test('opens About links in the default browser', async ({ app }) => {
   });
   const about = await openAbout(app);
   await about.getByRole('link', { name: 'Source code' }).click();
-  await expect
-    .poll(() =>
-      app.evaluate(() => (globalThis as unknown as { openedLinks: string[] }).openedLinks),
-    )
-    .toEqual(['https://github.com/vascoguita/yapyap']);
+  await expect(async () => {
+    expect(
+      await app.evaluate(() => (globalThis as unknown as { openedLinks: string[] }).openedLinks),
+    ).toEqual(['https://github.com/vascoguita/yapyap']);
+  }).toPass();
 });
 
 test('keeps app chrome out of reach of WhatsApp', async ({ window }) => {

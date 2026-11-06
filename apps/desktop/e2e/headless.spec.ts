@@ -73,17 +73,17 @@ test('runs with no display, says where agents connect and how to link, and quits
   }
 });
 
-test('says how to start, and exits, with no display and no headless backend', async ({
-  fakeWhatsApp,
-  profile,
-}) => {
-  test.skip(process.platform !== 'linux', 'Only Linux has display servers to miss');
-  const headless = await spawnHeadless(fakeWhatsApp.origin, profile, { backend: false });
-  const { seen, exited } = watch(headless);
-  try {
-    expect(await exited).toEqual({ code: 1, signal: null });
-    expect(seen.errors).toContain(en.headless.needsBackend);
-  } finally {
-    headless.kill('SIGKILL');
-  }
-});
+test(
+  'says how to start, and exits, with no display and no headless backend',
+  { tag: '@linux' },
+  async ({ fakeWhatsApp, profile }) => {
+    const headless = await spawnHeadless(fakeWhatsApp.origin, profile, { backend: false });
+    const { seen, exited } = watch(headless);
+    try {
+      expect(await exited).toEqual({ code: 1, signal: null });
+      expect(seen.errors).toContain(en.headless.needsBackend);
+    } finally {
+      headless.kill('SIGKILL');
+    }
+  },
+);

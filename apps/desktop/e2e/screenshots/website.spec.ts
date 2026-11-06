@@ -1,5 +1,6 @@
 import type { ElectronApplication } from '@playwright/test';
 import { execFileSync } from 'node:child_process';
+import { existsSync } from 'node:fs';
 import { mkdir, rm, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import { CLAUDE_ANSWER, readyClaude } from '../assistant-helpers.ts';
@@ -17,8 +18,6 @@ const OUT = join(import.meta.dirname, '..', '..', '..', '..', 'docs', 'public', 
 const SCALE = 2;
 const PERSONAL = '0b6c3f0e-58a4-4a39-9a43-6f0c1c1f6a01';
 const WORK = '7d2e9b1c-3f4a-4c5d-8e6f-1a2b3c4d5e6f';
-
-test.skip(process.platform !== 'linux', 'Screenshots are taken on Linux, under Xvfb.');
 
 async function seed(profile: string, theme: 'light' | 'dark'): Promise<void> {
   await seedSettings(profile, { appearance: { theme } });
@@ -172,6 +171,7 @@ test('Accounts window, for the get-started guide (#385)', async ({ profile }) =>
   try {
     await clickMenu(app, 'Manage Accounts…');
     await captureWindow(app, '/accounts.html', 'accounts', ['webp']);
+    expect(existsSync(join(OUT, 'accounts.webp'))).toBe(true);
   } finally {
     await closeApp(app);
     await showcase.close();

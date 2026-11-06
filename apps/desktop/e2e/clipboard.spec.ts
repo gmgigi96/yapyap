@@ -71,16 +71,20 @@ test('pastes an image copied from a browser or screenshot tool', async ({ app, w
   ]);
 });
 
-test('pastes an image file copied in a Linux file manager', async ({ app, window, profile }) => {
-  test.skip(process.platform !== 'linux', 'file managers elsewhere use native file formats');
-  await expect(window.getByTestId('fake-whatsapp')).toBeVisible();
-  const file = join(profile, 'holiday.png');
-  await writeFile(file, Buffer.from(PNG, 'base64'));
-  await copy(app, 'text/uri-list', `file://${file}\r\n`);
-  expect(await pasteIntoComposer(app, window)).toEqual([
-    expect.objectContaining({ name: 'holiday.png', type: 'image/png' }),
-  ]);
-});
+// File managers on other systems copy in their own native formats.
+test(
+  'pastes an image file copied in a Linux file manager',
+  { tag: '@linux' },
+  async ({ app, window, profile }) => {
+    await expect(window.getByTestId('fake-whatsapp')).toBeVisible();
+    const file = join(profile, 'holiday.png');
+    await writeFile(file, Buffer.from(PNG, 'base64'));
+    await copy(app, 'text/uri-list', `file://${file}\r\n`);
+    expect(await pasteIntoComposer(app, window)).toEqual([
+      expect.objectContaining({ name: 'holiday.png', type: 'image/png' }),
+    ]);
+  },
+);
 
 test('never lets WhatsApp read the clipboard', async ({ app, window }) => {
   await expect(window.getByTestId('fake-whatsapp')).toBeVisible();
